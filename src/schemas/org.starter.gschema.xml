@@ -1,0 +1,35 @@
+<schemalist>
+  <schema id="org.starter.core" path="/org/starter/core/" gettext-domain="starter">
+
+    <key name="rules-preprocessor" type="s">
+      <default>'m4 {F}'</default>
+      <summary>Rules preprocessor</summary>
+      <description>The command used to preprocess rules file.</description>
+    </key>
+    
+    <key name="db-host" type="s">
+      <default>'127.0.0.1'</default>
+      <summary>MySQL Host Address</summary>
+      <description>The IP address or hostname of the MySQL server.</description>
+    </key>
+
+    <key name="db-port" type="i">
+      <default>3306</default>
+      <summary>MySQL Host Port</summary>
+      <description>The port of the MySQL server.</description>
+    </key>
+    
+    <key name="db-user" type="s">
+      <default>'STWriter'</default>
+      <summary>Mysql Username</summary>
+      <description>Username for read/write access to the database.</description>
+    </key>
+
+    <key name="db-pass" type="s">
+      <default>'3gj3*31PPDks9)gc'</default>
+      <summary>Mysql Password</summary>
+      <description>Password for the STReader user.</description>
+    </key>
+
+  </schema>
+</schemalist>

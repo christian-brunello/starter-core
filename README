@@ -1,0 +1,55 @@
+STARTER - Simple disTributed smaRT controllER
+
+1. OVERVIEW
+===========
+
+STARTER (Simple disTributed smaRT controllER) is a core system for 
+distributed control environments. It is designed to coordinate multiple 
+nodes through a lightweight and robust communication stack:
+
+* Discovery: Uses mDNS (Multicast DNS) for automatic peer discovery.
+* Communication: Uses D-Bus for reliable inter-process communication (IPC).
+
+For more detailed information, please consult the technical manual located 
+in the 'doc' directory.
+
+2. PREREQUISITES
+================
+
+To build and run STARTER, you need the following dependencies:
+* GLib 2.0 (libglib2.0-dev)
+* D-Bus (libdbus-1-dev)
+* Avahi / mDNS stack (libavahi-client-dev, libavahi-glib-dev)
+* Autotools (autoconf, automake, libtool)
+
+3. BUILDING FROM SOURCE
+=======================
+
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ sudo make install
+
+4. CONFIGURATION
+================
+
+STARTER is designed to run as a systemd service. Initial setup requires 
+defining node identities and mDNS service names.
+
+    $ sudo systemctl enable --now starter.service
+
+6. LICENSE
+==========
+
+The STARTER project uses a dual-licensing strategy:
+* The core system and executable examples are distributed under the 
+  GNU General Public License (GPL) version 3 or later. 
+  See the 'COPYING' file for details.
+* The STARTER library components are distributed under the 
+  GNU Lesser General Public License (LGPL) version 3 or later. 
+  See the 'COPYING.LESSER' file for details.
+
+7. AUTHORS
+==========
+
+See the AUTHORS file for a complete list of contributors.

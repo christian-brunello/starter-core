@@ -1,0 +1,2973 @@
+This is starter-core.info, produced by makeinfo version 6.8 from
+starter-core.texi.
+
+Copyright (C) 2026 Christian Brunello.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled "GNU Free
+Documentation License".
+
+Copyright (C) 2026 Christian Brunello.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled "GNU Free
+Documentation License".
+
+
+File: starter-core.info,  Node: Top,  Next: Introduction,  Up: (dir)
+
+STARTER
+*******
+
+Copyright (C) 2026 Christian Brunello.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
+copy of the license is included in the section entitled "GNU Free
+Documentation License".
+
+* Menu:
+
+* Introduction::
+* STARTER Concepts::
+* Using STARTER: From Theory to Practice::
+* The starter-core Library: Building Your Own Ecosystem::
+* Conclusions: The World is Your Input::
+* Database Schema & Initialization::
+* API Reference::
+
+
+File: starter-core.info,  Node: Introduction,  Next: STARTER Concepts,  Prev: Top,  Up: Top
+
+Introduction
+************
+
+This project was born out of a personal necessity: I needed to stop
+bleeding money on home heating.
+
+At first, I tried the standard route-using a smartphone app to schedule
+the boiler.  But I quickly learned that savings were inversely
+proportional to comfort.  My partner and I would celebrate a lower gas
+bill while shivering in extra sweaters.
+
+With a radiator system and a hybrid boiler, we ran the gamut of options:
+hourly scheduling, integrated weather compensation curves, and
+continuous low-power operation.  Nothing worked.  It was a binary choice
+between comfort or savings; there was simply no middle ground.
+
+* Menu:
+
+* The Search for Intelligence::
+* The Pivot: Programmable Intent::
+* Giving Back to the Community::
+
+
+File: starter-core.info,  Node: The Search for Intelligence,  Next: The Pivot: Programmable Intent,  Up: Introduction
+
+The Search for Intelligence
+===========================
+
+I looked for off-the-shelf solutions to make the boiler "smarter," but I
+hit a dead end.  While there were plugins available to _control_ the
+hardware, the actual "intelligence" was missing.  I thought: _"We live
+in the age of AI-why can't we apply that to home automation?"_
+
+That’s when the project truly began.  My initial plan was to use a
+"Lite" version of TensorFlow.  Since I'm not wealthy and couldn't afford
+powerful servers, I invested my expertise instead of my cash.  I
+envisioned a core that could toggle between "learning mode" and "active
+mode."  It was an exciting prospect, but the AI path proved rocky.  It
+required massive amounts of training data, and the results were
+unpredictable.  I couldn't risk spending the rest of the winter in the
+cold just for a neural network experiment.
+
+
+File: starter-core.info,  Node: The Pivot: Programmable Intent,  Prev: The Search for Intelligence,  Up: Introduction
+
+The Pivot: Programmable Intent
+==============================
+
+I decided to strip the problem down to its core objective: _Giving the
+system clear instructions on how to behave based on the environment_.
+
+To give instructions, you need to communicate.  To communicate, you need
+a "channel" and a "protocol".  I realized the channel could be a simple
+file, and the protocol a straightforward, human-readable language.  This
+was the breakthrough that finally hit the target: _halving energy
+consumption while actually increasing comfort_.
+
+I achieved this through two fundamental logic rules:
+
+_Efficiency Switching_
+     Force the system to gas-only mode the moment environmental
+     conditions make the heat pump inefficient.
+_Dynamic Flow Control_
+     Set the boiler's flow temperature based on:
+        * A weighted average of the forecasted daily temperature swings.
+        * A calculated offset based on a physical constant I discovered
+          for my home: at 0^\circC outdoors, a 48^\circC flow
+          temperature perfectly balances the house's heat loss.
+
+Beyond Heating: The Monero Bonus
+================================
+
+Once the core was stable, more automations followed.  The most
+satisfying one?  Managing my photovoltaic surplus.  When my solar panels
+are overproducing and the grid voltage spikes near 250V, the system
+automatically triggers my mining rigs to mine Monero.  It’s the ultimate
+way to turn excess voltage into digital value.
+
+
+File: starter-core.info,  Node: Giving Back to the Community,  Up: Introduction
+
+Giving Back to the Community
+============================
+
+I believe this system has applications far beyond my own living room.
+I’m sharing it so others can benefit from these optimizations just as I
+have.
+
+I am a firm believer in "Free Software" (in the true Stallman sense),
+and this is my contribution to the community.  To ensure it remains free
+and open for everyone to improve, I am distributing the Core under the
+GPL license and the Library under the LGPL.
+
+
+File: starter-core.info,  Node: STARTER Concepts,  Next: Using STARTER: From Theory to Practice,  Prev: Introduction,  Up: Top
+
+1 STARTER Concepts
+******************
+
+Now that we’ve covered the "why," I want to dive into the "how".  Let’s
+start with the name.  STARTER is an acronym for _Simple distribuTed
+smART conTrollER_, and every letter reflects a core design principle.
+
+Simple
+        * Adding a new module is as easy as powering it on.
+        * You don't need to be a senior dev to manage it; the control
+          logic uses a near-natural language that anyone can understand.
+
+distribuTed
+        * Every component operates over the network.  It’s designed to
+          be lightweight, running smoothly even on low-spec, legacy
+          hardware.
+
+smART
+        * Services connect and disconnect on the fly, with rules applied
+          automatically in real-time.
+        * It doesn't just follow a schedule; it reacts to environmental
+          changes.
+        * It allows us to translate our specific will into action using
+          a near-human syntax.
+
+conTrollER
+        * Through our custom rules, it acts as the "brain," driving
+          every peripheral exactly as instructed.
+
+I chose this name because I wanted it to be clear that this core is just
+the _starting point_.  Any user can download it, plug in their own
+services, and begin coordinating them.  Currently, my setup runs on a
+single computer managing a mix of services.  However, the underlying
+architecture is generic: it can be applied virtually anywhere you need
+to define the logic: _"When these conditions are met, react this way"_.
+
+* Menu:
+
+* Unlimited Scalability::
+* Redefining the Foundations: Inputs, Outputs, and Events::
+
+
+File: starter-core.info,  Node: Unlimited Scalability,  Next: Redefining the Foundations: Inputs, Outputs, and Events,  Up: STARTER Concepts
+
+1.1 Unlimited Scalability
+=========================
+
+Because the system is modular and network-based, it is _completely
+scalable_.  You can start with a basic home automation setup and grow
+into a massive distributed network with multiple cores, each dedicated
+to a specific task.  We aren't just talking about managing a house;
+we’re talking about scaling to a warehouse, a farm, a neighborhood, or
+even an entire city.
+
+Before we get into the technical weeds, I want to take a moment to look
+at the foundational concepts of automation.  Through this manual, my
+goal is to help you see automation through an _abstract lens_.  Once you
+grasp the abstraction, you’ll realize how STARTER can be adapted to
+solve almost any challenge you throw at it.
+
+
+File: starter-core.info,  Node: Redefining the Foundations: Inputs, Outputs, and Events,  Prev: Unlimited Scalability,  Up: STARTER Concepts
+
+1.2 Redefining the Foundations: Inputs, Outputs, and Events
+===========================================================
+
+To understand how STARTER works, we need to strip away our
+preconceptions of what automation looks like and embrace a more abstract
+perspective.
+
+* Menu:
+
+* Input: More than just Sensors::
+* Output: A Channel for Action::
+* Logic: Applying Our Intelligence::
+* Analysis: Data-Driven Decisions::
+
+
+File: starter-core.info,  Node: Input: More than just Sensors,  Next: Output: A Channel for Action,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+
+1.2.1 Input: More than just Sensors
+-----------------------------------
+
+When I first sat down to design STARTER, I asked myself: _“What exactly
+is an input?”_ The instinctive answer is "a sensor", but that’s far too
+limiting.  In this system, an _Input_ is any incoming data point,
+whether it originates from physical hardware or an abstract digital
+service.
+
+It could be a humidity sensor in your basement, but it could just as
+easily be a weather API, the current exchange rate of the Euro, or a
+real-time cryptocurrency price.  If a service can feed data into the
+system, STARTER treats it as an input.
+
+
+File: starter-core.info,  Node: Output: A Channel for Action,  Prev: Input: More than just Sensors,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+
+1.2.2 Output: A Channel for Action
+----------------------------------
+
+We usually think of an _Output_ as something physical that clicks or
+turns-like a relay switching on a light.  But at its core, an output is
+simply _any "channel" where data can be written_.
+
+By treating outputs as abstract "writeable" points, we can control
+almost anything.  For example, I created a small "Explain" service that
+gives my home automation a voice; it literally tells me when something
+changes.  If you can send a value to it, STARTER considers it an output.
+
+1.2.3 Events: The Language of Change
+------------------------------------
+
+In traditional automation, "events" are often binary: a gate opened, a
+relay closed.  But let’s broaden our perspective.  Since inputs and
+outputs are abstract, an _Event_ is simply a _state change_.
+
+An event could be "it’s getting dark," "it’s raining," or "100 cars have
+passed the gate."  It could be "my EV battery is charged" or "Bitcoin
+just hit €60,000."  _Open your mind_: if the data changes, it’s an event
+you can act upon.
+
+
+File: starter-core.info,  Node: Logic: Applying Our Intelligence,  Next: Analysis: Data-Driven Decisions,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+
+1.2.4 Logic: Applying Our Intelligence
+--------------------------------------
+
+In automation, logic is everything.  Usually, this means "if X happens,
+then do Y." In 90% of existing systems, these rules are
+hard-coded—buried inside the software where they are difficult to
+change.
+
+In STARTER, the logic is _external_.  It is defined entirely by the user
+through custom rules.  This shifts the power back to you: we aren't
+limited by how "smart" the software is; instead, we have a system that
+_applies our own intelligence_.
+
+Take my heating setup: when the outdoor temperature shifts, STARTER
+recalculates the boiler's flow temperature.  This, in turn, triggers a
+re-evaluation of the heat pump’s efficiency based on ambient humidity.
+The system doesn't "understand" thermodynamics (and honestly, neither do
+I), but it follows the rules I’ve written.  If the inputs match a
+certain pattern, the outputs react accordingly.
+
+     The takeaway: If you can encode a condition into an input or an
+     output, you can master it.
+
+
+File: starter-core.info,  Node: Analysis: Data-Driven Decisions,  Prev: Logic: Applying Our Intelligence,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+
+1.2.5 Analysis: Data-Driven Decisions
+-------------------------------------
+
+Perfecting my boiler's weather compensation curve wasn't an overnight
+success.  It took weeks of measuring and tweaking to find my "sweet
+spot": a 48^\circC flow temperature to perfectly balance heat loss when
+it's 0^\circC outside.
+
+To get there, I couldn't rely on guesswork like _"maybe if I turn it up
+a bit..."_.  I needed cold, hard facts.
+
+That’s why I built STARTER to be _data-driven_ from the ground up.
+Every single event—every change in input or output—is automatically
+logged in a database.  The best part?  The database belongs to you;
+STARTER simply manages the flow of information.
+
+Having this historical data is a game-changer.  I personally use
+'Grafana' to visualize everything:
+   * A dashboard comparing home consumption vs.  grid demand.
+   * Real-time power usage and voltage fluctuations.
+   * Logs showing exactly when my mining rigs kick in.
+
+Once again, I want you to think abstractly: we have the data we’ve
+managed to encode.  _What that data represents is entirely up to you_!
+
+
+File: starter-core.info,  Node: Using STARTER: From Theory to Practice,  Prev: STARTER Concepts,  Up: Top
+
+2 Using STARTER: From Theory to Practice
+****************************************
+
+Now that we’ve explored the philosophy of automation and (hopefully)
+expanded our perspective on what’s possible, it’s time to get our hands
+dirty.  Let’s look at how to download and install STARTER on your
+system.
+
+* Menu:
+
+* A Quick Disclaimer::
+* System Preparation::
+* The Rules File: Where the Magic Happens::
+
+
+File: starter-core.info,  Node: A Quick Disclaimer,  Next: System Preparation,  Up: Using STARTER: From Theory to Practice
+
+2.1 A Quick Disclaimer
+======================
+
+Before we dive in, it’s important to remember that STARTER is, first and
+foremost, a "Core".  While the included examples are great for practice
+and getting a feel for the logic, "the real deal" happens when you start
+plugging in your own services and defining your unique rules.  Think of
+the Core as the conductor and the services as the orchestra; you’ll need
+to bring your own instruments to the stage.
+
+
+File: starter-core.info,  Node: System Preparation,  Next: The Rules File: Where the Magic Happens,  Prev: A Quick Disclaimer,  Up: Using STARTER: From Theory to Practice
+
+2.2 System Preparation
+======================
+
+STARTER is designed to run on a full GNU/Linux environment.
+
+For the sake of efficiency (and, let’s be honest, a bit of developer
+"laziness"), I developed the system on a _Debian-based_ distribution.
+Because of this, the instructions below are tailored for that
+environment.  If you are using a different distro, the core concepts
+remain the same, but you might need to adapt some specific commands or
+package names to fit your setup.
+
+* Menu:
+
+* Dependencies::
+* Database Initialization::
+* Download and Installation::
+* Configuration::
+* Where to go from here?::
+
+
+File: starter-core.info,  Node: Dependencies,  Next: Database Initialization,  Up: System Preparation
+
+2.2.1 Dependencies
+------------------
+
+To compile STARTER, you’ll need to prepare your environment.  The system
+relies on several core libraries for networking and data management.
+
+Required packages:
+        * 'glib-2.0' and 'gio-2.0' (The backbone for system
+          abstractions)
+        * 'avahi-client' and 'avahi-glib' (For zero-configuration
+          networking/service discovery)
+        * 'libmysqlclient-dev' (To enable database connectivity)
+Optional (but recommended):
+        * 'flex', 'bison', and 'makeinfo' (Useful for specific build
+          tasks or documentation)
+
+
+File: starter-core.info,  Node: Database Initialization,  Next: Download and Installation,  Prev: Dependencies,  Up: System Preparation
+
+2.2.2 Database Initialization
+-----------------------------
+
+Before launching the Core, you need a place for it to store its
+"memory."  You must create a MariaDB/MySQL database—either locally or on
+a remote server—named 'STARTER'.
+
+The database requires three specific tables: 'labels', 'history', and
+'stats'.  You can find the exact SQL schema and creation scripts in
+**Appendix XXX**.
+
+
+File: starter-core.info,  Node: Download and Installation,  Next: Configuration,  Prev: Database Initialization,  Up: System Preparation
+
+2.2.3 Download and Installation
+-------------------------------
+
+STARTER follows the standard GNU packaging conventions and utilizes
+'autotools'.  If you’ve ever compiled software on Linux, you’ll feel
+right at home.  Run the following commands from your terminal:
+
+     cd STARTER-DIRECTORY
+     ./configure
+     make
+     sudo make install
+
+The Core will be installed (typically under '/usr/local') and
+automatically configured as a 'systemd' service.  Note that the service
+is not enabled for auto-boot by default—we’ll leave that decision to you
+once everything is configured.
+
+
+File: starter-core.info,  Node: Configuration,  Next: Where to go from here?,  Prev: Download and Installation,  Up: System Preparation
+
+2.2.4 Configuration
+-------------------
+
+The final step is to point STARTER to your database.  Instead of messy
+config files, STARTER uses 'gsettings' for a clean, integrated
+configuration.  Use the command line to set your credentials:
+
+     gsettings set org.starter.core db-host 'YOUR_IP_OR_HOSTNAME'
+     gsettings set org.starter.core db-port PORT
+     gsettings set org.starter.core db-user 'YOUR_USERNAME'
+     gsettings set org.starter.core db-pass 'YOUR_PASSWORD'
+
+     Note: Ensure the database user has full Read/Write permissions.
+
+
+File: starter-core.info,  Node: Where to go from here?,  Prev: Configuration,  Up: System Preparation
+
+2.2.5 Where to go from here?
+----------------------------
+
+Your Core is now standing by, ready for orders.  What happens next
+depends entirely on your objective—whether it's home automation,
+industrial control, or building a smart city.
+
+  1. Install your services: Deploy the specific modules you need for
+     your project.
+  2. Fire them up: Once the services are live, they will automatically
+     announce themselves to the Core.
+  3. Define the Logic: Write your rules and watch the system transform
+     from a collection of parts into an intelligent, autonomous
+     environment.
+
+
+File: starter-core.info,  Node: The Rules File: Where the Magic Happens,  Prev: System Preparation,  Up: Using STARTER: From Theory to Practice
+
+2.3 The Rules File: Where the Magic Happens
+===========================================
+
+The rules file is the true heart of your system.  This is where your
+abstract ideas turn into reality: "_If it rains, close the shutters_",
+or "_If it’s a sunny day, run the irrigation at sunset_".
+
+By default, this file is located at 'INSTALLDIR/etc/starter/rules.conf'.
+To help you master the STARTER syntax, we’ll use the provided example
+services.  Let’s open the file and write our very first logic block:
+
+     beep:status {
+         SET TRUE WHEN time:hour == 7 && time:minute == 0;
+         SET FALSE WHEN TRUE;
+     }
+
+If you now launch 'starter-core', 'time-example', and 'beep-example',
+you’ve just built an alarm clock that rings every morning at 7:00 for
+exactly one minute.  Simple, right?  But let’s look under the hood to
+see how it actually works.
+
+* Menu:
+
+* Identifiers: The Power of Abstraction::
+* The Anatomy of a Logic Block::
+* Connecting the Dots: Events in Action::
+* Dynamic Control: The TRIGGER Construct::
+* Variables: The Connective Tissue::
+* Expressions: The Engine of STARTER::
+* The Mechanics of Evaluation: Snapshots vs. Live Streams::
+* Preprocessing: The Secret Weapon::
+* Command Line Options: Taking the Reins::
+
+
+File: starter-core.info,  Node: Identifiers: The Power of Abstraction,  Next: The Anatomy of a Logic Block,  Up: The Rules File: Where the Magic Happens
+
+2.3.1 Identifiers: The Power of Abstraction
+-------------------------------------------
+
+In the code above, we see terms like 'beep:status', 'time:hour', and
+'time:minute'.  In STARTER language, these are "Identifiers".
+
+Remember our mantra: _generalize_.  Let’s break down what these
+identifiers represent in this specific context:
+
+'beep:status'
+
+     This is an "Output" provided by the ST:BEEP service.  When set to
+     'TRUE', it triggers your computer to beep twice per second; when
+     'FALSE', it stays silent.
+
+'time:hour'
+'time:minute'
+
+     These are "Inputs" exposed by the ST:TIME service.  This service
+     tracks the current system time and broadcasts it as three distinct
+     inputs: HOURS, MINUTES, and SECONDS.
+
+By writing those two rules, you’ve told the system: "_At 7:00 AM, start
+beeping.  For the rest of the time, stay quiet_".
+
+
+File: starter-core.info,  Node: The Anatomy of a Logic Block,  Next: Connecting the Dots: Events in Action,  Prev: Identifiers: The Power of Abstraction,  Up: The Rules File: Where the Magic Happens
+
+2.3.2 The Anatomy of a Logic Block
+----------------------------------
+
+Every logic block in STARTER follows a consistent, clean format:
+
+     TARGET {
+         RULE; ...
+     }
+
+TARGET
+     Represents _WHAT_ you want to control (the Output).
+
+RULE
+     Represents _HOW_ and _WHEN_ it should react.
+
+If we were to translate our "alarm clock" block into plain English, it
+would look like this:
+
+     BEEP {
+       Set to _Active_ when it is exactly _Seven o'clock_;
+       Set to _Off_ whenever the first condition isn't met (Default to False).
+     }
+
+
+File: starter-core.info,  Node: Connecting the Dots: Events in Action,  Next: Dynamic Control: The TRIGGER Construct,  Prev: The Anatomy of a Logic Block,  Up: The Rules File: Where the Magic Happens
+
+2.3.3 Connecting the Dots: Events in Action
+-------------------------------------------
+
+In the previous section, we defined _Events_, _Inputs_, and _Outputs_.
+Let’s see how they dance together in our alarm clock example:
+
+_The Event: "The current time has changed."_
+_The Inputs: TIME:HOUR and TIME:MINUTE._
+_The Output: The computer's beep (On or Off)._
+
+For STARTER, the logic is straightforward: every time one of the inputs
+(TIME:HOUR or TIME:MINUTE) changes, the entire block is _re-evaluated_.
+The system checks the rules from top to bottom and sets the target
+(BEEP:STATUS) based on the _first rule that evaluates to 'TRUE'_.
+
+Simple, right?  But now, let’s go back to our mantra: _Abstraction_.
+
+What else could BEEP:STATUS represent?  And what other data could we
+feed in as an input?  Let’s push the boundaries.  Open your rules file
+again and swap the code for this:
+
+     beep:status {
+         SET TRUE WHEN oil:price < 100;
+         SET FALSE WHEN TRUE;
+     }
+
+Now, launch 'starter-core', 'beep-example', and 'oil-example'.  If you
+suddenly hear your computer beeping, it means the price of oil has just
+dropped below 100 a barrel!
+
+     Think about the implications: What if, instead of a simple beep,
+     that output was a service that sent a push notification to your
+     phone?  Or a service that executed a buy order on an exchange?  In
+     STARTER, there is no difference between a temperature sensor and a
+     stock market index—_data is data_.
+
+
+File: starter-core.info,  Node: Dynamic Control: The TRIGGER Construct,  Next: Variables: The Connective Tissue,  Prev: Connecting the Dots: Events in Action,  Up: The Rules File: Where the Magic Happens
+
+2.3.4 Dynamic Control: The TRIGGER Construct
+--------------------------------------------
+
+Now that you've got a feel for how to define a target, I want to show
+you the second main construct of the STARTER language:
+
+     TRIGGER WHEN CONDITION SET TARGET = VALUE;
+
+While the first method (the 'target { ... }' block) defines a set of
+rules for a _single objective_, the 'TRIGGER' allows you to define
+_multiple assignments linked to a specific event_.
+
+Let’s go back to our oil price example:
+
+     TRIGGER WHEN oil:price < 100 SET beep:status = TRUE;
+     TRIGGER WHEN oil:price > 100 SET beep:status = FALSE;
+
+We’ve achieved the exact same result as before, but with a different
+syntax.  This leads to a natural question: _When should you use
+'TRIGGER' instead of a target block?_
+
+* Menu:
+
+* Choosing Your Tool::
+* Examples::
+
+
+File: starter-core.info,  Node: Choosing Your Tool,  Next: Examples,  Up: Dynamic Control: The TRIGGER Construct
+
+2.3.4.1 Choosing Your Tool
+..........................
+
+The two constructs are designed for different architectural needs:
+
+_The Target Block ('target { ... }'):_
+     Use this when you need to drive _one specific output_ based on
+     various complex conditions.  It’s perfect for centralized control
+     over a single device (like a lightbulb that has many reasons to be
+     on or off).
+_The 'TRIGGER':_
+     Use this when you want to _synchronize multiple actions_ to a
+     single event.  It’s the "domino effect" of automation.
+
+
+File: starter-core.info,  Node: Examples,  Prev: Choosing Your Tool,  Up: Dynamic Control: The TRIGGER Construct
+
+2.3.4.2 Examples
+................
+
+_Scenario A: "Turn the light on if it's dark, off if it's bright."_
+     Here, you are controlling _one_ light based on _one_ sensor.  We
+     use the _Target Block_ with multiple rules inside it.
+_Scenario B: "When I turn on the first lamp, automatically turn on the second and third lamps too."_
+     Here, you are triggering a chain reaction across _multiple_
+     outputs.  We use a 'TRIGGER' to assign the value of the first lamp
+     to all the others simultaneously.
+
+
+File: starter-core.info,  Node: Variables: The Connective Tissue,  Next: Expressions: The Engine of STARTER,  Prev: Dynamic Control: The TRIGGER Construct,  Up: The Rules File: Where the Magic Happens
+
+2.3.5 Variables: The Connective Tissue
+--------------------------------------
+
+Until now, we’ve used "Target" to refer to a physical or abstract
+Output.  But STARTER allows for a powerful third option: _Variables_.
+
+In STARTER, a variable can act as both a _Target_ (something you write
+to) and an _Input_ (something you read from).  This allows you to create
+intermediate logic that simplifies even the most complex scenarios.
+
+* Menu:
+
+* The Power of Propagation::
+* How the System "Thinks"::
+* Why Use Variables?::
+
+
+File: starter-core.info,  Node: The Power of Propagation,  Next: How the System "Thinks",  Up: Variables: The Connective Tissue
+
+2.3.5.1 The Power of Propagation
+................................
+
+Let’s look at how variables can streamline your code:
+
+     VAR turn_on_lamps = 0;
+
+     turn_on_lamps {
+         SET 1 WHEN time:hour >= 22 || time:hour <= 5;
+         SET 0 WHEN TRUE;
+     }
+
+     TRIGGER WHEN turn_on_lamps == 1 SET Lamp1 = 1, Lamp2 = 1, Lamp3 = 1;
+     TRIGGER WHEN turn_on_lamps == 0 SET Lamp1 = 0, Lamp2 = 0, Lamp3 = 0;
+
+
+File: starter-core.info,  Node: How the System "Thinks",  Next: Why Use Variables?,  Prev: The Power of Propagation,  Up: Variables: The Connective Tissue
+
+2.3.5.2 How the System "Thinks"
+...............................
+
+What’s happening under the hood?  It’s a chain reaction of events:
+
+  1. _The Triggering Event_: The clock ticks.  TIME:HOUR changes.
+  2. _First Evaluation_: STARTER sees that TURN_ON_LAMPS depends on the
+     time.  It recalculates the variable.
+  3. _Event Propagation_: If the value of TURN_ON_LAMPS changes (e.g.,
+     from 0 to 1), that change _is itself a new event_.
+  4. _Second Evaluation_: Since our 'TRIGGER' rules are "listening" to
+     TURN_ON_LAMPS, they fire immediately, updating all your lamps at
+     once.
+
+
+File: starter-core.info,  Node: Why Use Variables?,  Prev: How the System "Thinks",  Up: Variables: The Connective Tissue
+
+2.3.5.3 Why Use Variables?
+..........................
+
+As you can see, if you have ten different lamps, it’s much more
+efficient to define one variable and a couple of triggers than to write
+ten identical, complex logic blocks.
+
+But let’s go back to our mantra: _Abstraction!_
+
+A variable doesn't just have to be a "switch" for lights.  It could
+represent a "System State" (e.g., _Home, Away, Night, Party_).  By
+changing one variable, you can trigger a cascade of hundreds of outputs
+across your entire network.  You aren't just writing rules anymore; you
+are designing a _behavioral ecosystem_.
+
+
+File: starter-core.info,  Node: Expressions: The Engine of STARTER,  Next: The Mechanics of Evaluation: Snapshots vs. Live Streams,  Prev: Variables: The Connective Tissue,  Up: The Rules File: Where the Magic Happens
+
+2.3.6 Expressions: The Engine of STARTER
+----------------------------------------
+
+Up until now, we’ve used simple expressions for basic evaluations.  In
+reality, _every condition or assignment_ in STARTER is an expression
+that can range from a single number to a complex mathematical formula.
+
+* Menu:
+
+* Constant Values and Types::
+* Boolean Logic: Everything is a Number::
+* Comparison and Logical Operators::
+* Mathematical Operators::
+* Built-in Functions::
+
+
+File: starter-core.info,  Node: Constant Values and Types,  Next: Boolean Logic: Everything is a Number,  Up: Expressions: The Engine of STARTER
+
+2.3.6.1 Constant Values and Types
+.................................
+
+All numerical constants in STARTER are handled as _double-precision
+floating-point numbers_.  Whether you're comparing TIME:HOUR to '7' or
+calculating a precise voltage offset, the system provides high
+precision.  While specific limits depend on your hardware, even on a
+32-bit machine, the margin for error is negligible for automation
+purposes.
+
+
+File: starter-core.info,  Node: Boolean Logic: Everything is a Number,  Next: Comparison and Logical Operators,  Prev: Constant Values and Types,  Up: Expressions: The Engine of STARTER
+
+2.3.6.2 Boolean Logic: Everything is a Number
+.............................................
+
+In STARTER, 'TRUE' and 'FALSE' are simply aliases for constants:
+
+'FALSE'
+     Is exactly '0'.
+'TRUE'
+     Is exactly '1'.
+
+However, the system evaluates _any non-zero value as 'TRUE'_.  This is a
+classic programmer's concept, but it's vital for clever automation.  For
+example:
+
+     beep:status {
+         SET TRUE WHEN time:minute;
+         SET FALSE WHEN TRUE;
+     }
+
+_Why would this make the computer beep almost all the time?_  Because
+TIME:MINUTE is only '0' at the very start of the hour.  For every other
+minute (1 through 59), the value is non-zero, which the system
+interprets as 'TRUE'.  The beep only stops for that first minute of the
+hour!
+
+
+File: starter-core.info,  Node: Comparison and Logical Operators,  Next: Mathematical Operators,  Prev: Boolean Logic: Everything is a Number,  Up: Expressions: The Engine of STARTER
+
+2.3.6.3 Comparison and Logical Operators
+........................................
+
+You can relate different expressions using standard operators:
+
+Operator               Description
+--------------------------------------------------------------------------
+'==', '!='             Equal to / Not equal to
+'<', '<='              Less than / Less than or equal to
+'>', '>='              Greater than / Greater than or equal to
+'&&'                   _AND_: True only if both expressions are true
+'||'                   _OR_: True if at least one expression is true
+
+You can use _parentheses_ '()' to group sub-expressions and control the
+evaluation order.  Want an alarm that rings at 7:00 AM _OR_ whenever oil
+prices drop?
+
+     SET TRUE WHEN (time:hour == 7 && time:minute == 0) || oil:price < 100;
+
+
+File: starter-core.info,  Node: Mathematical Operators,  Next: Built-in Functions,  Prev: Comparison and Logical Operators,  Up: Expressions: The Engine of STARTER
+
+2.3.6.4 Mathematical Operators
+..............................
+
+STARTER isn't just for logic; it’s for math.  It supports '+', '-', '*',
+'/', and the unary minus '-'.  Standard mathematical precedence applies
+(multiplication/division before addition/subtraction), but you can use
+parentheses to force your own order.
+
+'2 * 1 + 4 = 6'
+'2 * (1 + 4) = 10'
+'time:minute + (time:hour * 60) = _Total minutes since midnight._'
+
+
+File: starter-core.info,  Node: Built-in Functions,  Prev: Mathematical Operators,  Up: Expressions: The Engine of STARTER
+
+2.3.6.5 Built-in Functions
+..........................
+
+To simplify complex rules, STARTER provides a set of powerful functions:
+
+'MIN(arg1, arg2, ...)'
+     Returns the lowest value in a list.
+'MAX(arg1, arg2, ...)'
+     Returns the highest value in a list.
+'ROUND(value)'
+     Rounds to the nearest whole integer.
+'LIMIT(value, min, max)'
+     Clamps a value.  If it goes below MIN, it returns MIN; if above
+     MAX, it returns MAX.
+'CHANGED(id)'
+     This is a special one.  It returns '1' ('TRUE') only if the value
+     of that specific ID has changed since the last evaluation.  It's
+     perfect for triggering actions only on a fresh update.
+
+
+File: starter-core.info,  Node: The Mechanics of Evaluation: Snapshots vs. Live Streams,  Next: Preprocessing: The Secret Weapon,  Prev: Expressions: The Engine of STARTER,  Up: The Rules File: Where the Magic Happens
+
+2.3.7 The Mechanics of Evaluation: Snapshots vs. Live Streams
+-------------------------------------------------------------
+
+Understanding how STARTER "thinks" when it encounters an expression is
+the difference between a static setup and a truly fluid system.  Let's
+break down a simple logic gate:
+
+     time:second == 0;
+
+To evaluate this, the system doesn't just look at a stored number; it
+polls the value of TIME:SECOND at the exact millisecond the calculation
+is triggered.  If it catches the clock at the top of the minute, the
+result is 'TRUE'.  Otherwise, it’s 'FALSE'.
+
+But here’s where it gets interesting: _Variables_.
+
+     VAR second;
+     second = time:second;
+
+If you’re coming from traditional programming, you might expect SECOND
+to hold a static "snapshot" of the time when that line was executed.
+_In STARTER, it doesn't_.  By default, a variable acts as a _Live
+Reference_.  Using SECOND or TIME:SECOND in your rules is functionally
+the same—it’s a dynamic link that updates in real-time as the clock
+ticks.
+
+* Menu:
+
+* The EVAL Function: Killing the Link::
+* Why This Matters: Architectural Elegance::
+* The Boot-Time Paradox::
+
+
+File: starter-core.info,  Node: The EVAL Function: Killing the Link,  Next: Why This Matters: Architectural Elegance,  Up: The Mechanics of Evaluation: Snapshots vs. Live Streams
+
+2.3.7.1 The EVAL Function: Killing the Link
+...........................................
+
+Sometimes, you don't want a live stream; you want to "freeze" a moment
+in time.  This is where the _'EVAL()'_ function comes into play.  It
+forces the system to calculate the final result of an expression and
+store it as a static constant.
+
+     The "Cheat Sheet": 'value = 1;'
+          Hard-coded Constant.
+     'value = time:hour;'
+          _Dynamic Reference_ (The value evolves with the hour).
+     'value = EVAL(time:hour);'
+          _Frozen Value_ (Locks the hour at the moment of assignment).
+     'value = 1 + time:hour;'
+          _Dynamic Calculation_ (The result updates as time moves).
+     'value = EVAL(1 + time:hour);'
+          _Static Result_ (Calculates the sum once and stores the
+          total).
+
+
+File: starter-core.info,  Node: Why This Matters: Architectural Elegance,  Next: The Boot-Time Paradox,  Prev: The EVAL Function: Killing the Link,  Up: The Mechanics of Evaluation: Snapshots vs. Live Streams
+
+2.3.7.2 Why This Matters: Architectural Elegance
+................................................
+
+This "Reference-first" approach allows you to build a sophisticated,
+human-readable logic tree without repeating yourself:
+
+     VAR its_seven_o_clock = (time:hour == 7 && time:minute == 0);
+
+     beep:status {
+         SET TRUE WHEN its_seven_o_clock;
+         SET FALSE WHEN TRUE;
+     }
+
+By using a reference (ITS_SEVEN_O_CLOCK), you’ve created an _Alias_.
+Every time STARTER checks the BEEP:STATUS, it follows that alias back to
+the original time logic.  It’s clean, it’s abstract, and it’s incredibly
+powerful.
+
+
+File: starter-core.info,  Node: The Boot-Time Paradox,  Prev: Why This Matters: Architectural Elegance,  Up: The Mechanics of Evaluation: Snapshots vs. Live Streams
+
+2.3.7.3 The Boot-Time Paradox
+.............................
+
+A quick "gotcha" for the pros:
+
+     VAR startup_hour = EVAL(time:hour);
+
+You might intend to capture the exact hour the system starts.  However,
+at the microsecond of boot-up, the ST:TIME service might still be
+authenticating on the network.  If the input doesn't exist yet, 'EVAL'
+can't do its job.  Don't worry—STARTER handles this gracefully by
+performing the evaluation as soon as the required service makes its
+first appearance on the grid.
+
+
+File: starter-core.info,  Node: Preprocessing: The Secret Weapon,  Next: Command Line Options: Taking the Reins,  Prev: The Mechanics of Evaluation: Snapshots vs. Live Streams,  Up: The Rules File: Where the Magic Happens
+
+2.3.8 Preprocessing: The Secret Weapon
+--------------------------------------
+
+The final layer of the STARTER language is _Preprocessing_.  Before the
+Core ever reads your rules, the file is passed through an external
+program that modifies the text on the fly.  What STARTER actually
+executes is the _output_ of that program.
+
+If you’ve spent time in the trenches with C or C++, this concept will
+feel familiar—though STARTER’s implementation is even more flexible.  If
+you’re not a programmer, think of it this way: the preprocessor is like
+an automated editor that prepares your "manuscript" before the publisher
+(the Core) sees it.
+
+* Menu:
+
+* Power Unleashed: The M4 Default::
+* Swapping the Engine::
+
+
+File: starter-core.info,  Node: Power Unleashed: The M4 Default,  Next: Swapping the Engine,  Up: Preprocessing: The Secret Weapon
+
+2.3.8.1 Power Unleashed: The M4 Default
+.......................................
+
+By default, STARTER uses 'm4', the powerhouse preprocessor of the GNU
+system.  It is incredibly deep—too deep for a single manual—but it
+allows for advanced maneuvers like macros, file inclusions, and
+conditional text generation.
+
+While I won't turn you into an 'm4' expert here, you need to know it’s
+there because it gives you the ability to manage massive, complex sets
+of rules without repeating yourself.  If you’re curious, the official
+'m4' manual is a rabbit hole worth exploring.
+
+
+File: starter-core.info,  Node: Swapping the Engine,  Prev: Power Unleashed: The M4 Default,  Up: Preprocessing: The Secret Weapon
+
+2.3.8.2 Swapping the Engine
+...........................
+
+The beauty of STARTER’s philosophy is that you aren't locked in.  Don't
+like 'm4'?  You can swap the preprocessor for any command-line tool you
+prefer.
+
+Returning to our 'gsettings' configuration, you can change the
+preprocessor with a single command.  For example, if you want to bypass
+preprocessing entirely and just read the file "as-is," you can use the
+standard 'cat' command:
+
+     gsettings set org.starter.core rules-preprocessor 'cat {F}'
+
+In this syntax, '{F}' is a placeholder that STARTER automatically
+replaces with the path to your rules file.  This flexibility means you
+could even use a Python script, a custom parser, or a simple text filter
+as your preprocessor.
+
+
+File: starter-core.info,  Node: Command Line Options: Taking the Reins,  Prev: Preprocessing: The Secret Weapon,  Up: The Rules File: Where the Magic Happens
+
+2.3.9 Command Line Options: Taking the Reins
+--------------------------------------------
+
+While STARTER is designed to run quietly in the background as a system
+service, there are times—especially during debugging or initial
+setup—when you’ll want to launch it manually.
+
+When you run STARTER from the terminal, you can pass several options to
+override the default system settings.  This is incredibly useful for
+testing a new set of rules or increasing the log detail without touching
+your permanent configuration.
+
+The supported options are:
+
+Option  Long option            Description
+---------------------------------------------------------------------------
+'-h'    '--help'               Show all available help options and exit.
+'-n'    '--no-discovery'       Disable the automatic discovery of
+                               network devices/services.
+'-m'    '--service-match'      Regular expression to filter recognized
+                               services.  Default: ''^(STARTER:|ST:).*''
+'-R'    '--rules'              Specify a custom path to a rules file
+                               (overrides the default 'rules.conf').
+'-P'    '--rules-preprocessor' Define a specific command to preprocess
+                               the rules file on the fly.
+'-V'    '--verbosity'          Adjust the detail of the output logs
+                               (essential for troubleshooting).
+'-v'    '--version'            Print the current version of the Core and
+                               exit.
+
+* Menu:
+
+* Advanced Orchestration::
+* The Override Hierarchy::
+
+
+File: starter-core.info,  Node: Advanced Orchestration,  Next: The Override Hierarchy,  Up: Command Line Options: Taking the Reins
+
+2.3.9.1 Advanced Orchestration: Segmenting the System
+.....................................................
+
+The new '--service-match' (or '-m') option is a powerful tool for
+advanced users who wish to split their automation into multiple
+independent domains.
+
+By default, the Core listens to any service starting with 'STARTER:' or
+'ST:'.  However, by modifying this regular expression, you can run
+multiple Cores on the same network without interference.  Each Core will
+only "see" and manage services whose names match its specific pattern.
+
+For example, you could have:
+   * A Core managing only critical infrastructure: 'starter
+     --service-match '^ST:CRITICAL:.*''
+   * A Core managing leisure or lab services: 'starter --service-match
+     '^ST:LAB:.*''
+
+This segmentation ensures that a failure or a configuration error in one
+domain (like the lab) does not affect the stability of another (like the
+main heating system).
+
+
+File: starter-core.info,  Node: The Override Hierarchy,  Prev: Advanced Orchestration,  Up: Command Line Options: Taking the Reins
+
+2.3.9.2 The Override Hierarchy
+..............................
+
+Remember: _Command-line arguments are king_.  If you have a database
+host set via 'gsettings' but specify a different rule path or
+service-match via the terminal, the command-line flag will always take
+precedence.  This allows you to experiment with "sandbox" configurations
+without breaking your main production setup.
+
+3 System Architecture: Under the Hood
+*************************************
+
+Now that you’ve mastered the language and the installation, it’s time to
+look at the "nervous system" of STARTER.  Understanding how the Core
+communicates with its services is key to building a truly robust
+automation network.
+
+
+File: starter-core.info,  Node: A Truly Distributed Ecosystem
+
+3.1 A Truly Distributed Ecosystem
+=================================
+
+As we touched upon in the introduction, STARTER is a _distributed
+system_.  It isn't tied to a single CPU or a single box.
+
+_Single-Machine Mode_
+     For a home setup, one machine can handle everything.
+_Large-Scale Deployment_
+     In a smart city or industrial scenario, you can spread the workload
+     across dozens of low-power machines.
+
+The architecture follows a _Client/Server principle_.  Each service that
+manages I/O acts as a _Server_, while the Core acts as the _Client_.
+You aren't limited to one client; you can deploy multiple Cores across a
+network, each handling a specific subset of services and logic.
+
+* Menu:
+
+* ZeroConf: Plug & Play Reality::
+* Communication via D-Bus RPC::
+* The Operational Loop::
+
+
+File: starter-core.info,  Node: ZeroConf: Plug & Play Reality,  Next: Communication via D-Bus RPC,  Up: A Truly Distributed Ecosystem
+
+3.1.1 ZeroConf: Plug & Play Reality
+-----------------------------------
+
+One of the most frustrating parts of automation is manual network
+configuration.  STARTER eliminates this via _ZeroConf_.
+
+The Core constantly listens for _mDNS (Multicast DNS)_ events.  The
+moment a new service is powered on and publishes itself on the network,
+the Core recognizes it, initiates a connection, and synchronizes
+automatically.  No IP addresses to type, no config files to update.
+
+
+File: starter-core.info,  Node: Communication via D-Bus RPC,  Next: The Operational Loop,  Prev: ZeroConf: Plug & Play Reality,  Up: A Truly Distributed Ecosystem
+
+3.1.2 Communication via D-Bus RPC
+---------------------------------
+
+The "dialogue" between clients and servers happens over the _D-Bus TCP
+protocol_.  This Remote Procedure Call (RPC) mechanism allows for
+high-speed, reliable data exchange.
+
+When a service is discovered, the Core performs a "handshake" using
+three primary methods:
+
+'getInputs'
+     The Core requests a list of all available inputs from the service.
+     Once received, it "hooks" into specific _'*-changed' signals_.
+     This ensures that the moment a sensor value shifts at the service
+     level, the Core is notified instantly.
+
+'getOutputs'
+     Similar to inputs, the Core fetches the array of available outputs.
+     It hooks the change signals here as well, keeping the Core’s
+     internal map perfectly synchronized with the service’s real-world
+     state.
+
+'getStats'
+     Finally, the Core retrieves the service’s internal statistics.
+     Like the I/O, these are monitored via signals so that any
+     diagnostic or performance data is updated in real-time.
+
+
+File: starter-core.info,  Node: The Operational Loop,  Prev: Communication via D-Bus RPC,  Up: A Truly Distributed Ecosystem
+
+3.1.3 The Operational Loop
+--------------------------
+
+Once the handshake is complete, the Client and Server are fully linked.
+Here is the lifecycle of a single action:
+
+_Change_
+     A service updates an Input (e.g., a thermometer reads a new
+     temperature).
+_Notification_
+     The service fires a signal; the Core receives it immediately.
+_Processing_
+     The Core re-evaluates all rules related to that Input.
+_Action_
+     If a rule triggers a change in an Output, the Core calls the
+     'SetOutput' method on the service.
+_Alignment_
+     The service receives the command and adjusts the physical or
+     abstract hardware to match the requested value.
+
+
+File: starter-core.info,  Node: The starter-core Library: Building Your Own Ecosystem,  Next: Conclusions: The World is Your Input,  Up: Top
+
+4 The starter-core Library: Building Your Own Ecosystem
+*******************************************************
+
+The heavy lifting—networking, D-Bus signaling, and service discovery—is
+already baked into the library.  This means you can focus on your
+specific logic while the library handles the "plumbing."
+
+Let's dive into the anatomy of a service.  We’ll build a template for
+your first service in just a few lines of C.
+
+* Menu:
+
+* The Skeleton: first-service.c::
+* Adding Substance: Inputs and Outputs::
+* Signals: The Reactive Core::
+* The Grand Finale: Bridging Code and Logic::
+
+
+File: starter-core.info,  Node: The Skeleton: first-service.c,  Next: Adding Substance: Inputs and Outputs,  Up: The starter-core Library: Building Your Own Ecosystem
+
+4.1 The Skeleton: 'first-service.c'
+===================================
+
+     #include <stdlib.h>
+     #include <glib.h>
+
+     #include <starter/mdns.h>
+     #include <starter/server.h>
+     #include <starter/input.h>
+     #include <starter/output.h>
+
+     static GPtrArray *inputs = NULL;
+     static GPtrArray *outputs = NULL;
+     static STVersion version = { 0, 1, 0 };
+
+     int main(int argc, char *argv[])
+     {
+       GMainLoop *gloop = NULL;
+       STServer *server;
+       STMDNS *mdns;
+       GError *error = NULL;
+
+       gloop = g_main_loop_new(NULL, FALSE);
+
+       // Initializing I/O containers
+       inputs = g_ptr_array_new_full(0, g_object_unref);
+       outputs = g_ptr_array_new_full(0, g_object_unref);
+
+       // Creating the Server instance
+       server = st_server_new("ST:MyFirstService", &version, inputs, outputs);
+       st_server_start(server, 0, &error);
+
+       // Publishing the service via ZeroConf (mDNS)
+       mdns = st_mdns_new();
+       st_mdns_publish_service(mdns, st_server_get_name(server), "_dbus._tcp", st_server_get_port(server));
+
+       g_main_loop_run(gloop);
+
+       return EXIT_SUCCESS;
+     }
+
+* Menu:
+
+* Compiling and Running::
+* Breaking Down the Code::
+
+
+File: starter-core.info,  Node: Compiling and Running,  Next: Breaking Down the Code,  Up: The Skeleton: first-service.c
+
+4.1.1 Compiling and Running
+---------------------------
+
+To turn this code into a binary, use 'gcc' along with 'pkg-config' to
+automatically pull in the necessary flags and libraries:
+
+     gcc -o my-first-service my-first-service.c `pkg-config --cflags --libs starter-core`
+
+When you run it, it might look like it's doing nothing.  But by enabling
+debug logs, you can watch the handshake happen in real-time:
+
+     export G_MESSAGES_DEBUG=libstarter-core
+     ./my-first-service
+
+If the Core is already running, you'll see your service "answering" the
+Core's queries:
+
+     ... handle method call GetInputs
+     ... handle method call GetOutputs
+     ... handle method call GetStats
+
+
+File: starter-core.info,  Node: Breaking Down the Code,  Prev: Compiling and Running,  Up: The Skeleton: first-service.c
+
+4.1.2 Breaking Down the Code
+----------------------------
+
+'st_server_new(...)'
+     This initializes your service.  You provide a unique name (like
+     'ST:MyFirstService'), a version, and the I/O arrays.  A key feature
+     here is _shared memory_: the library doesn't copy your inputs and
+     outputs; it shares them.  If your code updates a sensor value, the
+     library knows immediately.  If the Core sends a command to an
+     output, your code is notified.
+'st_server_start(server, 0, ...)'
+     This starts the D-Bus server on a local port.  By passing '0', the
+     library automatically finds the first available port—no more manual
+     port management.
+'st_mdns_new()'
+'st_mdns_publish_service(...)'
+     This is where the "magic" happens.  The first call sets up the
+     discovery engine; the second broadcasts your service's name and
+     port to the network.  This is the broadcast that the Core hears,
+     triggering the automatic connection.
+
+
+File: starter-core.info,  Node: Adding Substance: Inputs and Outputs,  Next: Signals: The Reactive Core,  Prev: The Skeleton: first-service.c,  Up: The starter-core Library: Building Your Own Ecosystem
+
+4.2 Adding Substance: Inputs and Outputs
+========================================
+
+In the STARTER ecosystem, a service exists to share data.  To do that,
+we need to populate our INPUTS and OUTPUTS arrays.  Let’s upgrade our
+code to version 0.2.0:
+
+     // ... headers as before ...
+
+     int main(int argc, char *argv[])
+     {
+       // ... boilerplate initialization ...
+
+       // Defining a new Input
+       inputs = g_ptr_array_new_full(0, g_object_unref);
+       g_ptr_array_add(inputs, st_input_new("myFirstInput",
+         "My first input", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+
+       // Defining a new Output
+       outputs = g_ptr_array_new_full(0, g_object_unref);
+       g_ptr_array_add(outputs, st_output_new("myFirstOutput",
+         "My first output", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+
+       // ... server creation and mDNS publish ...
+     }
+
+* Menu:
+
+* The Anatomy of an I/O Object::
+* The Power of Flags: Customizing I/O Behavior::
+
+
+File: starter-core.info,  Node: The Anatomy of an I/O Object,  Next: The Power of Flags: Customizing I/O Behavior,  Up: Adding Substance: Inputs and Outputs
+
+4.2.1 The Anatomy of an I/O Object
+----------------------------------
+
+To create these objects, we use the 'st_input_new' and 'st_output_new'
+functions.  Their signatures are identical, but their roles in the
+system logic are opposite.
+
+     STInput * st_input_new(
+         const gchar *name,         // Unique identifier (e.g., "temperature")
+         const gchar *description,  // Human-readable description
+         STUnit unit,               // Unit of measurement (Celsius, Percentage, etc.)
+         gdouble min,               // Minimum allowed value
+         gdouble max,               // Maximum allowed value
+         gdouble step,              // Resolution/Step of the value
+         gdouble val,               // Initial value
+         guint64 flags              // Special behavior flags
+     );
+
+
+File: starter-core.info,  Node: The Power of Flags: Customizing I/O Behavior,  Prev: The Anatomy of an I/O Object,  Up: Adding Substance: Inputs and Outputs
+
+4.2.2 The Power of Flags: Customizing I/O Behavior
+--------------------------------------------------
+
+A critical, yet often overlooked, field in both 'STInput' and 'STOutput'
+objects is the FLAGS field.  These bitwise flags allow you to modify how
+the Core interacts with a specific data point, giving you the power to
+bypass standard logic or optimize database performance on the fly.
+
+The system defines the following flags:
+
+'ST_IO_FLAG_NULL'
+     No flags set.  The I/O behaves according to standard system
+     defaults.
+
+'ST_IO_FLAG_MANUAL_OVERRIDE'
+     This is a "safety" flag for Outputs.  When set, the Core is
+     prohibited from automatically changing the value.  This is
+     essential for maintenance modes or when you need to take manual
+     control of an actuator without the logic blocks interfering.
+
+'ST_IO_FLAG_NO_HISTORY'
+     Use this to keep your database lean.  If an Input or Output has
+     this flag, the Core will process the data in real-time but will not
+     write it to the history tables.  Perfect for high-frequency data
+     that doesn't require long-term logging.
+
+'ST_IO_FLAG_USR1'
+'ST_IO_FLAG_USR2'
+'ST_IO_FLAG_USR3'
+'ST_IO_FLAG_USR4'
+     These are reserved for you.  They carry no internal meaning for the
+     STARTER Core, allowing you to implement custom logic filters or
+     tagging within your own services.
+
+By mastering these flags, you aren't just defining data; you are
+defining the policy of that data within your distributed network.
+
+
+File: starter-core.info,  Node: Signals: The Reactive Core,  Next: The Grand Finale: Bridging Code and Logic,  Prev: Adding Substance: Inputs and Outputs,  Up: The starter-core Library: Building Your Own Ecosystem
+
+4.3 Signals: The Reactive Core
+==============================
+
+These objects are derived from 'GObject', which means they are "chatty."
+They communicate changes through signals.  Every time you modify a
+property, the object alerts the system.
+
+'changed'
+     The "master" signal.  It fires whenever *any* property of the
+     object changes.
+'name-changed'
+'descr-changed'
+'unit-changed'
+'min-changed'
+'max-changed'
+'step-changed'
+'val-changed'
+'flags-changed'
+     These fire only when their specific property is updated.
+
+For instance, if you update the MIN value of a sensor, both 'changed'
+and 'min-changed' will be emitted.  This allows the Core (or other parts
+of your code) to react only to the information that matters.
+
+* Menu:
+
+* Input vs. Output: What's the difference?::
+
+
+File: starter-core.info,  Node: Input vs. Output: What's the difference?,  Up: Signals: The Reactive Core
+
+4.3.1 Input vs. Output: What's the difference?
+----------------------------------------------
+
+If the parameters are identical, why do we have two different types?
+'STInput'
+     Represents data coming _from the service to the Core_ (e.g., a
+     sensor reading).  The service "owns" the value; the Core consumes
+     it.
+'STOutput'
+     Represents data coming _from the Core to the service_ (e.g., a
+     command to turn on a light).  The Core "requests" a value; the
+     service executes it.
+
+
+File: starter-core.info,  Node: The Grand Finale: Bridging Code and Logic,  Prev: Signals: The Reactive Core,  Up: The starter-core Library: Building Your Own Ecosystem
+
+4.4 The Grand Finale: Bridging Code and Logic
+=============================================
+
+An _Input_ is a stream of data to be read; an _Output_ is a command
+waiting to be written.  Now that we’ve defined our I/O, let's stop
+talking and start _acting_.
+
+We’re going to evolve our service into a living entity.  We’ll implement
+a _sensor simulation_ (a timer that increments a value) and a "callback"
+that waits for the Core to bark an order.
+
+* Menu:
+
+* The Living Service: `first-service-v3.c`::
+* The Rule: Closing the Loop::
+* The Result: A Symphony of Data::
+
+
+File: starter-core.info,  Node: The Living Service: `first-service-v3.c`,  Next: The Rule: Closing the Loop,  Up: The Grand Finale: Bridging Code and Logic
+
+4.4.1 The Living Service: 'first-service-v3.c'
+----------------------------------------------
+
+     #include <starter/mdns.h>
+     #include <starter/server.h>
+     #include <starter/input.h>
+     #include <starter/output.h>
+
+     static GPtrArray *inputs = NULL;
+     static GPtrArray *outputs = NULL;
+     static STVersion version = { 0, 3, 0 };
+
+     // Simulation: Incrementing our virtual sensor every second
+     static gboolean update_input (gpointer data) {
+         STInput *input = ST_INPUT(data);
+         gdouble val = st_input_get_val(input);
+
+         val = (val < 100) ? val + 1 : 0;
+
+         st_input_set_val(input, val, NULL); // This triggers the *-changed signal automatically
+         return G_SOURCE_CONTINUE;
+     }
+
+     // Callback: This fires the moment the Core sends a command to our service
+     static void on_output_changed(STOutput *out, gpointer data) {
+         g_print("Action Triggered! Core set output to: %lf\n", st_output_get_val(out));
+     }
+
+     int main(int argc, char *argv[]) {
+         GMainLoop *gloop = g_main_loop_new(NULL, FALSE);
+         STServer *server;
+         STMDNS *mdns;
+
+         inputs = g_ptr_array_new_full(0, g_object_unref);
+         g_ptr_array_add(inputs, st_input_new("myFirstInput", "Virtual Sensor", ST_UNIT_NULL, 0, 100, 1, 0, ST_IO_FLAG_NULL));
+
+         outputs = g_ptr_array_new_full(0, g_object_unref);
+         g_ptr_array_add(outputs, st_output_new("myFirstOutput", "Actuator", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+
+         // CONNECTING THE SIGNAL: Tell the code to listen for "val-changed"
+         g_signal_connect(outputs->pdata[0], "val-changed", G_CALLBACK(on_output_changed), NULL);
+
+         server = st_server_new("ST:MyFirstService", &version, inputs, outputs);
+         st_server_start(server, 0, NULL);
+         mdns = st_mdns_new();
+         st_mdns_publish_service(mdns, st_server_get_name(server), "_dbus._tcp", st_server_get_port(server));
+
+         // Start the heartbeat: Update the input every 1 second
+         g_timeout_add_seconds(1, update_input, inputs->pdata[0]);
+
+         g_main_loop_run(gloop);
+         return EXIT_SUCCESS;
+     }
+
+
+File: starter-core.info,  Node: The Rule: Closing the Loop,  Next: The Result: A Symphony of Data,  Prev: The Living Service: `first-service-v3.c`,  Up: The Grand Finale: Bridging Code and Logic
+
+4.4.2 The Rule: Closing the Loop
+--------------------------------
+
+With the service broadcasting and listening, we just need the "brain" to
+make a decision.  Open your 'rules.conf' and drop this in:
+
+     myFirstOutput {
+         SET 1 WHEN myFirstInput > 50;
+         SET 0 WHEN TRUE;
+     }
+
+
+File: starter-core.info,  Node: The Result: A Symphony of Data,  Prev: The Rule: Closing the Loop,  Up: The Grand Finale: Bridging Code and Logic
+
+4.4.3 The Result: A Symphony of Data
+------------------------------------
+
+Here is what happens when you hit "Run":
+_Discovery_
+     Your service shouts its existence over mDNS; the Core hears it and
+     hooks up via D-Bus.
+_Telemetry_
+     Your code starts counting.  Every second, the Core receives the
+     updated 'myFirstInput'.
+_Threshold_
+     The moment that counter hits **51**, the Core’s rule evaluates to
+     'TRUE'.
+_Reaction_
+     The Core calls 'SetOutput' on your service.  Your
+     'on_output_changed' function fires, and you see the confirmation in
+     your console.
+
+_Congratulations_ You’ve just built a fully distributed, reactive
+automation loop.  You’ve bridged the gap between raw C code and
+high-level abstract logic.  This is no longer just a "beep example"—it's
+the blueprint for an entire ecosystem.
+
+
+File: starter-core.info,  Node: Conclusions: The World is Your Input,  Next: Database Schema & Initialization,  Prev: The starter-core Library: Building Your Own Ecosystem,  Up: Top
+
+5 Conclusions: The World is Your Input
+**************************************
+
+We’ve covered the syntax, the distributed architecture, and the
+"plumbing" that makes STARTER tick.  But as we reach the end of this
+journey, the most important tool I can leave you with isn't a library or
+a command—it’s _the art of abstraction_.
+
+* Menu:
+
+* Thinking in STARTER::
+
+
+File: starter-core.info,  Node: Thinking in STARTER,  Up: Conclusions: The World is Your Input
+
+5.1 Thinking in STARTER
+=======================
+
+Building a smart system isn't about connecting wires; it's about
+translating reality into a digital dialogue.  When you look at your
+home, your office, or a complex industrial plant, stop seeing "machines"
+and start seeing _Inputs_ and _Outputs_.
+
+   * _Is it a sensor?_  It’s an Input.  Whether it's a thermometer, a
+     stock market ticker, or a database query monitoring server
+     load—it's just a number flowing into the system.
+   * _Is it an action?_  It’s an Output.  Turning on a heater, sending
+     an alert to your phone, or scaling a cloud instance—it’s just a
+     value being set by the Core.
+
+* Menu:
+
+* The Power of Generalization::
+* Where Will You Take It?::
+
+
+File: starter-core.info,  Node: The Power of Generalization,  Next: Where Will You Take It?,  Up: Thinking in STARTER
+
+5.1.1 The Power of Generalization
+---------------------------------
+
+The beauty of the STARTER architecture is that the Core doesn’t care
+_what_ the data represents.  To the rules engine, a temperature of 25°C
+and an oil price of $25 are identical.  This is your greatest advantage.
+By generalizing your data, you can reuse logic, simplify complex
+scenarios, and create an ecosystem where unrelated services can finally
+"talk" to each other through the Core.
+
+
+File: starter-core.info,  Node: Where Will You Take It?,  Prev: The Power of Generalization,  Up: Thinking in STARTER
+
+5.1.2 Where Will You Take It?
+-----------------------------
+
+STARTER was born from the need for a system that is as simple as a light
+switch but as powerful as a distributed cluster.  We’ve given you the
+engine; now you are the architect.
+
+Whether you're automating a single room to react to the sun or
+orchestrating a network of machines across different continents, the
+principle remains the same: _Abstract the complexity, define your rules,
+and let the system handle the rest._
+
+Now, the keyboard is yours.  What will be your first service?  What
+rules will you write to make your environment work for you?
+
+_Go ahead.  Start something._
+
+
+File: starter-core.info,  Node: Database Schema & Initialization,  Next: API Reference,  Prev: Conclusions: The World is Your Input,  Up: Top
+
+Appendix A Database Schema & Initialization
+*******************************************
+
+As we explored in the previous chapters, STARTER is a data-driven
+ecosystem.  For the Core to manage persistence, track event history, and
+monitor system performance, it requires a solid and correctly configured
+storage infrastructure.
+
+This appendix provides the SQL queries necessary to initialize the
+MariaDB/MySQL database, which should be named 'STARTER'.  The schema is
+built around three foundational tables:
+
+'labels'
+     Maps I/O identifiers to human-readable descriptions and metadata.
+'history'
+     The primary ledger where every single event and state change is
+     recorded for long-term analysis.
+'stats'
+     Dedicated to gathering diagnostic data and runtime statistics from
+     your various services.
+
+CREATE DATABASE STARTER;
+
+USE STARTER;
+
+CREATE TABLE labels (
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    unit INT NOT NULL,
+    min DOUBLE NOT NULL,
+    max DOUBLE NOT NULL,
+    step DOUBLE NOT NULL,
+    PRIMARY KEY (id),
+    INDEX idx_labels_type (type)
+);
+
+CREATE TABLE history (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    timestamp DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    source VARCHAR(100) NOT NULL,
+    label_id INT NOT NULL,
+    value DOUBLE NOT NULL,
+    flags BIGINT UNSIGNED NOT NULL, 
+    PRIMARY KEY (id),
+    FOREIGN KEY (label_id) REFERENCES labels(id),
+    INDEX idx_label_time (label_id, timestamp),
+    INDEX idx_history_source (source)
+);
+
+CREATE TABLE stats (
+    id                INTEGER PRIMARY KEY AUTO_INCREMENT,
+    service_name      VARCHAR(100) NOT NULL UNIQUE,
+    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    vmsize_min        REAL NOT NULL,
+    vmsize_max        REAL NOT NULL,
+    vmsize_last       REAL NOT NULL,
+
+    vmrss_min         REAL NOT NULL,
+    vmrss_max         REAL NOT NULL,
+    vmrss_last        REAL NOT NULL,
+
+    vmswap_min        REAL NOT NULL,
+    vmswap_max        REAL NOT NULL,
+    vmswap_last       REAL NOT NULL,
+
+    io_read_min       REAL NOT NULL,
+    io_read_max       REAL NOT NULL,
+    io_read_last      REAL NOT NULL,
+
+    io_write_min      REAL NOT NULL,
+    io_write_max      REAL NOT NULL,
+    io_write_last     REAL NOT NULL,
+
+    cpu_min           REAL NOT NULL,
+    cpu_max           REAL NOT NULL,
+    cpu_last          REAL NOT NULL,
+
+    icswitch_min      REAL NOT NULL,
+    icswitch_max      REAL NOT NULL,
+    icswitch_last     REAL NOT NULL,
+
+    priority_min      REAL NOT NULL,
+    priority_max      REAL NOT NULL,
+    priority_last     REAL NOT NULL,
+
+    threads_min       REAL NOT NULL,
+    threads_max       REAL NOT NULL,
+    threads_last      REAL NOT NULL,
+    INDEX idx_service_name (service_name)
+);
+
+CREATE INDEX idx_service_name ON stats (service_name);
+
+     Security Note: Ensure the DB-USER defined in your 'gsettings'
+     configuration has full Read/Write permissions ('GRANT ALL
+     PRIVILEGES') on these tables.  Without this, the Core will be
+     unable to commit the "memory" of your system to the disk.
+
+
+File: starter-core.info,  Node: API Reference,  Prev: Database Schema & Initialization,  Up: Top
+
+Appendix B API Reference
+************************
+
+* Menu:
+
+* Error Handling::
+* STInput: The Sensor Abstraction::
+* STOutput: The Actuator Abstraction::
+* Network Discovery: mDNS and Service Location::
+* System Statistics: Performance Monitoring::
+* Services and Communication: Server and Client::
+
+
+File: starter-core.info,  Node: Error Handling,  Up: API Reference
+
+B.1 Error Handling: The 'STError' Domain
+========================================
+
+In a complex ecosystem where services communicate over the network via
+D-Bus, error handling is not just an option—it is a necessity.  STARTER
+uses the GLib 'GError' system to report failures in a standardized way.
+
+* Menu:
+
+* STError::
+* Error Quarks and Macros::
+
+
+File: starter-core.info,  Node: STError,  Next: Error Quarks and Macros,  Up: Error Handling
+
+B.1.1 STError Enumeration
+-------------------------
+
+The 'STError' enumeration defines the specific error codes returned by
+the library.  These errors are associated with the 'ST_ERROR' quark.
+
+ -- Enumeration: STError
+     This enumeration defines the failure modes that can occur during
+     I/O operations or service communication.
+
+     'ST_ERROR_INVALID_VALUE'
+          The value provided for an operation is outside the allowed
+          range (defined by MIN and MAX) or is incompatible with the
+          expected 'STUnit'.
+
+     'ST_ERROR_INVALID_RESPONSE'
+          The remote service or the Core sent a response that does not
+          match the expected D-Bus signature or contains malformed data.
+
+     'ST_ERROR_NOT_IMPLEMENTED'
+          The requested method or operation is recognized but not
+          currently supported by the specific version of the service or
+          the library.
+
+
+File: starter-core.info,  Node: Error Quarks and Macros,  Prev: STError,  Up: Error Handling
+
+B.1.2 Error Quarks and Macros
+-----------------------------
+
+To work with GLib's error reporting system, STARTER defines a specific
+error domain.
+
+ -- Macro: ST_ERROR
+     This macro expands to the result of 'st_error_quark()'.  It is used
+     to identify the error domain when catching or throwing errors:
+
+          if (error->domain == ST_ERROR) {
+              /* Handle STARTER specific errors */
+          }
+
+ -- Function: GQuark st_error_quark (void)
+     Returns a 'GQuark' that uniquely identifies the STARTER error
+     domain.  This function is typically called via the 'ST_ERROR'
+     macro.
+
+B.2 API Definitions: Constants and Enumerations
+===============================================
+
+This section describes the foundational constants and types defined in
+'starter/defs.h'.  These definitions are shared across the entire
+ecosystem to ensure consistent behavior between services and the Core.
+
+
+File: starter-core.info,  Node: I/O Flags,  Next: STUnit Enumeration
+
+B.2.1 I/O Flags
+---------------
+
+Flags are used to modify the behavior of 'STInput' and 'STOutput'
+objects.  They are defined as bitwise constants of type 'guint64'.
+
+'ST_IO_FLAG_NULL'
+     No flags set ('0x0').  Standard system behavior applies.
+
+'ST_IO_FLAG_MANUAL_OVERRIDE'
+     When set on an Output, it prevents the Core from automatically
+     updating its value.  This is used for manual maintenance or safety
+     locks.
+
+'ST_IO_FLAG_NO_HISTORY'
+     Disables database logging for the specific I/O. The Core processes
+     changes in real-time but does not record them in the 'history'
+     table.
+
+'ST_IO_FLAG_USR1'
+'ST_IO_FLAG_USR2'
+'ST_IO_FLAG_USR3'
+'ST_IO_FLAG_USR4'
+     User-defined flags.  These have no internal meaning for the Core
+     and can be used by developers for custom service-level logic.
+
+'ST_IO_FLAG_USR_MASK'
+     A bitmask ('0xF000000000000000LL') provided to easily isolate or
+     clear all user-defined flags.
+
+
+File: starter-core.info,  Node: STUnit Enumeration,  Next: Special Constants,  Prev: I/O Flags
+
+B.2.2 STUnit Enumeration
+------------------------
+
+The 'STUnit' enumeration defines the measurement units supported by the
+system.  Every Input and Output must be associated with a unit to ensure
+proper data interpretation and visualization (e.g., in Grafana
+dashboards).
+
+ -- Enumeration: STUnit
+     'ST_UNIT_NULL'
+          No unit specified.
+     'ST_UNIT_CELSIUS'
+          Temperature in degrees Celsius.
+     'ST_UNIT_PERCENT'
+          Percentage values (0.0 to 100.0).
+     'ST_UNIT_BAR'
+          Pressure in bars.
+     'ST_UNIT_ONOFF'
+          Binary state representation.
+     'ST_UNIT_ENUM'
+          A discrete list of states.
+     'ST_UNIT_V'
+     'ST_UNIT_W'
+     'ST_UNIT_VAR'
+     'ST_UNIT_KW'
+          Electrical units: Volts, Watts, Volt-Ampere Reactive, and
+          Kilowatts.
+     'ST_UNIT_WH'
+     'ST_UNIT_KWH'
+          Energy consumption units: Watt-hours and Kilowatt-hours.
+     'ST_UNIT_SECONDS'
+     'ST_UNIT_MINUTES'
+     'ST_UNIT_HOURS'
+          Time duration units.
+
+
+File: starter-core.info,  Node: Special Constants,  Prev: STUnit Enumeration
+
+B.2.3 Special Constants
+-----------------------
+
+ -- Macro: ST_INVALID_VALUE
+     This macro evaluates to 'G_MAXDOUBLE'.  It is used by the system to
+     indicate that a value is currently unavailable or that an I/O has
+     not yet been initialized.
+
+
+File: starter-core.info,  Node: STInput: The Sensor Abstraction,  Next: STOutput: The Actuator Abstraction,  Up: API Reference
+
+B.3 STInput: The Sensor Abstraction
+===================================
+
+The 'STInput' object represents a single data source within the STARTER
+ecosystem.  It is a derivable 'GObject' that encapsulates not only the
+current value but also the metadata (units, ranges, steps) required for
+the Core to interpret the data correctly.
+
+* Menu:
+
+* STInput Lifecycle Management::
+* STInput Metadata Accessors::
+* Range and Value Control::
+
+
+File: starter-core.info,  Node: STInput Lifecycle Management,  Next: STInput Metadata Accessors,  Up: STInput: The Sensor Abstraction
+
+B.3.1 Lifecycle Management
+--------------------------
+
+ -- Function: STInput * st_input_new (const gchar *NAME, const gchar
+          *DESCRIPTION, STUnit UNIT, gdouble MIN, gdouble MAX, gdouble
+          STEP, gdouble VAL, guint64 FLAGS)
+     Creates a new 'STInput' instance.
+
+        * NAME: Unique identifier used in rules (e.g.,
+          "living_room_temp").
+        * DESCRIPTION: A human-readable string describing the input.
+        * UNIT: The 'STUnit' associated with the data.
+        * MIN / MAX: The allowed logical range for the value.
+        * STEP: The minimum increment between values.
+        * VAL: The initial value.
+        * FLAGS: Behavior modifiers (see *note I/O Flags::).
+
+ -- Function: STInput * st_input_dup (const STInput *SELF)
+     Creates a deep copy of an existing 'STInput' object.
+
+
+File: starter-core.info,  Node: STInput Metadata Accessors,  Next: Range and Value Control,  Prev: STInput Lifecycle Management,  Up: STInput: The Sensor Abstraction
+
+B.3.2 Metadata Accessors
+------------------------
+
+These functions manage the identity and properties of the input.  Most
+"set" functions will emit a specific signal (e.g., 'name-changed') and a
+general 'changed' signal upon success.
+
+ -- Function: const char * st_input_get_name (const STInput *SELF)
+ -- Function: gboolean st_input_set_name (STInput *SELF, const char
+          *NAME, GError **ERROR)
+     Gets or sets the unique identifier for the input.
+
+ -- Function: const char * st_input_get_description (const STInput
+          *SELF)
+ -- Function: gboolean st_input_set_description (STInput *SELF, const
+          char *DESCRIPTION, GError **ERROR)
+     Gets or sets the human-readable description.
+
+ -- Function: STUnit st_input_get_unit (const STInput *SELF)
+ -- Function: gboolean st_input_set_unit (STInput *SELF, STUnit UNIT,
+          GError **ERROR)
+     Gets or sets the measurement unit.
+
+
+File: starter-core.info,  Node: Range and Value Control,  Prev: STInput Metadata Accessors,  Up: STInput: The Sensor Abstraction
+
+B.3.3 Range and Value Control
+-----------------------------
+
+ -- Function: gdouble st_input_get_val (const STInput *SELF)
+ -- Function: gboolean st_input_set_val (STInput *SELF, gdouble VAL,
+          GError **ERROR)
+     Returns or updates the current value.  If VAL is outside the
+     MIN/MAX range, the function will fail and return
+     'ST_ERROR_INVALID_VALUE'.
+
+ -- Function: gdouble st_input_get_min (const STInput *SELF)
+ -- Function: gboolean st_input_set_min (STInput *SELF, gdouble MIN,
+          GError **ERROR)
+ -- Function: gdouble st_input_get_max (const STInput *SELF)
+ -- Function: gboolean st_input_set_max (STInput *SELF, gdouble MAX,
+          GError **ERROR)
+     Manage the operational boundaries of the input.
+
+ -- Function: gdouble st_input_get_step (const STInput *SELF)
+ -- Function: gboolean st_input_set_step (STInput *SELF, gdouble STEP,
+          GError **ERROR)
+     Manage the value increment resolution.
+
+ -- Function: guint64 st_input_get_flags (const STInput *SELF)
+ -- Function: gboolean st_input_set_flags (STInput *SELF, guint64 FLAGS,
+          GError **ERROR)
+     Gets or sets the behavioral flags (e.g., 'ST_IO_FLAG_NO_HISTORY').
+
+
+File: starter-core.info,  Node: STOutput: The Actuator Abstraction,  Next: Network Discovery: mDNS and Service Location,  Prev: STInput: The Sensor Abstraction,  Up: API Reference
+
+B.4 STOutput: The Actuator Abstraction
+======================================
+
+The 'STOutput' object represents an actionable endpoint within the
+STARTER ecosystem.  While 'STInput' is for reading the world, 'STOutput'
+is for changing it.  It is a derivable 'GObject' that filters incoming
+commands from the Core against defined ranges and steps.
+
+* Menu:
+
+* STOutput Lifecycle Management::
+* STOutput Metadata Accessors::
+* Value and State Control::
+
+
+File: starter-core.info,  Node: STOutput Lifecycle Management,  Next: STOutput Metadata Accessors,  Up: STOutput: The Actuator Abstraction
+
+B.4.1 Lifecycle Management
+--------------------------
+
+ -- Function: STOutput * st_output_new (const gchar *NAME, const gchar
+          *DESCRIPTION, STUnit UNIT, gdouble MIN, gdouble MAX, gdouble
+          STEP, gdouble VAL, guint64 FLAGS)
+     Creates a new 'STOutput' instance.
+
+        * NAME: Unique identifier used as the target in rules (e.g.,
+          'main_heater').
+        * DESCRIPTION: Human-readable description of the actuator.
+        * UNIT: The 'STUnit' (e.g., 'ST_UNIT_ONOFF' for switches).
+        * MIN / MAX: The allowed range for commanded values.
+        * STEP: The resolution for valid commands.
+        * VAL: The initial state of the output.
+        * FLAGS: Behavior modifiers (see *note I/O Flags::).
+
+ -- Function: STOutput * st_output_dup (const STOutput *SELF)
+     Creates a deep copy of an existing 'STOutput' object.
+
+
+File: starter-core.info,  Node: STOutput Metadata Accessors,  Next: Value and State Control,  Prev: STOutput Lifecycle Management,  Up: STOutput: The Actuator Abstraction
+
+B.4.2 Metadata Accessors
+------------------------
+
+Similar to inputs, these functions manage the properties of the output.
+Setting these properties will emit specific signals to notify the rest
+of the system of the change in configuration.
+
+ -- Function: const char * st_output_get_name (const STOutput *SELF)
+ -- Function: gboolean st_output_set_name (STOutput *SELF, const char
+          *NAME, GError **ERROR)
+     Gets or sets the unique identifier.
+
+ -- Function: const char * st_output_get_description (const STOutput
+          *SELF)
+ -- Function: gboolean st_output_set_description (STOutput *SELF, const
+          char *DESCRIPTION, GError **ERROR)
+     Gets or sets the human-readable description.
+
+ -- Function: STUnit st_output_get_unit (const STOutput *SELF)
+ -- Function: gboolean st_output_set_unit (STOutput *SELF, STUnit UNIT,
+          GError **ERROR)
+     Gets or sets the measurement unit.
+
+
+File: starter-core.info,  Node: Value and State Control,  Prev: STOutput Metadata Accessors,  Up: STOutput: The Actuator Abstraction
+
+B.4.3 Value and State Control
+-----------------------------
+
+ -- Function: gdouble st_output_get_val (const STOutput *SELF)
+ -- Function: gboolean st_output_set_val (STOutput *SELF, gdouble VAL,
+          GError **ERROR)
+     Returns or updates the current value.  For outputs,
+     'st_output_set_val' is typically called by the service when it
+     receives a command from the Core, or when a manual override is in
+     effect.
+
+ -- Function: gdouble st_output_get_min (const STOutput *SELF)
+ -- Function: gboolean st_output_set_min (STOutput *SELF, gdouble MIN,
+          GError **ERROR)
+ -- Function: gdouble st_output_get_max (const STOutput *SELF)
+ -- Function: gboolean st_output_set_max (STOutput *SELF, gdouble MAX,
+          GError **ERROR)
+     Manage the operational range.  Commands outside these bounds will
+     be rejected.
+
+ -- Function: gdouble st_output_get_step (const STOutput *SELF)
+ -- Function: gboolean st_output_set_step (STOutput *SELF, gdouble STEP,
+          GError **ERROR)
+     Sets the precision required for value updates.
+
+ -- Function: guint64 st_output_get_flags (const STOutput *SELF)
+ -- Function: gboolean st_output_set_flags (STOutput *SELF, guint64
+          FLAGS, GError **ERROR)
+     Manages behavioral flags like 'ST_IO_FLAG_MANUAL_OVERRIDE'.
+
+
+File: starter-core.info,  Node: Network Discovery: mDNS and Service Location,  Next: System Statistics: Performance Monitoring,  Prev: STOutput: The Actuator Abstraction,  Up: API Reference
+
+B.5 Network Discovery: mDNS and Service Location
+================================================
+
+STARTER uses Multicast DNS (mDNS) to achieve true zero-configuration
+networking.  This allows the Core and various services to discover each
+other dynamically on the local network.
+
+* Menu:
+
+* STMDNSService: Service Representation::
+* STMDNS: The Discovery Engine::
+
+
+File: starter-core.info,  Node: STMDNSService: Service Representation,  Next: STMDNS: The Discovery Engine,  Up: Network Discovery: mDNS and Service Location
+
+B.5.1 STMDNSService: Service Representation
+-------------------------------------------
+
+The 'STMDNSService' object is a data container that represents a
+discovered service or a service ready to be published.
+
+ -- Function: STMDNSService * st_mdns_service_new (const gchar *NAME,
+          const gchar *TYPE, const gchar *HOST, const gchar *ADDRESS,
+          const guint16 PORT, const gint PROTO)
+     Creates a new 'STMDNSService' descriptor.
+        * NAME: The service instance name (e.g., "ST:MyFirstService").
+        * TYPE: The mDNS service type (e.g., "_dbus._tcp").
+        * HOST: The target hostname.
+        * ADDRESS: The IP address of the service.
+        * PORT: The TCP/UDP port where the service is listening.
+        * PROTO: The network protocol (IPv4/IPv6).
+
+* Menu:
+
+* Property Management::
+
+
+File: starter-core.info,  Node: Property Management,  Up: STMDNSService: Service Representation
+
+B.5.1.1 Property Management
+...........................
+
+ -- Function: const gchar * st_mdns_service_get_name (const
+          STMDNSService *SELF)
+ -- Function: void st_mdns_service_set_name (STMDNSService *SELF, const
+          gchar *NAME)
+ -- Function: const gchar * st_mdns_service_get_mdns_type (const
+          STMDNSService *SELF)
+ -- Function: void st_mdns_service_set_mdns_type (STMDNSService *SELF,
+          const gchar *TYPE)
+ -- Function: const gchar * st_mdns_service_get_host (const
+          STMDNSService *SELF)
+ -- Function: void st_mdns_service_set_host (STMDNSService *SELF, const
+          gchar *HOST)
+ -- Function: const gchar * st_mdns_service_get_address (const
+          STMDNSService *SELF)
+ -- Function: void st_mdns_service_set_address (STMDNSService *SELF,
+          const gchar *ADDRESS)
+ -- Function: guint16 st_mdns_service_get_port (const STMDNSService
+          *SELF)
+ -- Function: void st_mdns_service_set_port (STMDNSService *SELF, const
+          guint16 PORT)
+     Getters and setters for the service network properties.
+
+
+File: starter-core.info,  Node: STMDNS: The Discovery Engine,  Prev: STMDNSService: Service Representation,  Up: Network Discovery: mDNS and Service Location
+
+B.5.2 STMDNS: The Discovery Engine
+----------------------------------
+
+The 'STMDNS' object handles the actual background tasks of browsing for
+services and publishing your own.
+
+ -- Function: STMDNS * st_mdns_new (void)
+     Initializes the mDNS engine.
+
+ -- Function: gboolean st_mdns_publish_service (STMDNS *SELF, const
+          gchar *NAME, const gchar *TYPE, guint16 PORT)
+     Broadcasts your service to the network.  This is what makes your
+     service "visible" to the STARTER Core.
+
+ -- Function: const GList * st_mdns_get_all_services (STMDNS *SELF)
+     Returns a list of all 'STMDNSService' objects currently discovered
+     on the network.
+
+* Menu:
+
+* Signals::
+
+
+File: starter-core.info,  Node: Signals,  Up: STMDNS: The Discovery Engine
+
+B.5.2.1 Signals
+...............
+
+ -- Signal: STMDNS service-added (STMDNSService *service)
+     Emitted when a new STARTER-compatible service is discovered on the
+     network.
+
+ -- Signal: STMDNS service-removed (STMDNSService *service)
+     Emitted when a service is no longer reachable.
+
+
+File: starter-core.info,  Node: System Statistics: Performance Monitoring,  Next: Services and Communication: Server and Client,  Prev: Network Discovery: mDNS and Service Location,  Up: API Reference
+
+B.6 System Statistics: Performance Monitoring
+=============================================
+
+STARTER provides a built-in framework for monitoring the health and
+performance of its services.  This telemetry data allows for deep
+analysis of resource consumption, such as CPU usage and memory
+footprint.
+
+* Menu:
+
+* STStats: The Telemetry Container::
+* STStatsCollector: The Abstract Engine::
+* STProcessStatsCollector: Process Monitoring::
+
+
+File: starter-core.info,  Node: STStats: The Telemetry Container,  Next: STStatsCollector: The Abstract Engine,  Up: System Statistics: Performance Monitoring
+
+B.6.1 STStats: The Telemetry Container
+--------------------------------------
+
+The 'STStats' object acts as a snapshot of a process's performance
+metrics.  It uses the 'STStatsEntry' structure to store MIN, MAX, and
+LAST values for each metric.
+
+ -- Structure: STStatsEntry
+     'min'
+          The minimum value recorded since the collector started.
+     'max'
+          The maximum value recorded.
+     'last'
+          The most recent measurement.
+
+ -- Function: STStats * st_stats_new (const gchar *NAME)
+     Creates a new statistics container identified by NAME.
+
+* Menu:
+
+* Metric Accessors::
+
+
+File: starter-core.info,  Node: Metric Accessors,  Up: STStats: The Telemetry Container
+
+B.6.1.1 Metric Accessors
+........................
+
+ -- Function: const STStatsEntry * st_stats_get_cpu (const STStats
+          *SELF)
+ -- Function: const STStatsEntry * st_stats_get_vmrss (const STStats
+          *SELF)
+ -- Function: const STStatsEntry * st_stats_get_vmsize (const STStats
+          *SELF)
+ -- Function: const STStatsEntry * st_stats_get_threads (const STStats
+          *SELF)
+     Retrieve specific metrics including CPU load (percentage), Resident
+     Set Size (memory actually used), Virtual Memory Size, and thread
+     count.
+
+
+File: starter-core.info,  Node: STStatsCollector: The Abstract Engine,  Next: STProcessStatsCollector: Process Monitoring,  Prev: STStats: The Telemetry Container,  Up: System Statistics: Performance Monitoring
+
+B.6.2 STStatsCollector: The Abstract Engine
+-------------------------------------------
+
+The 'STStatsCollector' is a derivable base class designed to automate
+the sampling of statistics at regular intervals.
+
+ -- Function: STStatsCollector * st_stats_collector_new (STStats *STATS,
+          guint UPDATE_INTERVAL_MS)
+     Initializes a collector that will update the provided STATS object
+     every UPDATE_INTERVAL_MS milliseconds.
+
+
+File: starter-core.info,  Node: STProcessStatsCollector: Process Monitoring,  Prev: STStatsCollector: The Abstract Engine,  Up: System Statistics: Performance Monitoring
+
+B.6.3 STProcessStatsCollector: Process Monitoring
+-------------------------------------------------
+
+This is a specialized implementation of the collector that reads
+performance data directly from the system (e.g., '/proc' on Linux) for
+the current process.
+
+ -- Function: STProcessStatsCollector * st_process_stats_collector_new
+          (STStats *STATS, guint INTERVAL_MS)
+     Creates a collector that automatically gathers OS-level metrics
+     (memory, I/O, context switches) for the running service.
+
+
+File: starter-core.info,  Node: Services and Communication: Server and Client,  Prev: System Statistics: Performance Monitoring,  Up: API Reference
+
+B.7 Services and Communication: Server and Client
+=================================================
+
+This section details the primary objects used to establish distributed
+communication within the STARTER network.  The 'STServer' exposes local
+resources to the network, while 'STClient' provides the means to
+discover and control remote services.
+
+* Menu:
+
+* STServer: Publishing a Service::
+* STClient: Consuming a Service::
+
+
+File: starter-core.info,  Node: STServer: Publishing a Service,  Next: STClient: Consuming a Service,  Up: Services and Communication: Server and Client
+
+B.7.1 STServer: Publishing a Service
+------------------------------------
+
+The 'STServer' object is responsible for taking a collection of
+'STInput' and 'STOutput' objects and making them available over D-Bus.
+It handles the low-level registration and message dispatching.
+
+ -- Function: STServer * st_server_new (const gchar *NAME, const
+          STVersion *VERSION, GPtrArray *INPUTS, GPtrArray *OUTPUTS)
+     Initializes a new server instance.
+        * NAME: The unique name of the service (e.g., "ST:MyService").
+        * VERSION: The 'STVersion' of the service.
+        * INPUTS: A 'GPtrArray' containing the 'STInput' objects to
+          expose.
+        * OUTPUTS: A 'GPtrArray' containing the 'STOutput' objects to
+          expose.
+
+ -- Function: gboolean st_server_start (STServer *SELF, guint16 PORT,
+          GError **ERROR)
+     Starts the server and begins listening for incoming connections on
+     the specified PORT.
+
+* Menu:
+
+* Service Metadata::
+
+
+File: starter-core.info,  Node: Service Metadata,  Up: STServer: Publishing a Service
+
+B.7.1.1 Service Metadata
+........................
+
+ -- Function: const gchar * st_server_get_name (const STServer *SELF)
+ -- Function: gboolean st_server_set_name (STServer *SELF, const gchar
+          *NAME, GError **ERROR)
+ -- Function: const STVersion * st_server_get_version (const STServer
+          *SELF)
+ -- Function: const GPtrArray * st_server_get_inputs (const STServer
+          *SELF)
+ -- Function: const GPtrArray * st_server_get_outputs (const STServer
+          *SELF)
+     Accessors to retrieve or modify the server's identity and its
+     collection of I/O objects.
+
+
+File: starter-core.info,  Node: STClient: Consuming a Service,  Prev: STServer: Publishing a Service,  Up: Services and Communication: Server and Client
+
+B.7.2 STClient: Consuming a Service
+-----------------------------------
+
+The 'STClient' is the counterpart to the server.  It connects to a
+remote 'STServer' and creates a local proxy of all its inputs, outputs,
+and statistics.
+
+ -- Function: STClient * st_client_new (void)
+     Creates a new, uninitialized client object.
+
+ -- Function: gboolean st_client_start (STClient *SELF, const gchar
+          *ADDRESS, guint16 PORT, GError **ERROR)
+     Connects the client to a remote service at the given ADDRESS and
+     PORT.  Upon success, the client will automatically synchronize all
+     remote I/O objects.
+
+* Menu:
+
+* Remote Resource Access::
+
+
+File: starter-core.info,  Node: Remote Resource Access,  Up: STClient: Consuming a Service
+
+B.7.2.1 Remote Resource Access
+..............................
+
+Once a client is started, it provides access to the remote service's
+data as if it were local.
+
+ -- Function: const GPtrArray * st_client_get_inputs (STClient *SELF)
+ -- Function: const GPtrArray * st_client_get_outputs (STClient *SELF)
+     Returns arrays of 'STInput' and 'STOutput' objects that represent
+     the remote service's resources.
+
+ -- Function: const STStats * st_client_get_stats (STClient *SELF)
+     Retrieves the performance statistics ('STStats') of the remote
+     process.
+
+Appendix C GNU Free Documentation License
+*****************************************
+
+                     Version 1.3, 3 November 2008
+
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+     <https://fsf.org/>
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft", which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.  We
+     recommend this License principally for works whose purpose is
+     instruction or reference.
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it can
+     be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You accept
+     the license if you copy, modify or distribute the work in a way
+     requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in the
+     notice that says that the Document is released under this License.
+     If a section does not fit the above definition of Secondary then it
+     is not allowed to be designated as Invariant.  The Document may
+     contain zero Invariant Sections.  If the Document does not identify
+     any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images composed
+     of pixels) generic paint programs or (for drawings) some widely
+     available drawing editor, and that is suitable for input to text
+     formatters or for automatic translation to a variety of formats
+     suitable for input to text formatters.  A copy made in an otherwise
+     Transparent file format whose markup, or absence of markup, has
+     been arranged to thwart or discourage subsequent modification by
+     readers is not Transparent.  An image format is not Transparent if
+     used for any substantial amount of text.  A copy that is not
+     "Transparent" is called "Opaque".
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and standard-conforming
+     simple HTML, PostScript or PDF designed for human modification.
+     Examples of transparent image formats include PNG, XCF and JPG.
+     Opaque formats include proprietary formats that can be read and
+     edited only by proprietary word processors, SGML or XML for which
+     the DTD and/or processing tools are not generally available, and
+     the machine-generated HTML, PostScript or PDF produced by some word
+     processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow the
+     conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the title
+     equally prominent and visible.  You may add other material on the
+     covers in addition.  Copying with changes limited to the covers, as
+     long as they preserve the title of the Document and satisfy these
+     conditions, can be treated as verbatim copying in other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a machine-readable
+     Transparent copy along with each Opaque copy, or state in or with
+     each Opaque copy a computer-network location from which the general
+     network-using public has access to download using public-standard
+     network protocols a complete Transparent copy of the Document, free
+     of added material.  If you use the latter option, you must take
+     reasonably prudent steps, when you begin distribution of Opaque
+     copies in quantity, to ensure that this Transparent copy will
+     remain thus accessible at the stated location until at least one
+     year after the last time you distribute an Opaque copy (directly or
+     through your agents or retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of copies,
+     to give them a chance to provide you with an updated version of the
+     Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with the
+     Modified Version filling the role of the Document, thus licensing
+     distribution and modification of the Modified Version to whoever
+     possesses a copy of it.  In addition, you must do these things in
+     the Modified Version:
+
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of previous
+          versions (which should, if there were any, be listed in the
+          History section of the Document).  You may use the same title
+          as a previous version if the original publisher of that
+          version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on the
+          Title Page.  If there is no section Entitled "History" in the
+          Document, create one stating the title, year, authors, and
+          publisher of the Document as given on its Title Page, then add
+          an item describing the Modified Version as stated in the
+          previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in the
+          "History" section.  You may omit a network location for a work
+          that was published at least four years before the Document
+          itself, or if the original publisher of the version it refers
+          to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the section
+          all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document, unaltered
+          in their text and in their titles.  Section numbers or the
+          equivalent are not considered part of the section titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option designate
+     some or all of these sections as invariant.  To do this, add their
+     titles to the list of Invariant Sections in the Modified Version's
+     license notice.  These titles must be distinct from any other
+     section titles.
+
+     You may add a section Entitled "Endorsements", provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end of
+     the list of Cover Texts in the Modified Version.  Only one passage
+     of Front-Cover Text and one of Back-Cover Text may be added by (or
+     through arrangements made by) any one entity.  If the Document
+     already includes a cover text for the same cover, previously added
+     by you or by arrangement made by the same entity you are acting on
+     behalf of, you may not add another; but you may replace the old
+     one, on explicit permission from the previous publisher that added
+     the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination all
+     of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements", and any sections Entitled "Dedications".  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the documents
+     in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow this
+     License in all other respects regarding verbatim copying of that
+     document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of a
+     storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly and
+     finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from you
+     under this License.  If your rights have been terminated and not
+     permanently reinstated, receipt of a copy of some or all of the
+     same material does not give you any rights to use it.
+
+  10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     <https://www.gnu.org/licenses/>.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If the
+     Document does not specify a version number of this License, you may
+     choose any version ever published (not as a draft) by the Free
+     Software Foundation.  If the Document specifies that a proxy can
+     decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+  11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
+
+If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
+replace the "with...Texts." line with this:
+
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
+
+If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of free
+software license, such as the GNU General Public License, to permit
+their use in free software.
+
+
+
+Tag Table:
+Node: Top905
+Node: Introduction1649
+Node: The Search for Intelligence2502
+Node: The Pivot: Programmable Intent3486
+Node: Giving Back to the Community5072
+Node: STARTER Concepts5624
+Node: Unlimited Scalability7354
+Node: Redefining the Foundations: Inputs, Outputs, and Events8251
+Node: Input: More than just Sensors8812
+Node: Output: A Channel for Action9590
+Node: Logic: Applying Our Intelligence10822
+Node: Analysis: Data-Driven Decisions12025
+Node: Using STARTER: From Theory to Practice13289
+Node: A Quick Disclaimer13805
+Node: System Preparation14390
+Node: Dependencies15179
+Node: Database Initialization15874
+Node: Download and Installation16406
+Node: Configuration17136
+Node: Where to go from here?17819
+Node: The Rules File: Where the Magic Happens18515
+Node: Identifiers: The Power of Abstraction19913
+Node: The Anatomy of a Logic Block20930
+Node: Connecting the Dots: Events in Action21683
+Node: Dynamic Control: The TRIGGER Construct23367
+Node: Choosing Your Tool24409
+Node: Examples25064
+Node: Variables: The Connective Tissue25690
+Node: The Power of Propagation26415
+Node: How the System "Thinks"26958
+Node: Why Use Variables?27713
+Node: Expressions: The Engine of STARTER28440
+Node: Constant Values and Types29127
+Node: Boolean Logic: Everything is a Number29692
+Node: Comparison and Logical Operators30631
+Node: Mathematical Operators31616
+Node: Built-in Functions32205
+Node: The Mechanics of Evaluation: Snapshots vs. Live Streams32982
+Node: The EVAL Function: Killing the Link34364
+Node: Why This Matters: Architectural Elegance35357
+Node: The Boot-Time Paradox36193
+Node: Preprocessing: The Secret Weapon36872
+Node: Power Unleashed: The M4 Default37811
+Node: Swapping the Engine38524
+Node: Command Line Options: Taking the Reins39400
+Node: Advanced Orchestration41146
+Node: The Override Hierarchy42214
+Node: A Truly Distributed Ecosystem43041
+Node: ZeroConf: Plug & Play Reality43901
+Node: Communication via D-Bus RPC44508
+Node: The Operational Loop45723
+Node: The starter-core Library: Building Your Own Ecosystem46516
+Node: The Skeleton: first-service.c47253
+Node: Compiling and Running48635
+Node: Breaking Down the Code49444
+Node: Adding Substance: Inputs and Outputs50536
+Node: The Anatomy of an I/O Object51716
+Node: The Power of Flags: Customizing I/O Behavior52688
+Node: Signals: The Reactive Core54338
+Node: Input vs. Output: What's the difference?55339
+Node: The Grand Finale: Bridging Code and Logic55944
+Node: The Living Service: `first-service-v3.c`56689
+Node: The Rule: Closing the Loop58996
+Node: The Result: A Symphony of Data59488
+Node: Conclusions: The World is Your Input60478
+Node: Thinking in STARTER61030
+Node: The Power of Generalization61868
+Node: Where Will You Take It?62452
+Node: Database Schema & Initialization63218
+Node: API Reference66516
+Node: Error Handling66916
+Node: STError67337
+Node: Error Quarks and Macros68339
+Node: I/O Flags69347
+Node: STUnit Enumeration70364
+Node: Special Constants71467
+Node: STInput: The Sensor Abstraction71800
+Node: STInput Lifecycle Management72363
+Node: STInput Metadata Accessors73319
+Node: Range and Value Control74395
+Node: STOutput: The Actuator Abstraction75701
+Node: STOutput Lifecycle Management76336
+Node: STOutput Metadata Accessors77333
+Node: Value and State Control78418
+Node: Network Discovery: mDNS and Service Location79843
+Node: STMDNSService: Service Representation80402
+Node: Property Management81377
+Node: STMDNS: The Discovery Engine82539
+Node: Signals83378
+Node: System Statistics: Performance Monitoring83747
+Node: STStats: The Telemetry Container84390
+Node: Metric Accessors85153
+Node: STStatsCollector: The Abstract Engine85796
+Node: STProcessStatsCollector: Process Monitoring86445
+Node: Services and Communication: Server and Client87126
+Node: STServer: Publishing a Service87704
+Node: Service Metadata88830
+Node: STClient: Consuming a Service89504
+Node: Remote Resource Access90308
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

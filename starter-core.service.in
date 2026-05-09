@@ -1,0 +1,17 @@
+[Unit]
+Description=Starter core service
+After=network-online.target mysql.service dbus.socket avahi-daemon.service
+Wants=network-online.target mysql.service avahi-daemon.service
+
+[Service]
+ExecStartPre=/bin/sleep 60 
+ExecStart=@bindir@/starter-core -R @sysconfdir@/starter/rules.conf
+Restart=on-failure
+RestartSec=15s
+StartLimitIntervalSec=120
+StartLimitBurst=5
+User=starter
+Group=starter
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2063 @@
+\input texinfo   @c -*-texinfo-*-
+@setfilename starter-core.info
+@settitle Starter Core Documentation
+
+@paragraphindent 0
+
+@copying
+Copyright @copyright{} 2026 Christian Brunello.
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled "GNU Free
+Documentation License".
+@end copying
+
+@titlepage
+@title STARTER 
+@subtitle Simple distribuTed smART conTrollER
+@author Christian Brunello
+@end titlepage
+
+@insertcopying
+
+@ifnottex
+@node Top
+@top STARTER 
+@insertcopying
+@end ifnottex
+
+@contents
+
+@node Introduction
+@unnumbered Introduction
+
+This project was born out of a personal necessity: I needed to stop bleeding money on home heating.
+
+At first, I tried the standard route--using a smartphone app to schedule the boiler. But I quickly learned that savings were inversely proportional to comfort. My partner and I would celebrate a lower gas bill while shivering in extra sweaters. 
+
+With a radiator system and a hybrid boiler, we ran the gamut of options: hourly scheduling, integrated weather compensation curves, and continuous low-power operation. Nothing worked. It was a binary choice between comfort or savings; there was simply no middle ground.
+
+@node The Search for Intelligence
+@section The Search for Intelligence
+
+I looked for off-the-shelf solutions to make the boiler "smarter," but I hit a dead end. While there were plugins available to @emph{control} the hardware, the actual "intelligence" was missing. I thought: @emph{"We live in the age of AI--why can't we apply that to home automation?"}
+
+That’s when the project truly began. My initial plan was to use a "Lite" version of TensorFlow. Since I'm not wealthy and couldn't afford powerful servers, I invested my expertise instead of my cash. I envisioned a core that could toggle between "learning mode" and "active mode." It was an exciting prospect, but the AI path proved rocky. It required massive amounts of training data, and the results were unpredictable. I couldn't risk spending the rest of the winter in the cold just for a neural network experiment.
+
+@node The Pivot: Programmable Intent
+@section The Pivot: Programmable Intent
+I decided to strip the problem down to its core objective: @emph{Giving the system clear instructions on how to behave based on the environment}.
+
+To give instructions, you need to communicate. To communicate, you need a @dfn{channel} and a @dfn{protocol}. I realized the channel could be a simple file, and the protocol a straightforward, human-readable language. This was the breakthrough that finally hit the target: @emph{halving energy consumption while actually increasing comfort}.
+
+I achieved this through two fundamental logic rules:
+
+@table @emph
+@item Efficiency Switching
+Force the system to gas-only mode the moment environmental conditions make the heat pump inefficient.
+@item Dynamic Flow Control
+Set the boiler's flow temperature based on:
+@itemize
+@item A weighted average of the forecasted daily temperature swings.
+@item A calculated offset based on a physical constant I discovered for my home: at 0@math{^\circ}C outdoors, a 48@math{^\circ}C flow temperature perfectly balances the house's heat loss.
+@end itemize
+@end table
+
+@section Beyond Heating: The Monero Bonus
+Once the core was stable, more automations followed. The most satisfying one? Managing my photovoltaic surplus. When my solar panels are overproducing and the grid voltage spikes near 250V, the system automatically triggers my mining rigs to mine Monero. It’s the ultimate way to turn excess voltage into digital value.
+
+@node Giving Back to the Community
+@section Giving Back to the Community
+
+I believe this system has applications far beyond my own living room. I’m sharing it so others can benefit from these optimizations just as I have. 
+
+I am a firm believer in @dfn{Free Software} (in the true Stallman sense), and this is my contribution to the community. To ensure it remains free and open for everyone to improve, I am distributing the Core under the @acronym{GPL} license and the Library under the @acronym{LGPL}.
+
+
+@node STARTER Concepts
+@chapter STARTER Concepts
+
+Now that we’ve covered the "why," I want to dive into the "how". Let’s start with the name. @acronym{STARTER} is an acronym for @emph{Simple distribuTed smART conTrollER}, and every letter reflects a core design principle.
+
+@table @b
+@item Simple
+@itemize 
+@item Adding a new module is as easy as powering it on.
+@item You don't need to be a senior dev to manage it; the control logic uses a near-natural language that anyone can understand.
+@end itemize
+
+@item distribuTed
+@itemize
+@item Every component operates over the network. It’s designed to be lightweight, running smoothly even on low-spec, legacy hardware.
+@end itemize
+
+@item smART
+@itemize 
+@item Services connect and disconnect on the fly, with rules applied automatically in real-time.
+@item It doesn't just follow a schedule; it reacts to environmental changes.
+@item It allows us to translate our specific will into action using a near-human syntax.
+@end itemize
+
+@item conTrollER
+@itemize
+@item Through our custom rules, it acts as the "brain," driving every peripheral exactly as instructed.
+@end itemize
+@end table
+
+I chose this name because I wanted it to be clear that this core is just the @emph{starting point}. Any user can download it, plug in their own services, and begin coordinating them. Currently, my setup runs on a single computer managing a mix of services. However, the underlying architecture is generic: it can be applied virtually anywhere you need to define the logic: @emph{"When these conditions are met, react this way"}.
+
+@node Unlimited Scalability
+@section Unlimited Scalability
+
+Because the system is modular and network-based, it is @emph{completely scalable}. You can start with a basic home automation setup and grow into a massive distributed network with multiple cores, each dedicated to a specific task. We aren't just talking about managing a house; we’re talking about scaling to a warehouse, a farm, a neighborhood, or even an entire city. 
+
+Before we get into the technical weeds, I want to take a moment to look at the foundational concepts of automation. Through this manual, my goal is to help you see automation through an @emph{abstract lens}. Once you grasp the abstraction, you’ll realize how @acronym{STARTER} can be adapted to solve almost any challenge you throw at it.
+
+@node Redefining the Foundations: Inputs@comma{} Outputs@comma{} and Events
+@section Redefining the Foundations: Inputs, Outputs, and Events
+
+To understand how STARTER works, we need to strip away our preconceptions of what automation looks like and embrace a more abstract perspective.
+
+@node Input: More than just Sensors
+@subsection Input: More than just Sensors
+
+When I first sat down to design @acronym{STARTER}, I asked myself: @emph{“What exactly is an input?”} The instinctive answer is "a sensor", but that’s far too limiting. In this system, an @emph{Input} is any incoming data point, whether it originates from physical hardware or an abstract digital service.
+
+It could be a humidity sensor in your basement, but it could just as easily be a weather @acronym{API}, the current exchange rate of the Euro, or a real-time cryptocurrency price. If a service can feed data into the system, @acronym{STARTER} treats it as an input.
+
+@node Output: A Channel for Action
+@subsection Output: A Channel for Action
+
+We usually think of an @emph{Output} as something physical that clicks or turns--like a relay switching on a light. But at its core, an output is simply @emph{any "channel" where data can be written}. 
+
+By treating outputs as abstract "writeable" points, we can control almost anything. For example, I created a small "Explain" service that gives my home automation a voice; it literally tells me when something changes. If you can send a value to it, @acronym{STARTER} considers it an output.
+
+@subsection Events: The Language of Change
+In traditional automation, "events" are often binary: a gate opened, a relay closed. But let’s broaden our perspective. Since inputs and outputs are abstract, an @emph{Event} is simply a @emph{state change}.
+
+An event could be "it’s getting dark," "it’s raining," or "100 cars have passed the gate." It could be "my EV battery is charged" or "Bitcoin just hit €60,000." @emph{Open your mind}: if the data changes, it’s an event you can act upon. 
+
+@node Logic: Applying Our Intelligence
+@subsection Logic: Applying Our Intelligence
+
+In automation, logic is everything. Usually, this means "if X happens, then do Y." In 90% of existing systems, these rules are hard-coded—buried inside the software where they are difficult to change.
+
+In @acronym{STARTER}, the logic is @emph{external}. It is defined entirely by the user through custom rules. This shifts the power back to you: we aren't limited by how "smart" the software is; instead, we have a system that @emph{applies our own intelligence}.
+
+Take my heating setup: when the outdoor temperature shifts, @acronym{STARTER} recalculates the boiler's flow temperature. This, in turn, triggers a re-evaluation of the heat pump’s efficiency based on ambient humidity. The system doesn't "understand" thermodynamics (and honestly, neither do I), but it follows the rules I’ve written. If the inputs match a certain pattern, the outputs react accordingly. 
+
+@quotation 
+@b{The takeaway}: If you can encode a condition into an input or an output, you can master it.
+@end quotation
+
+@node Analysis: Data-Driven Decisions
+@subsection Analysis: Data-Driven Decisions
+
+Perfecting my boiler's weather compensation curve wasn't an overnight success. It took weeks of measuring and tweaking to find my "sweet spot": a 48@math{^\circ}C flow temperature to perfectly balance heat loss when it's 0@math{^\circ}C outside. 
+
+To get there, I couldn't rely on guesswork like @emph{"maybe if I turn it up a bit..."}. I needed cold, hard facts. 
+
+That’s why I built @acronym{STARTER} to be @emph{data-driven} from the ground up. Every single event—every change in input or output—is automatically logged in a database. The best part? The database belongs to you; @acronym{STARTER} simply manages the flow of information. 
+
+Having this historical data is a game-changer. I personally use @command{Grafana} to visualize everything:
+@itemize
+@item A dashboard comparing home consumption vs. grid demand.
+@item Real-time power usage and voltage fluctuations.
+@item Logs showing exactly when my mining rigs kick in.
+@end itemize
+
+Once again, I want you to think abstractly: we have the data we’ve managed to encode. @emph{What that data represents is entirely up to you}!
+
+@node Using STARTER: From Theory to Practice
+@chapter Using STARTER: From Theory to Practice
+
+Now that we’ve explored the philosophy of automation and (hopefully) expanded our perspective on what’s possible, it’s time to get our hands dirty. Let’s look at how to download and install @acronym{STARTER} on your system.
+
+@node A Quick Disclaimer
+@section A Quick Disclaimer
+
+Before we dive in, it’s important to remember that @acronym{STARTER} is, first and foremost, a "Core". While the included examples are great for practice and getting a feel for the logic, "the real deal" happens when you start plugging in your own services and defining your unique rules. Think of the Core as the conductor and the services as the orchestra; you’ll need to bring your own instruments to the stage.
+
+@node System Preparation
+@section System Preparation
+
+@acronym{STARTER} is designed to run on a full @acronym{GNU}/Linux environment. 
+
+For the sake of efficiency (and, let’s be honest, a bit of developer "laziness"), I developed the system on a @emph{Debian-based} distribution. Because of this, the instructions below are tailored for that environment. If you are using a different distro, the core concepts remain the same, but you might need to adapt some specific commands or package names to fit your setup.
+
+@node Dependencies
+@subsection Dependencies
+To compile @acronym{STARTER}, you’ll need to prepare your environment. The system relies on several core libraries for networking and data management.
+
+@table @b
+@item Required packages:
+@itemize
+@item @command{glib-2.0} and @command{gio-2.0} (The backbone for system abstractions)
+@item @command{avahi-client} and @command{avahi-glib} (For zero-configuration networking/service discovery)
+@item @command{libmysqlclient-dev} (To enable database connectivity)
+@end itemize
+@item Optional (but recommended):
+@itemize
+@item @command{flex}, @command{bison}, and @command{makeinfo} (Useful for specific build tasks or documentation)
+@end itemize
+@end table
+
+@node Database Initialization
+@subsection Database Initialization
+
+Before launching the Core, you need a place for it to store its "memory." You must create a MariaDB/MySQL database—either locally or on a remote server—named @code{STARTER}.
+
+The database requires three specific tables: @code{labels}, @code{history}, and @code{stats}. You can find the exact SQL schema and creation scripts in **Appendix XXX**.
+
+@node Download and Installation
+@subsection Download and Installation
+
+@acronym{STARTER} follows the standard @acronym{GNU} packaging conventions and utilizes @command{autotools}. If you’ve ever compiled software on Linux, you’ll feel right at home. Run the following commands from your terminal:
+
+@example
+cd @var{starter-directory}
+./configure
+make
+sudo make install
+@end example
+
+The Core will be installed (typically under @file{/usr/local}) and automatically configured as a @command{systemd} service. Note that the service is not enabled for auto-boot by default—we’ll leave that decision to you once everything is configured.
+
+@node Configuration
+@subsection Configuration
+
+The final step is to point STARTER to your database. Instead of messy config files, @acronym{STARTER} uses @command{gsettings} for a clean, integrated configuration. Use the command line to set your credentials:
+
+@example
+gsettings set org.starter.core db-host '@var{your_ip_or_hostname}'
+gsettings set org.starter.core db-port @var{port}
+gsettings set org.starter.core db-user '@var{your_username}'
+gsettings set org.starter.core db-pass '@var{your_password}'
+@end example
+
+@quotation Note
+Ensure the database user has full Read/Write permissions.
+@end quotation
+
+@node Where to go from here?
+@subsection Where to go from here?
+
+Your Core is now standing by, ready for orders. What happens next depends entirely on your objective—whether it's home automation, industrial control, or building a smart city.
+
+@enumerate
+@item @b{Install your services}: Deploy the specific modules you need for your project.
+@item @b{Fire them up}: Once the services are live, they will automatically announce themselves to the Core.
+@item @b{Define the Logic}: Write your rules and watch the system transform from a collection of parts into an intelligent, autonomous environment.
+@end enumerate
+
+@node The Rules File: Where the Magic Happens
+@section The Rules File: Where the Magic Happens
+
+The rules file is the true heart of your system. This is where your abstract ideas turn into reality: 
+"@emph{If it rains, close the shutters}", or "@emph{If it’s a sunny day, run the irrigation at sunset}".
+
+By default, this file is located at @file{@var{installdir}/etc/starter/rules.conf}. To help you master the @acronym{STARTER} syntax, we’ll use the provided example services. Let’s open the file and write our very first logic block:
+
+@example
+beep:status @{
+    SET TRUE WHEN time:hour == 7 && time:minute == 0;
+    SET FALSE WHEN TRUE;
+@}
+@end example
+
+If you now launch @command{starter-core}, @command{time-example}, and @command{beep-example}, you’ve just built an alarm clock that rings every morning at 7:00 for exactly one minute. Simple, right? But let’s look under the hood to see how it actually works.
+
+@node Identifiers: The Power of Abstraction
+@subsection Identifiers: The Power of Abstraction
+
+In the code above, we see terms like @code{beep:status}, @code{time:hour}, and @code{time:minute}. In @acronym{STARTER} language, these are @dfn{Identifiers}. 
+
+Remember our mantra: @emph{generalize}. Let’s break down what these identifiers represent in this specific context:
+
+@table @code
+@item beep:status
+
+This is an @dfn{Output} provided by the @var{ST:Beep} service. When set to @code{TRUE}, it triggers your computer to beep twice per second; 
+when @code{FALSE}, it stays silent.
+
+@item time:hour
+@item time:minute
+
+These are @dfn{Inputs} exposed by the @var{ST:Time} service. This service tracks the current system time and broadcasts it as three distinct inputs: @var{hours}, @var{minutes}, and @var{seconds}.
+@end table
+
+By writing those two rules, you’ve told the system: "@emph{At 7:00 AM, start beeping. For the rest of the time, stay quiet}".
+
+@node The Anatomy of a Logic Block
+@subsection The Anatomy of a Logic Block
+Every logic block in @acronym{STARTER} follows a consistent, clean format:
+
+@example
+@var{target} @{
+    @var{rule}; ...
+@}
+@end example
+
+@table @var
+@item target
+Represents @emph{WHAT} you want to control (the Output).
+
+@item rule
+Represents @emph{HOW} and @emph{WHEN} it should react.
+@end table
+
+If we were to translate our "alarm clock" block into plain English, it would look like this:
+
+@example
+@var{BEEP} @{
+  Set to @emph{Active} when it is exactly @emph{Seven o'clock};
+  Set to @emph{Off} whenever the first condition isn't met (Default to False).
+@}
+@end example
+
+@node Connecting the Dots: Events in Action
+@subsection Connecting the Dots: Events in Action
+
+In the previous section, we defined @emph{Events}, @emph{Inputs}, and @emph{Outputs}. Let’s see how they dance together in our alarm clock example:
+
+@table @emph
+@item The Event: "The current time has changed."
+@item The Inputs: @var{time:hour} and @var{time:minute}.
+@item The Output: The computer's beep (On or Off).
+@end table
+
+For @acronym{STARTER}, the logic is straightforward: every time one of the inputs (@var{time:hour} or @var{time:minute}) changes, the entire block is @emph{re-evaluated}. The system checks the rules from top to bottom and sets the target (@var{beep:status}) based on the @emph{first rule that evaluates to @code{TRUE}}.
+
+Simple, right? But now, let’s go back to our mantra: @emph{Abstraction}. 
+
+What else could @var{beep:status} represent? And what other data could we feed in as an input? Let’s push the boundaries. Open your rules file again and swap the code for this:
+
+@example
+beep:status @{
+    SET TRUE WHEN oil:price < 100;
+    SET FALSE WHEN TRUE;
+@}
+@end example
+
+Now, launch @command{starter-core}, @command{beep-example}, and @command{oil-example}. If you suddenly hear your computer beeping, it means the price of oil has just dropped below 100 a barrel! 
+
+@quotation Think about the implications
+What if, instead of a simple beep, that output was a service that sent a push notification to your phone? Or a service that executed a buy order on an exchange? In @acronym{STARTER}, there is no difference between a temperature sensor and a stock market index—@emph{data is data}.
+@end quotation
+
+@node Dynamic Control: The TRIGGER Construct
+@subsection Dynamic Control: The TRIGGER Construct
+
+Now that you've got a feel for how to define a target, I want to show you the second main construct of the @acronym{STARTER} language:
+
+@example
+TRIGGER WHEN @var{condition} SET @var{target} = @var{value};
+@end example
+
+While the first method (the @code{target @{ ... @}} block) defines a set of rules for a @emph{single objective}, the @code{TRIGGER} allows you to define @emph{multiple assignments linked to a specific event}.
+
+Let’s go back to our oil price example:
+
+@example
+TRIGGER WHEN oil:price < 100 SET beep:status = TRUE;
+TRIGGER WHEN oil:price > 100 SET beep:status = FALSE;
+@end example
+
+We’ve achieved the exact same result as before, but with a different syntax. This leads to a natural question: @emph{When should you use @code{TRIGGER} instead of a target block?}
+
+@node Choosing Your Tool
+@subsubsection Choosing Your Tool
+The two constructs are designed for different architectural needs:
+
+@table @emph
+@item The Target Block (@code{target @{ ... @}}):
+ Use this when you need to drive @emph{one specific output} based on various complex conditions. It’s perfect for centralized control over a single device (like a lightbulb that has many reasons to be on or off).
+@item The @code{TRIGGER}:
+Use this when you want to @emph{synchronize multiple actions} to a single event. It’s the "domino effect" of automation.
+@end table
+
+@node Examples
+@subsubsection Examples
+
+@table @emph
+@item Scenario A: "Turn the light on if it's dark, off if it's bright."
+Here, you are controlling @emph{one} light based on @emph{one} sensor. We use the @emph{Target Block} with multiple rules inside it.
+@item Scenario B: "When I turn on the first lamp, automatically turn on the second and third lamps too."
+Here, you are triggering a chain reaction across @emph{multiple} outputs. We use a @code{TRIGGER} to assign the value of the first lamp to all the others simultaneously.
+@end table
+
+@node Variables: The Connective Tissue
+@subsection Variables: The Connective Tissue
+
+Until now, we’ve used "Target" to refer to a physical or abstract Output. But @acronym{STARTER} allows for a powerful third option: @emph{Variables}.
+
+In @acronym{STARTER}, a variable can act as both a @emph{Target} (something you write to) and an @emph{Input} (something you read from). This allows you to create intermediate logic that simplifies even the most complex scenarios.
+
+@node The Power of Propagation
+@subsubsection The Power of Propagation
+
+Let’s look at how variables can streamline your code:
+
+@example
+VAR turn_on_lamps = 0;
+
+turn_on_lamps @{
+    SET 1 WHEN time:hour >= 22 || time:hour <= 5;
+    SET 0 WHEN TRUE;
+@}
+
+TRIGGER WHEN turn_on_lamps == 1 SET Lamp1 = 1, Lamp2 = 1, Lamp3 = 1;
+TRIGGER WHEN turn_on_lamps == 0 SET Lamp1 = 0, Lamp2 = 0, Lamp3 = 0;
+@end example
+
+@node How the System "Thinks"
+@subsubsection How the System "Thinks"
+What’s happening under the hood? It’s a chain reaction of events:
+
+@enumerate
+@item @emph{The Triggering Event}: The clock ticks. @var{time:hour} changes.
+@item @emph{First Evaluation}: @acronym{STARTER} sees that @var{turn_on_lamps} depends on the time. It recalculates the variable.
+@item @emph{Event Propagation}: If the value of @var{turn_on_lamps} changes (e.g., from 0 to 1), that change @emph{is itself a new event}. 
+@item @emph{Second Evaluation}: Since our @code{TRIGGER} rules are "listening" to @var{turn_on_lamps}, they fire immediately, updating all your lamps at once.
+@end enumerate
+
+@node Why Use Variables?
+@subsubsection Why Use Variables?
+
+As you can see, if you have ten different lamps, it’s much more efficient to define one variable and a couple of triggers than to write ten identical, complex logic blocks. 
+
+But let’s go back to our mantra: @emph{Abstraction!}
+ 
+A variable doesn't just have to be a "switch" for lights. It could represent a "System State" (e.g., @emph{Home, Away, Night, Party}). By changing one variable, you can trigger a cascade of hundreds of outputs across your entire network. You aren't just writing rules anymore; you are designing a @emph{behavioral ecosystem}.
+
+@node Expressions: The Engine of STARTER
+@subsection Expressions: The Engine of STARTER
+
+Up until now, we’ve used simple expressions for basic evaluations. In reality, @emph{every condition or assignment} in @acronym{STARTER} is an expression that can range from a single number to a complex mathematical formula.
+
+@node Constant Values and Types
+@subsubsection Constant Values and Types
+
+All numerical constants in @acronym{STARTER} are handled as @emph{double-precision floating-point numbers}. 
+Whether you're comparing @var{time:hour} to @code{7} or calculating a precise voltage offset, the system provides high precision. While specific limits depend on your hardware, even on a 32-bit machine, the margin for error is negligible for automation purposes.
+
+@node Boolean Logic: Everything is a Number
+@subsubsection Boolean Logic: Everything is a Number
+
+In @acronym{STARTER}, @code{TRUE} and @code{FALSE} are simply aliases for constants:
+
+@table @code
+@item FALSE
+Is exactly @code{0}.
+@item TRUE
+Is exactly @code{1}.
+@end table
+
+However, the system evaluates @emph{any non-zero value as @code{TRUE}}. This is a classic programmer's concept, but it's vital for clever automation. 
+For example:
+
+@example
+beep:status @{
+    SET TRUE WHEN time:minute;
+    SET FALSE WHEN TRUE;
+@}
+@end example
+
+@emph{Why would this make the computer beep almost all the time?} Because @var{time:minute} is only @code{0} at the very start of the hour. For every other minute (1 through 59), the value is non-zero, which the system interprets as @code{TRUE}. The beep only stops for that first minute of the hour!
+
+@node Comparison and Logical Operators
+@subsubsection Comparison and Logical Operators
+You can relate different expressions using standard operators:
+
+@multitable @columnfractions .30 .70
+@headitem Operator @tab Description
+@item @code{==}, @code{!=}          @tab Equal to / Not equal to 
+@item @code{<}, @code{<=}           @tab Less than / Less than or equal to
+@item @code{>}, @code{>=}           @tab Greater than / Greater than or equal to 
+@item @code{&&}                     @tab @emph{AND}: True only if both expressions are true 
+@item @code{||}                     @tab @emph{OR}: True if at least one expression is true
+@end multitable
+
+You can use @emph{parentheses} @code{()} to group sub-expressions and control the evaluation order. Want an alarm that rings at 7:00 AM @emph{OR} whenever oil prices drop?
+
+@example
+SET TRUE WHEN (time:hour == 7 && time:minute == 0) || oil:price < 100;
+@end example
+
+@node Mathematical Operators
+@subsubsection Mathematical Operators
+
+@acronym{STARTER} isn't just for logic; it’s for math. It supports @code{+}, @code{-}, @code{*}, @code{/}, and the unary minus @code{-}. Standard mathematical precedence applies (multiplication/division before addition/subtraction), but you can use parentheses to force your own order.
+
+@table @code
+@item 2 * 1 + 4 = @var{6}
+@item 2 * (1 + 4) = @var{10}
+@item time:minute + (time:hour * 60) = @emph{Total minutes since midnight.}
+@end table
+
+@node Built-in Functions
+@subsubsection Built-in Functions
+To simplify complex rules, @acronym{STARTER} provides a set of powerful functions:
+
+@table @code
+@item MIN(arg1, arg2, ...)
+Returns the lowest value in a list.
+@item MAX(arg1, arg2, ...)
+Returns the highest value in a list.
+@item ROUND(value)
+Rounds to the nearest whole integer.
+@item LIMIT(value, min, max)
+Clamps a value. If it goes below @var{min}, it returns @var{min}; if above @var{max}, it returns @var{max}.
+@item CHANGED(id)
+This is a special one. It returns @code{1} (@code{TRUE}) only if the value of that specific @var{id} has changed since the last evaluation. It's perfect for triggering actions only on a fresh update.
+@end table
+
+@node The Mechanics of Evaluation: Snapshots vs. Live Streams
+@subsection The Mechanics of Evaluation: Snapshots vs. Live Streams
+
+Understanding how @acronym{STARTER} "thinks" when it encounters an expression is the difference between a static setup and a truly fluid system. Let's break down a simple logic gate:
+
+@example
+time:second == 0;
+@end example
+
+To evaluate this, the system doesn't just look at a stored number; it polls the value of @var{time:second} at the exact millisecond the calculation is triggered. If it catches the clock at the top of the minute, the result is @code{TRUE}. Otherwise, it’s @code{FALSE}. 
+
+But here’s where it gets interesting: @emph{Variables}.
+
+@example
+VAR second;
+second = time:second;
+@end example
+
+If you’re coming from traditional programming, you might expect @var{second} to hold a static "snapshot" of the time when that line was executed. @emph{In @acronym{STARTER}, it doesn't}. By default, a variable acts as a @emph{Live Reference}. Using @var{second} or @var{time:second} in your rules is functionally the same—it’s a dynamic link that updates in real-time as the clock ticks.
+
+@node The EVAL Function: Killing the Link
+@subsubsection The EVAL Function: Killing the Link
+
+Sometimes, you don't want a live stream; you want to "freeze" a moment in time. This is where the @emph{@code{EVAL()}} function comes into play. It forces the system to calculate the final result of an expression and store it as a static constant.
+
+@quotation The "Cheat Sheet"
+@table @code
+@item value = 1;
+Hard-coded Constant.
+@item value = time:hour;
+@emph{Dynamic Reference} (The value evolves with the hour).
+@item value = EVAL(time:hour);
+@emph{Frozen Value} (Locks the hour at the moment of assignment).
+@item value = 1 + time:hour;
+@emph{Dynamic Calculation} (The result updates as time moves).
+@item value = EVAL(1 + time:hour);
+@emph{Static Result} (Calculates the sum once and stores the total).
+@end table
+@end quotation
+
+@node Why This Matters: Architectural Elegance
+@subsubsection Why This Matters: Architectural Elegance
+This "Reference-first" approach allows you to build a sophisticated, human-readable logic tree without repeating yourself:
+
+@example
+VAR its_seven_o_clock = (time:hour == 7 && time:minute == 0);
+
+beep:status @{
+    SET TRUE WHEN its_seven_o_clock;
+    SET FALSE WHEN TRUE;
+@}
+@end example
+
+By using a reference (@var{its_seven_o_clock}), you’ve created an @emph{Alias}. Every time @acronym{STARTER} checks the @var{beep:status}, it follows that alias back to the original time logic. It’s clean, it’s abstract, and it’s incredibly powerful.
+
+@node The Boot-Time Paradox
+@subsubsection The Boot-Time Paradox
+
+A quick "gotcha" for the pros:
+
+@example
+VAR startup_hour = EVAL(time:hour);
+@end example
+
+You might intend to capture the exact hour the system starts. However, at the microsecond of boot-up, the @var{ST:Time} service might still be authenticating on the network. If the input doesn't exist yet, @code{EVAL} can't do its job. Don't worry—@acronym{STARTER} handles this gracefully by performing the evaluation as soon as the required service makes its first appearance on the grid.
+
+@node Preprocessing: The Secret Weapon
+@subsection Preprocessing: The Secret Weapon
+
+The final layer of the @acronym{STARTER} language is @emph{Preprocessing}. Before the Core ever reads your rules, the file is passed through an external program that modifies the text on the fly. What @acronym{STARTER} actually executes is the @emph{output} of that program. 
+
+If you’ve spent time in the trenches with C or C++, this concept will feel familiar—though @acronym{STARTER}’s implementation is even more flexible. If you’re not a programmer, think of it this way: the preprocessor is like an automated editor that prepares your "manuscript" before the publisher (the Core) sees it.
+
+@node Power Unleashed: The M4 Default
+@subsubsection Power Unleashed: The M4 Default
+By default, @acronym{STARTER} uses @command{m4}, the powerhouse preprocessor of the @acronym{GNU} system. It is incredibly deep—too deep for a single manual—but it allows for advanced maneuvers like macros, file inclusions, and conditional text generation. 
+
+While I won't turn you into an @command{m4} expert here, you need to know it’s there because it gives you the ability to manage massive, complex sets of rules without repeating yourself. If you’re curious, the official @command{m4} manual is a rabbit hole worth exploring.
+
+@node Swapping the Engine
+@subsubsection Swapping the Engine
+The beauty of @acronym{STARTER}’s philosophy is that you aren't locked in. Don't like @command{m4}? You can swap the preprocessor for any command-line tool you prefer. 
+
+Returning to our @command{gsettings} configuration, you can change the preprocessor with a single command. For example, if you want to bypass preprocessing entirely and just read the file "as-is," you can use the standard @command{cat} command:
+
+@example
+gsettings set org.starter.core rules-preprocessor 'cat @{F@}'
+@end example
+
+In this syntax, @code{@{F@}} is a placeholder that STARTER automatically replaces with the path to your rules file. This flexibility means you could even use a Python script, a custom parser, or a simple text filter as your preprocessor. 
+
+@node Command Line Options: Taking the Reins
+@subsection Command Line Options: Taking the Reins
+
+While @acronym{STARTER} is designed to run quietly in the background as a system service, there are times—especially during debugging or initial setup—when you’ll want to launch it manually. 
+
+When you run @acronym{STARTER} from the terminal, you can pass several options to override the default system settings. This is incredibly useful for testing a new set of rules or increasing the log detail without touching your permanent configuration.
+
+The supported options are:
+
+@multitable @columnfractions .10 .30 .60
+@headitem Option @tab Long option @tab Description
+@item @code{-h} @tab @code{--help} @tab Show all available help options and exit.
+@item @code{-n} @tab @code{--no-discovery} @tab Disable the automatic discovery of network devices/services.
+@item @code{-m} @tab @code{--service-match} @tab Regular expression to filter recognized services. Default: @code{'^(STARTER:|ST:).*'}
+@item @code{-R} @tab @code{--rules} @tab Specify a custom path to a rules file (overrides the default @file{rules.conf}).
+@item @code{-P} @tab @code{--rules-preprocessor} @tab Define a specific command to preprocess the rules file on the fly.
+@item @code{-V} @tab @code{--verbosity} @tab Adjust the detail of the output logs (essential for troubleshooting). 
+@item @code{-v} @tab @code{--version} @tab Print the current version of the Core and exit. 
+@end multitable
+
+@node Advanced Orchestration
+@subsubsection Advanced Orchestration: Segmenting the System
+
+The new @code{--service-match} (or @code{-m}) option is a powerful tool for advanced users who wish to split their automation into multiple independent domains. 
+
+By default, the Core listens to any service starting with @code{STARTER:} or @code{ST:}. However, by modifying this regular expression, you can run @b{multiple Cores} on the same network without interference. Each Core will only "see" and manage services whose names match its specific pattern. 
+
+For example, you could have:
+@itemize @bullet
+@item A Core managing only critical infrastructure: @code{starter --service-match '^ST:CRITICAL:.*'}
+@item A Core managing leisure or lab services: @code{starter --service-match '^ST:LAB:.*'}
+@end itemize
+
+This segmentation ensures that a failure or a configuration error in one domain (like the lab) does not affect the stability of another (like the main heating system).
+
+@node The Override Hierarchy
+@subsubsection The Override Hierarchy
+
+Remember: @emph{Command-line arguments are king}. If you have a database host set via @command{gsettings} but specify a different rule path or service-match via the terminal, the command-line flag will always take precedence. This allows you to experiment with "sandbox" configurations without breaking your main production setup.
+
+@chapter System Architecture: Under the Hood
+
+Now that you’ve mastered the language and the installation, it’s time to look at the "nervous system" of @acronym{STARTER}. Understanding how the Core communicates with its services is key to building a truly robust automation network.
+
+@node A Truly Distributed Ecosystem
+@section A Truly Distributed Ecosystem
+
+As we touched upon in the introduction, @acronym{STARTER} is a @emph{distributed system}. It isn't tied to a single CPU or a single box. 
+
+@table @emph
+@item Single-Machine Mode
+For a home setup, one machine can handle everything.
+@item Large-Scale Deployment
+In a smart city or industrial scenario, you can spread the workload across dozens of low-power machines.
+@end table
+
+The architecture follows a @emph{Client/Server principle}. Each service that manages I/O acts as a @emph{Server}, while the Core acts as the @emph{Client}. You aren't limited to one client; you can deploy multiple Cores across a network, each handling a specific subset of services and logic.
+
+@node ZeroConf: Plug & Play Reality
+@subsection ZeroConf: Plug & Play Reality
+
+One of the most frustrating parts of automation is manual network configuration. @acronym{STARTER} eliminates this via @emph{ZeroConf}. 
+
+The Core constantly listens for @emph{mDNS (Multicast DNS)} events. The moment a new service is powered on and publishes itself on the network, the Core recognizes it, initiates a connection, and synchronizes automatically. No @acronym{IP} addresses to type, no config files to update.
+
+@node Communication via D-Bus RPC
+@subsection Communication via D-Bus RPC
+
+The "dialogue" between clients and servers happens over the @emph{D-Bus TCP protocol}. This Remote Procedure Call (@acronym{RPC}) mechanism allows for high-speed, reliable data exchange.
+
+When a service is discovered, the Core performs a "handshake" using three primary methods:
+
+@table @code
+@item getInputs
+The Core requests a list of all available inputs from the service. Once received, it "hooks" into specific @emph{@code{*-changed} signals}. This ensures that the moment a sensor value shifts at the service level, the Core is notified instantly.
+
+@item getOutputs
+Similar to inputs, the Core fetches the array of available outputs. It hooks the change signals here as well, keeping the Core’s internal map perfectly synchronized with the service’s real-world state.
+
+@item getStats
+Finally, the Core retrieves the service’s internal statistics. Like the I/O, these are monitored via signals so that any diagnostic or performance data is updated in real-time.
+@end table
+
+@node The Operational Loop
+@subsection The Operational Loop
+Once the handshake is complete, the Client and Server are fully linked. Here is the lifecycle of a single action:
+
+@table @emph
+@item Change
+A service updates an Input (e.g., a thermometer reads a new temperature).
+@item Notification
+The service fires a signal; the Core receives it immediately.
+@item Processing
+The Core re-evaluates all rules related to that Input.
+@item Action
+If a rule triggers a change in an Output, the Core calls the @code{SetOutput} method on the service.
+@item Alignment
+The service receives the command and adjusts the physical or abstract hardware to match the requested value.
+@end table
+
+@node The starter-core Library: Building Your Own Ecosystem
+@chapter The starter-core Library: Building Your Own Ecosystem
+
+The heavy lifting—networking, D-Bus signaling, and service discovery—is already baked into the library. This means you can focus on your specific logic while the library handles the "plumbing."
+
+Let's dive into the anatomy of a service. We’ll build a template for your first service in just a few lines of C.
+
+@node The Skeleton: @file{first-service.c}
+@section The Skeleton: @file{first-service.c}
+
+@example
+#include <stdlib.h>
+#include <glib.h>
+
+#include <starter/mdns.h>
+#include <starter/server.h>
+#include <starter/input.h>
+#include <starter/output.h>
+
+static GPtrArray *inputs = NULL;
+static GPtrArray *outputs = NULL;
+static STVersion version = @{ 0, 1, 0 @};
+
+int main(int argc, char *argv[])
+@{
+  GMainLoop *gloop = NULL;
+  STServer *server;
+  STMDNS *mdns;
+  GError *error = NULL;
+
+  gloop = g_main_loop_new(NULL, FALSE);
+
+  // Initializing I/O containers
+  inputs = g_ptr_array_new_full(0, g_object_unref);
+  outputs = g_ptr_array_new_full(0, g_object_unref);
+
+  // Creating the Server instance
+  server = st_server_new("ST:MyFirstService", &version, inputs, outputs);
+  st_server_start(server, 0, &error);
+
+  // Publishing the service via ZeroConf (mDNS)
+  mdns = st_mdns_new();
+  st_mdns_publish_service(mdns, st_server_get_name(server), "_dbus._tcp", st_server_get_port(server));
+
+  g_main_loop_run(gloop);
+
+  return EXIT_SUCCESS;
+@}
+@end example
+
+@node Compiling and Running
+@subsection Compiling and Running
+To turn this code into a binary, use @command{gcc} along with @command{pkg-config} to automatically pull in the necessary flags and libraries:
+
+@example
+gcc -o my-first-service my-first-service.c `pkg-config --cflags --libs starter-core`
+@end example
+
+When you run it, it might look like it's doing nothing. But by enabling debug logs, you can watch the handshake happen in real-time:
+
+@example
+export G_MESSAGES_DEBUG=libstarter-core
+./my-first-service
+@end example
+
+If the Core is already running, you'll see your service "answering" the Core's queries:
+
+@example
+... handle method call GetInputs
+... handle method call GetOutputs
+... handle method call GetStats
+@end example
+
+@node Breaking Down the Code
+@subsection Breaking Down the Code
+
+@table @code
+@item st_server_new(...)
+This initializes your service. You provide a unique name (like @code{ST:MyFirstService}), a version, and the I/O arrays. A key feature here is @emph{shared memory}: the library doesn't copy your inputs and outputs; it shares them. If your code updates a sensor value, the library knows immediately. If the Core sends a command to an output, your code is notified.
+@item st_server_start(server, 0, ...)
+This starts the D-Bus server on a local port. By passing @code{0}, the library automatically finds the first available port—no more manual port management.
+@item st_mdns_new()
+@item st_mdns_publish_service(...)
+This is where the "magic" happens. The first call sets up the discovery engine; the second broadcasts your service's name and port to the network. This is the broadcast that the Core hears, triggering the automatic connection.
+@end table
+
+@node Adding Substance: Inputs and Outputs
+@section Adding Substance: Inputs and Outputs
+
+In the @acronym{STARTER} ecosystem, a service exists to share data. To do that, we need to populate our @var{inputs} and @var{outputs} arrays. Let’s upgrade our code to version @var{0.2.0}:
+
+@example
+// ... headers as before ...
+
+int main(int argc, char *argv[])
+@{
+  // ... boilerplate initialization ...
+
+  // Defining a new Input
+  inputs = g_ptr_array_new_full(0, g_object_unref);
+  g_ptr_array_add(inputs, st_input_new("myFirstInput", 
+    "My first input", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+
+  // Defining a new Output
+  outputs = g_ptr_array_new_full(0, g_object_unref);
+  g_ptr_array_add(outputs, st_output_new("myFirstOutput", 
+    "My first output", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+  
+  // ... server creation and mDNS publish ...
+@}
+@end example
+
+@node The Anatomy of an I/O Object
+@subsection The Anatomy of an I/O Object
+
+To create these objects, we use the @code{st_input_new} and @code{st_output_new} functions. Their signatures are identical, but their roles in the system logic are opposite.
+
+@example
+STInput * st_input_new(
+    const gchar *name,         // Unique identifier (e.g., "temperature")
+    const gchar *description,  // Human-readable description
+    STUnit unit,               // Unit of measurement (Celsius, Percentage, etc.)
+    gdouble min,               // Minimum allowed value
+    gdouble max,               // Maximum allowed value
+    gdouble step,              // Resolution/Step of the value
+    gdouble val,               // Initial value
+    guint64 flags              // Special behavior flags
+);
+@end example
+
+@node The Power of Flags: Customizing I/O Behavior
+@subsection The Power of Flags: Customizing I/O Behavior
+
+A critical, yet often overlooked, field in both @code{STInput} and @code{STOutput} objects is the @var{flags} field. These bitwise flags allow you to modify how the Core interacts with a specific data point, giving you the power to bypass standard logic or optimize database performance on the fly.
+
+The system defines the following flags:
+
+@table @code
+@item ST_IO_FLAG_NULL
+No flags set. The I/O behaves according to standard system defaults.
+
+@item ST_IO_FLAG_MANUAL_OVERRIDE
+This is a "safety" flag for Outputs. When set, the Core is prohibited from automatically changing the value. This is essential for maintenance modes or when you need to take manual control of an actuator without the logic blocks interfering.
+
+@item ST_IO_FLAG_NO_HISTORY
+Use this to keep your database lean. If an Input or Output has this flag, the Core will process the data in real-time but will not write it to the history tables. Perfect for high-frequency data that doesn't require long-term logging.
+
+@item ST_IO_FLAG_USR1
+@item ST_IO_FLAG_USR2
+@item ST_IO_FLAG_USR3
+@item ST_IO_FLAG_USR4 
+These are reserved for you. They carry no internal meaning for the @acronym{STARTER} Core, allowing you to implement custom logic filters or tagging within your own services.
+@end table
+
+By mastering these flags, you aren't just defining data; you are defining the policy of that data within your distributed network.
+
+@node Signals: The Reactive Core
+@section Signals: The Reactive Core
+
+These objects are derived from @code{GObject}, which means they are "chatty." They communicate changes through signals. Every time you modify a property, the object alerts the system.
+
+@table @code
+@item changed
+The "master" signal. It fires whenever *any* property of the object changes.
+@item name-changed
+@item descr-changed
+@item unit-changed
+@item min-changed
+@item max-changed
+@item step-changed
+@item val-changed
+@item flags-changed
+These fire only when their specific property is updated.
+@end table
+
+For instance, if you update the @var{min} value of a sensor, both @code{changed} and @code{min-changed} will be emitted. This allows the Core (or other parts of your code) to react only to the information that matters.
+
+@node Input vs. Output: What's the difference?
+@subsection Input vs. Output: What's the difference?
+
+If the parameters are identical, why do we have two different types?
+@table @code
+@item STInput
+Represents data coming @emph{from the service to the Core} (e.g., a sensor reading). The service "owns" the value; the Core consumes it.
+@item STOutput
+Represents data coming @emph{from the Core to the service} (e.g., a command to turn on a light). The Core "requests" a value; the service executes it.
+@end table
+
+@node The Grand Finale: Bridging Code and Logic
+@section The Grand Finale: Bridging Code and Logic
+
+An @emph{Input} is a stream of data to be read; an @emph{Output} is a command waiting to be written. Now that we’ve defined our I/O, let's stop talking and start @emph{acting}. 
+
+We’re going to evolve our service into a living entity. We’ll implement a @emph{sensor simulation} (a timer that increments a value) and a @dfn{callback} that waits for the Core to bark an order.
+
+@node The Living Service: `first-service-v3.c`
+@subsection The Living Service: `first-service-v3.c`
+
+@example
+#include <starter/mdns.h>
+#include <starter/server.h>
+#include <starter/input.h>
+#include <starter/output.h>
+
+static GPtrArray *inputs = NULL;
+static GPtrArray *outputs = NULL;
+static STVersion version = @{ 0, 3, 0 @};
+
+// Simulation: Incrementing our virtual sensor every second
+static gboolean update_input (gpointer data) @{
+    STInput *input = ST_INPUT(data);
+    gdouble val = st_input_get_val(input);
+    
+    val = (val < 100) ? val + 1 : 0;
+    
+    st_input_set_val(input, val, NULL); // This triggers the *-changed signal automatically
+    return G_SOURCE_CONTINUE;
+@}
+
+// Callback: This fires the moment the Core sends a command to our service
+static void on_output_changed(STOutput *out, gpointer data) @{
+    g_print("Action Triggered! Core set output to: %lf\n", st_output_get_val(out));
+@}
+
+int main(int argc, char *argv[]) @{
+    GMainLoop *gloop = g_main_loop_new(NULL, FALSE);
+    STServer *server;
+    STMDNS *mdns;
+
+    inputs = g_ptr_array_new_full(0, g_object_unref);
+    g_ptr_array_add(inputs, st_input_new("myFirstInput", "Virtual Sensor", ST_UNIT_NULL, 0, 100, 1, 0, ST_IO_FLAG_NULL));
+
+    outputs = g_ptr_array_new_full(0, g_object_unref);
+    g_ptr_array_add(outputs, st_output_new("myFirstOutput", "Actuator", ST_UNIT_NULL, 0, 1, 1, 0, ST_IO_FLAG_NULL));
+
+    // CONNECTING THE SIGNAL: Tell the code to listen for "val-changed"
+    g_signal_connect(outputs->pdata[0], "val-changed", G_CALLBACK(on_output_changed), NULL);
+    
+    server = st_server_new("ST:MyFirstService", &version, inputs, outputs);
+    st_server_start(server, 0, NULL);
+    mdns = st_mdns_new();
+    st_mdns_publish_service(mdns, st_server_get_name(server), "_dbus._tcp", st_server_get_port(server));
+
+    // Start the heartbeat: Update the input every 1 second
+    g_timeout_add_seconds(1, update_input, inputs->pdata[0]);
+    
+    g_main_loop_run(gloop);
+    return EXIT_SUCCESS;
+@}
+@end example
+
+@node The Rule: Closing the Loop
+@subsection The Rule: Closing the Loop
+
+With the service broadcasting and listening, we just need the "brain" to make a decision. Open your @file{rules.conf} and drop this in:
+
+@example
+myFirstOutput @{
+    SET 1 WHEN myFirstInput > 50; 
+    SET 0 WHEN TRUE;
+@}
+@end example
+
+@node The Result: A Symphony of Data
+@subsection The Result: A Symphony of Data
+
+Here is what happens when you hit "Run":
+@table @emph
+@item Discovery
+Your service shouts its existence over mDNS; the Core hears it and hooks up via D-Bus.
+@item Telemetry
+Your code starts counting. Every second, the Core receives the updated `myFirstInput`.
+@item Threshold
+The moment that counter hits **51**, the Core’s rule evaluates to `TRUE`.
+@item Reaction
+The Core calls @code{SetOutput} on your service. Your @code{on_output_changed} function fires, and you see the confirmation in your console. 
+@end table
+
+@emph{Congratulations} You’ve just built a fully distributed, reactive automation loop. You’ve bridged the gap between raw C code and high-level abstract logic. This is no longer just a "beep example"—it's the blueprint for an entire ecosystem.
+
+@node Conclusions: The World is Your Input
+@chapter Conclusions: The World is Your Input
+
+We’ve covered the syntax, the distributed architecture, and the "plumbing" that makes @acronym{STARTER} tick. But as we reach the end of this journey, the most important tool I can leave you with isn't a library or a command—it’s @emph{the art of abstraction}.
+
+@node Thinking in STARTER
+@section Thinking in STARTER
+
+Building a smart system isn't about connecting wires; it's about translating reality into a digital dialogue. When you look at your home, your office, or a complex industrial plant, stop seeing "machines" and start seeing @emph{Inputs} and @emph{Outputs}.
+
+@itemize
+@item @emph{Is it a sensor?} It’s an Input. Whether it's a thermometer, a stock market ticker, or a database query monitoring server load—it's just a number flowing into the system.
+@item @emph{Is it an action?} It’s an Output. Turning on a heater, sending an alert to your phone, or scaling a cloud instance—it’s just a value being set by the Core.
+@end itemize
+
+@node The Power of Generalization
+@subsection The Power of Generalization
+
+The beauty of the @acronym{STARTER} architecture is that the Core doesn’t care @emph{what} the data represents. To the rules engine, a temperature of 25°C and an oil price of $25 are identical. This is your greatest advantage. By generalizing your data, you can reuse logic, simplify complex scenarios, and create an ecosystem where unrelated services can finally "talk" to each other through the Core.
+
+@node Where Will You Take It?
+@subsection Where Will You Take It?
+
+@acronym{STARTER} was born from the need for a system that is as simple as a light switch but as powerful as a distributed cluster. We’ve given you the engine; now you are the architect. 
+
+Whether you're automating a single room to react to the sun or orchestrating a network of machines across different continents, the principle remains the same: @emph{Abstract the complexity, define your rules, and let the system handle the rest.}
+
+Now, the keyboard is yours. What will be your first service? What rules will you write to make your environment work for you?
+
+@emph{Go ahead. Start something.}
+
+@node Database Schema & Initialization
+@appendix Database Schema & Initialization
+
+As we explored in the previous chapters, @acronym{STARTER} is a data-driven ecosystem. For the Core to manage persistence, track event history, and monitor system performance, it requires a solid and correctly configured storage infrastructure. 
+
+This appendix provides the SQL queries necessary to initialize the MariaDB/MySQL database, which should be named @code{STARTER}. The schema is built around three foundational tables:
+
+@table @code
+@item labels
+Maps I/O identifiers to human-readable descriptions and metadata.
+@item history
+The primary ledger where every single event and state change is recorded for long-term analysis.
+@item stats
+Dedicated to gathering diagnostic data and runtime statistics from your various services.
+@end table
+
+@verbatim
+CREATE DATABASE STARTER;
+
+USE STARTER;
+
+CREATE TABLE labels (
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    unit INT NOT NULL,
+    min DOUBLE NOT NULL,
+    max DOUBLE NOT NULL,
+    step DOUBLE NOT NULL,
+    PRIMARY KEY (id),
+    INDEX idx_labels_type (type)
+);
+
+CREATE TABLE history (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    timestamp DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    source VARCHAR(100) NOT NULL,
+    label_id INT NOT NULL,
+    value DOUBLE NOT NULL,
+    flags BIGINT UNSIGNED NOT NULL, 
+    PRIMARY KEY (id),
+    FOREIGN KEY (label_id) REFERENCES labels(id),
+    INDEX idx_label_time (label_id, timestamp),
+    INDEX idx_history_source (source)
+);
+
+CREATE TABLE stats (
+    id                INTEGER PRIMARY KEY AUTO_INCREMENT,
+    service_name      VARCHAR(100) NOT NULL UNIQUE,
+    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    vmsize_min        REAL NOT NULL,
+    vmsize_max        REAL NOT NULL,
+    vmsize_last       REAL NOT NULL,
+
+    vmrss_min         REAL NOT NULL,
+    vmrss_max         REAL NOT NULL,
+    vmrss_last        REAL NOT NULL,
+
+    vmswap_min        REAL NOT NULL,
+    vmswap_max        REAL NOT NULL,
+    vmswap_last       REAL NOT NULL,
+
+    io_read_min       REAL NOT NULL,
+    io_read_max       REAL NOT NULL,
+    io_read_last      REAL NOT NULL,
+
+    io_write_min      REAL NOT NULL,
+    io_write_max      REAL NOT NULL,
+    io_write_last     REAL NOT NULL,
+
+    cpu_min           REAL NOT NULL,
+    cpu_max           REAL NOT NULL,
+    cpu_last          REAL NOT NULL,
+
+    icswitch_min      REAL NOT NULL,
+    icswitch_max      REAL NOT NULL,
+    icswitch_last     REAL NOT NULL,
+
+    priority_min      REAL NOT NULL,
+    priority_max      REAL NOT NULL,
+    priority_last     REAL NOT NULL,
+
+    threads_min       REAL NOT NULL,
+    threads_max       REAL NOT NULL,
+    threads_last      REAL NOT NULL,
+    INDEX idx_service_name (service_name)
+);
+
+CREATE INDEX idx_service_name ON stats (service_name);
+@end verbatim
+
+@quotation Security Note
+Ensure the @var{db-user} defined in your @command{gsettings} configuration has full Read/Write permissions (@code{GRANT ALL PRIVILEGES}) on these tables. Without this, the Core will be unable to commit the "memory" of your system to the disk.
+@end quotation
+
+@node API Reference
+@appendix API Reference
+
+@node Error Handling
+@section Error Handling: The @code{STError} Domain
+
+In a complex ecosystem where services communicate over the network via D-Bus, error handling is not just an option—it is a necessity. @acronym{STARTER} uses the GLib @code{GError} system to report failures in a standardized way.
+
+@node STError
+@subsection STError Enumeration
+
+The @code{STError} enumeration defines the specific error codes returned by the library. These errors are associated with the @code{ST_ERROR} quark.
+
+@deftp {Enumeration} STError
+This enumeration defines the failure modes that can occur during I/O operations or service communication.
+
+@table @code
+@item ST_ERROR_INVALID_VALUE
+The value provided for an operation is outside the allowed range (defined by @var{min} and @var{max}) or is incompatible with the expected @code{STUnit}.
+
+@item ST_ERROR_INVALID_RESPONSE
+The remote service or the Core sent a response that does not match the expected D-Bus signature or contains malformed data.
+
+@item ST_ERROR_NOT_IMPLEMENTED
+The requested method or operation is recognized but not currently supported by the specific version of the service or the library.
+@end table
+@end deftp
+
+@node Error Quarks and Macros
+@subsection Error Quarks and Macros
+
+To work with GLib's error reporting system, @acronym{STARTER} defines a specific error domain.
+
+@defvr {Macro} ST_ERROR
+This macro expands to the result of @code{st_error_quark()}. It is used to identify the error domain when catching or throwing errors:
+
+@example
+if (error->domain == ST_ERROR) @{
+    /* Handle STARTER specific errors */
+@}
+@end example
+@end defvr
+
+@deftypefun GQuark st_error_quark (void)
+Returns a @code{GQuark} that uniquely identifies the @acronym{STARTER} error domain. This function is typically called via the @code{ST_ERROR} macro.
+@end deftypefun
+
+@section API Definitions: Constants and Enumerations
+
+This section describes the foundational constants and types defined in @file{starter/defs.h}. These definitions are shared across the entire ecosystem to ensure consistent behavior between services and the Core.
+
+@node I/O Flags
+@subsection I/O Flags
+
+Flags are used to modify the behavior of @code{STInput} and @code{STOutput} objects. They are defined as bitwise constants of type @code{guint64}.
+
+@vtable @code
+@item ST_IO_FLAG_NULL
+No flags set (@code{0x0}). Standard system behavior applies.
+
+@item ST_IO_FLAG_MANUAL_OVERRIDE
+When set on an Output, it prevents the Core from automatically updating its value. This is used for manual maintenance or safety locks.
+
+@item ST_IO_FLAG_NO_HISTORY
+Disables database logging for the specific I/O. The Core processes changes in real-time but does not record them in the @code{history} table.
+
+@item ST_IO_FLAG_USR1
+@itemx ST_IO_FLAG_USR2
+@itemx ST_IO_FLAG_USR3
+@itemx ST_IO_FLAG_USR4
+User-defined flags. These have no internal meaning for the Core and can be used by developers for custom service-level logic.
+
+@item ST_IO_FLAG_USR_MASK
+A bitmask (@code{0xF000000000000000LL}) provided to easily isolate or clear all user-defined flags.
+@end vtable
+
+@node STUnit Enumeration
+@subsection STUnit Enumeration
+
+The @code{STUnit} enumeration defines the measurement units supported by the system. Every Input and Output must be associated with a unit to ensure proper data interpretation and visualization (e.g., in Grafana dashboards).
+
+@deftp {Enumeration} STUnit
+@table @code
+@item ST_UNIT_NULL
+No unit specified.
+@item ST_UNIT_CELSIUS
+Temperature in degrees Celsius.
+@item ST_UNIT_PERCENT
+Percentage values (0.0 to 100.0).
+@item ST_UNIT_BAR
+Pressure in bars.
+@item ST_UNIT_ONOFF
+Binary state representation.
+@item ST_UNIT_ENUM
+A discrete list of states.
+@item ST_UNIT_V
+@itemx ST_UNIT_W
+@itemx ST_UNIT_VAR
+@itemx ST_UNIT_KW
+Electrical units: Volts, Watts, Volt-Ampere Reactive, and Kilowatts.
+@item ST_UNIT_WH
+@itemx ST_UNIT_KWH
+Energy consumption units: Watt-hours and Kilowatt-hours.
+@item ST_UNIT_SECONDS
+@itemx ST_UNIT_MINUTES
+@itemx ST_UNIT_HOURS
+Time duration units.
+@end table
+@end deftp
+
+@node Special Constants
+@subsection Special Constants
+
+@defvr {Macro} ST_INVALID_VALUE
+This macro evaluates to @code{G_MAXDOUBLE}. It is used by the system to indicate that a value is currently unavailable or that an I/O has not yet been initialized.
+@end defvr
+
+@node STInput: The Sensor Abstraction
+@section STInput: The Sensor Abstraction
+
+The @code{STInput} object represents a single data source within the STARTER ecosystem. It is a derivable @code{GObject} that encapsulates not only the current value but also the metadata (units, ranges, steps) required for the Core to interpret the data correctly.
+
+@node STInput Lifecycle Management
+@subsection Lifecycle Management
+
+@deftypefun {STInput *} st_input_new (const gchar *@var{name}, const gchar *@var{description}, STUnit @var{unit}, gdouble @var{min}, gdouble @var{max}, gdouble @var{step}, gdouble @var{val}, guint64 @var{flags})
+Creates a new @code{STInput} instance. 
+
+@itemize @bullet
+@item @var{name}: Unique identifier used in rules (e.g., "living_room_temp").
+@item @var{description}: A human-readable string describing the input.
+@item @var{unit}: The @code{STUnit} associated with the data.
+@item @var{min} / @var{max}: The allowed logical range for the value.
+@item @var{step}: The minimum increment between values.
+@item @var{val}: The initial value.
+@item @var{flags}: Behavior modifiers (see @ref{I/O Flags}).
+@end itemize
+@end deftypefun
+
+@deftypefun {STInput *} st_input_dup (const STInput *@var{self})
+Creates a deep copy of an existing @code{STInput} object.
+@end deftypefun
+
+@node STInput Metadata Accessors
+@subsection Metadata Accessors
+
+These functions manage the identity and properties of the input. Most "set" functions will emit a specific signal (e.g., @code{name-changed}) and a general @code{changed} signal upon success.
+
+@deftypefun {const char *} st_input_get_name (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_name (STInput *@var{self}, const char *@var{name}, GError **@var{error})
+Gets or sets the unique identifier for the input.
+@end deftypefun
+
+@deftypefun {const char *} st_input_get_description (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_description (STInput *@var{self}, const char *@var{description}, GError **@var{error})
+Gets or sets the human-readable description.
+@end deftypefun
+
+@deftypefun {STUnit} st_input_get_unit (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_unit (STInput *@var{self}, STUnit @var{unit}, GError **@var{error})
+Gets or sets the measurement unit.
+@end deftypefun
+
+@node Range and Value Control
+@subsection Range and Value Control
+
+@deftypefun {gdouble} st_input_get_val (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_val (STInput *@var{self}, gdouble @var{val}, GError **@var{error})
+Returns or updates the current value. If @var{val} is outside the @var{min}/@var{max} range, the function will fail and return @code{ST_ERROR_INVALID_VALUE}.
+@end deftypefun
+
+@deftypefun {gdouble} st_input_get_min (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_min (STInput *@var{self}, gdouble @var{min}, GError **@var{error})
+@deftypefunx {gdouble} st_input_get_max (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_max (STInput *@var{self}, gdouble @var{max}, GError **@var{error})
+Manage the operational boundaries of the input.
+@end deftypefun
+
+@deftypefun {gdouble} st_input_get_step (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_step (STInput *@var{self}, gdouble @var{step}, GError **@var{error})
+Manage the value increment resolution.
+@end deftypefun
+
+@deftypefun {guint64} st_input_get_flags (const STInput *@var{self})
+@deftypefunx {gboolean} st_input_set_flags (STInput *@var{self}, guint64 @var{flags}, GError **@var{error})
+Gets or sets the behavioral flags (e.g., @code{ST_IO_FLAG_NO_HISTORY}).
+@end deftypefun
+
+@node STOutput: The Actuator Abstraction
+@section STOutput: The Actuator Abstraction
+
+The @code{STOutput} object represents an actionable endpoint within the STARTER ecosystem. While @code{STInput} is for reading the world, @code{STOutput} is for changing it. It is a derivable @code{GObject} that filters incoming commands from the Core against defined ranges and steps.
+
+@node STOutput Lifecycle Management
+@subsection Lifecycle Management
+
+@deftypefun {STOutput *} st_output_new (const gchar *@var{name}, const gchar *@var{description}, STUnit @var{unit}, gdouble @var{min}, gdouble @var{max}, gdouble @var{step}, gdouble @var{val}, guint64 @var{flags})
+Creates a new @code{STOutput} instance.
+
+@itemize @bullet
+@item @var{name}: Unique identifier used as the target in rules (e.g., @code{main_heater}).
+@item @var{description}: Human-readable description of the actuator.
+@item @var{unit}: The @code{STUnit} (e.g., @code{ST_UNIT_ONOFF} for switches).
+@item @var{min} / @var{max}: The allowed range for commanded values.
+@item @var{step}: The resolution for valid commands.
+@item @var{val}: The initial state of the output.
+@item @var{flags}: Behavior modifiers (see @ref{I/O Flags}).
+@end itemize
+@end deftypefun
+
+@deftypefun {STOutput *} st_output_dup (const STOutput *@var{self})
+Creates a deep copy of an existing @code{STOutput} object.
+@end deftypefun
+
+@node STOutput Metadata Accessors
+@subsection Metadata Accessors
+
+Similar to inputs, these functions manage the properties of the output. Setting these properties will emit specific signals to notify the rest of the system of the change in configuration.
+
+@deftypefun {const char *} st_output_get_name (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_name (STOutput *@var{self}, const char *@var{name}, GError **@var{error})
+Gets or sets the unique identifier.
+@end deftypefun
+
+@deftypefun {const char *} st_output_get_description (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_description (STOutput *@var{self}, const char *@var{description}, GError **@var{error})
+Gets or sets the human-readable description.
+@end deftypefun
+
+@deftypefun {STUnit} st_output_get_unit (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_unit (STOutput *@var{self}, STUnit @var{unit}, GError **@var{error})
+Gets or sets the measurement unit.
+@end deftypefun
+
+@node Value and State Control
+@subsection Value and State Control
+
+@deftypefun {gdouble} st_output_get_val (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_val (STOutput *@var{self}, gdouble @var{val}, GError **@var{error})
+Returns or updates the current value. For outputs, @code{st_output_set_val} is typically called by the service when it receives a command from the Core, or when a manual override is in effect. 
+@end deftypefun
+
+@deftypefun {gdouble} st_output_get_min (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_min (STOutput *@var{self}, gdouble @var{min}, GError **@var{error})
+@deftypefunx {gdouble} st_output_get_max (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_max (STOutput *@var{self}, gdouble @var{max}, GError **@var{error})
+Manage the operational range. Commands outside these bounds will be rejected.
+@end deftypefun
+
+@deftypefun {gdouble} st_output_get_step (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_step (STOutput *@var{self}, gdouble @var{step}, GError **@var{error})
+Sets the precision required for value updates.
+@end deftypefun
+
+@deftypefun {guint64} st_output_get_flags (const STOutput *@var{self})
+@deftypefunx {gboolean} st_output_set_flags (STOutput *@var{self}, guint64 @var{flags}, GError **@var{error})
+Manages behavioral flags like @code{ST_IO_FLAG_MANUAL_OVERRIDE}.
+@end deftypefun
+
+@node Network Discovery: mDNS and Service Location
+@section Network Discovery: mDNS and Service Location
+
+STARTER uses Multicast DNS (mDNS) to achieve true zero-configuration networking. This allows the Core and various services to discover each other dynamically on the local network.
+
+@node STMDNSService: Service Representation
+@subsection STMDNSService: Service Representation
+
+The @code{STMDNSService} object is a data container that represents a discovered service or a service ready to be published.
+
+@deftypefun {STMDNSService *} st_mdns_service_new (const gchar *@var{name}, const gchar *@var{type}, const gchar *@var{host}, const gchar *@var{address}, const guint16 @var{port}, const gint @var{proto})
+Creates a new @code{STMDNSService} descriptor.
+@itemize @bullet
+@item @var{name}: The service instance name (e.g., "ST:MyFirstService").
+@item @var{type}: The mDNS service type (e.g., "_dbus._tcp").
+@item @var{host}: The target hostname.
+@item @var{address}: The IP address of the service.
+@item @var{port}: The TCP/UDP port where the service is listening.
+@item @var{proto}: The network protocol (IPv4/IPv6).
+@end itemize
+@end deftypefun
+
+@node Property Management
+@subsubsection Property Management
+
+@deftypefun {const gchar *} st_mdns_service_get_name (const STMDNSService *@var{self})
+@deftypefunx {void} st_mdns_service_set_name (STMDNSService *@var{self}, const gchar *@var{name})
+@deftypefunx {const gchar *} st_mdns_service_get_mdns_type (const STMDNSService *@var{self})
+@deftypefunx {void} st_mdns_service_set_mdns_type (STMDNSService *@var{self}, const gchar *@var{type})
+@deftypefunx {const gchar *} st_mdns_service_get_host (const STMDNSService *@var{self})
+@deftypefunx {void} st_mdns_service_set_host (STMDNSService *@var{self}, const gchar *@var{host})
+@deftypefunx {const gchar *} st_mdns_service_get_address (const STMDNSService *@var{self})
+@deftypefunx {void} st_mdns_service_set_address (STMDNSService *@var{self}, const gchar *@var{address})
+@deftypefunx {guint16} st_mdns_service_get_port (const STMDNSService *@var{self})
+@deftypefunx {void} st_mdns_service_set_port (STMDNSService *@var{self}, const guint16 @var{port})
+Getters and setters for the service network properties.
+@end deftypefun
+
+@node STMDNS: The Discovery Engine
+@subsection STMDNS: The Discovery Engine
+
+The @code{STMDNS} object handles the actual background tasks of browsing for services and publishing your own.
+
+@deftypefun {STMDNS *} st_mdns_new (void)
+Initializes the mDNS engine.
+@end deftypefun
+
+@deftypefun {gboolean} st_mdns_publish_service (STMDNS *@var{self}, const gchar *@var{name}, const gchar *@var{type}, guint16 @var{port})
+Broadcasts your service to the network. This is what makes your service "visible" to the STARTER Core.
+@end deftypefun
+
+@deftypefun {const GList *} st_mdns_get_all_services (STMDNS *@var{self})
+Returns a list of all @code{STMDNSService} objects currently discovered on the network.
+@end deftypefun
+
+@node Signals
+@subsubsection Signals
+
+@deffn Signal {STMDNS} service-added (@code{STMDNSService *service})
+Emitted when a new STARTER-compatible service is discovered on the network.
+@end deffn
+
+@deffn Signal {STMDNS} service-removed (@code{STMDNSService *service})
+Emitted when a service is no longer reachable.
+@end deffn
+
+@node System Statistics: Performance Monitoring
+@section System Statistics: Performance Monitoring
+
+STARTER provides a built-in framework for monitoring the health and performance of its services. This telemetry data allows for deep analysis of resource consumption, such as CPU usage and memory footprint.
+
+@node STStats: The Telemetry Container
+@subsection STStats: The Telemetry Container
+
+The @code{STStats} object acts as a snapshot of a process's performance metrics. It uses the @code{STStatsEntry} structure to store @var{min}, @var{max}, and @var{last} values for each metric.
+
+@deftp {Structure} STStatsEntry
+@table @code
+@item min
+The minimum value recorded since the collector started.
+@item max
+The maximum value recorded.
+@item last
+The most recent measurement.
+@end table
+@end deftp
+
+@deftypefun {STStats *} st_stats_new (const gchar *@var{name})
+Creates a new statistics container identified by @var{name}.
+@end deftypefun
+
+@node Metric Accessors
+@subsubsection Metric Accessors
+
+@deftypefun {const STStatsEntry *} st_stats_get_cpu (const STStats *@var{self})
+@deftypefunx {const STStatsEntry *} st_stats_get_vmrss (const STStats *@var{self})
+@deftypefunx {const STStatsEntry *} st_stats_get_vmsize (const STStats *@var{self})
+@deftypefunx {const STStatsEntry *} st_stats_get_threads (const STStats *@var{self})
+Retrieve specific metrics including CPU load (percentage), Resident Set Size (memory actually used), Virtual Memory Size, and thread count.
+@end deftypefun
+
+@node STStatsCollector: The Abstract Engine
+@subsection STStatsCollector: The Abstract Engine
+
+The @code{STStatsCollector} is a derivable base class designed to automate the sampling of statistics at regular intervals.
+
+@deftypefun {STStatsCollector *} st_stats_collector_new (STStats *@var{stats}, guint @var{update_interval_ms})
+Initializes a collector that will update the provided @var{stats} object every @var{update_interval_ms} milliseconds.
+@end deftypefun
+
+@node STProcessStatsCollector: Process Monitoring
+@subsection STProcessStatsCollector: Process Monitoring
+
+This is a specialized implementation of the collector that reads performance data directly from the system (e.g., @file{/proc} on Linux) for the current process.
+
+@deftypefun {STProcessStatsCollector *} st_process_stats_collector_new (STStats *@var{stats}, guint @var{interval_ms})
+Creates a collector that automatically gathers OS-level metrics (memory, I/O, context switches) for the running service.
+@end deftypefun
+
+@node Services and Communication: Server and Client
+@section Services and Communication: Server and Client
+
+This section details the primary objects used to establish distributed communication within the STARTER network. The @code{STServer} exposes local resources to the network, while @code{STClient} provides the means to discover and control remote services.
+
+@node STServer: Publishing a Service
+@subsection STServer: Publishing a Service
+
+The @code{STServer} object is responsible for taking a collection of @code{STInput} and @code{STOutput} objects and making them available over D-Bus. It handles the low-level registration and message dispatching.
+
+@deftypefun {STServer *} st_server_new (const gchar *@var{name}, const STVersion *@var{version}, GPtrArray *@var{inputs}, GPtrArray *@var{outputs})
+Initializes a new server instance.
+@itemize @bullet
+@item @var{name}: The unique name of the service (e.g., "ST:MyService").
+@item @var{version}: The @code{STVersion} of the service.
+@item @var{inputs}: A @code{GPtrArray} containing the @code{STInput} objects to expose.
+@item @var{outputs}: A @code{GPtrArray} containing the @code{STOutput} objects to expose.
+@end itemize
+@end deftypefun
+
+@deftypefun {gboolean} st_server_start (STServer *@var{self}, guint16 @var{port}, GError **@var{error})
+Starts the server and begins listening for incoming connections on the specified @var{port}.
+@end deftypefun
+
+@node Service Metadata
+@subsubsection Service Metadata
+
+@deftypefun {const gchar *} st_server_get_name (const STServer *@var{self})
+@deftypefunx {gboolean} st_server_set_name (STServer *@var{self}, const gchar *@var{name}, GError **@var{error})
+@deftypefunx {const STVersion *} st_server_get_version (const STServer *@var{self})
+@deftypefunx {const GPtrArray *} st_server_get_inputs (const STServer *@var{self})
+@deftypefunx {const GPtrArray *} st_server_get_outputs (const STServer *@var{self})
+Accessors to retrieve or modify the server's identity and its collection of I/O objects.
+@end deftypefun
+
+@node STClient: Consuming a Service
+@subsection STClient: Consuming a Service
+
+The @code{STClient} is the counterpart to the server. It connects to a remote @code{STServer} and creates a local proxy of all its inputs, outputs, and statistics.
+
+@deftypefun {STClient *} st_client_new (void)
+Creates a new, uninitialized client object.
+@end deftypefun
+
+@deftypefun {gboolean} st_client_start (STClient *@var{self}, const gchar *@var{address}, guint16 @var{port}, GError **@var{error})
+Connects the client to a remote service at the given @var{address} and @var{port}. Upon success, the client will automatically synchronize all remote I/O objects.
+@end deftypefun
+
+@node Remote Resource Access
+@subsubsection Remote Resource Access
+
+Once a client is started, it provides access to the remote service's data as if it were local.
+
+@deftypefun {const GPtrArray *} st_client_get_inputs (STClient *@var{self})
+@deftypefunx {const GPtrArray *} st_client_get_outputs (STClient *@var{self})
+Returns arrays of @code{STInput} and @code{STOutput} objects that represent the remote service's resources.
+@end deftypefun
+
+@deftypefun {const STStats *} st_client_get_stats (STClient *@var{self})
+Retrieves the performance statistics (@code{STStats}) of the remote process.
+@end deftypefun
+
+@appendix GNU Free Documentation License
+@c The GNU Free Documentation License.
+@center Version 1.3, 3 November 2008
+
+@c This file is intended to be included within another document,
+@c hence no sectioning command or @node.
+
+@display
+Copyright @copyright{} 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+@uref{https://fsf.org/}
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+@end display
+
+@enumerate 0
+@item
+PREAMBLE
+
+The purpose of this License is to make a manual, textbook, or other
+functional and useful document @dfn{free} in the sense of freedom: to
+assure everyone the effective freedom to copy and redistribute it,
+with or without modifying it, either commercially or noncommercially.
+Secondarily, this License preserves for the author and publisher a way
+to get credit for their work, while not being considered responsible
+for modifications made by others.
+
+This License is a kind of ``copyleft'', which means that derivative
+works of the document must themselves be free in the same sense.  It
+complements the GNU General Public License, which is a copyleft
+license designed for free software.
+
+We have designed this License in order to use it for manuals for free
+software, because free software needs free documentation: a free
+program should come with manuals providing the same freedoms that the
+software does.  But this License is not limited to software manuals;
+it can be used for any textual work, regardless of subject matter or
+whether it is published as a printed book.  We recommend this License
+principally for works whose purpose is instruction or reference.
+
+@item
+APPLICABILITY AND DEFINITIONS
+
+This License applies to any manual or other work, in any medium, that
+contains a notice placed by the copyright holder saying it can be
+distributed under the terms of this License.  Such a notice grants a
+world-wide, royalty-free license, unlimited in duration, to use that
+work under the conditions stated herein.  The ``Document'', below,
+refers to any such manual or work.  Any member of the public is a
+licensee, and is addressed as ``you''.  You accept the license if you
+copy, modify or distribute the work in a way requiring permission
+under copyright law.
+
+A ``Modified Version'' of the Document means any work containing the
+Document or a portion of it, either copied verbatim, or with
+modifications and/or translated into another language.
+
+A ``Secondary Section'' is a named appendix or a front-matter section
+of the Document that deals exclusively with the relationship of the
+publishers or authors of the Document to the Document's overall
+subject (or to related matters) and contains nothing that could fall
+directly within that overall subject.  (Thus, if the Document is in
+part a textbook of mathematics, a Secondary Section may not explain
+any mathematics.)  The relationship could be a matter of historical
+connection with the subject or with related matters, or of legal,
+commercial, philosophical, ethical or political position regarding
+them.
+
+The ``Invariant Sections'' are certain Secondary Sections whose titles
+are designated, as being those of Invariant Sections, in the notice
+that says that the Document is released under this License.  If a
+section does not fit the above definition of Secondary then it is not
+allowed to be designated as Invariant.  The Document may contain zero
+Invariant Sections.  If the Document does not identify any Invariant
+Sections then there are none.
+
+The ``Cover Texts'' are certain short passages of text that are listed,
+as Front-Cover Texts or Back-Cover Texts, in the notice that says that
+the Document is released under this License.  A Front-Cover Text may
+be at most 5 words, and a Back-Cover Text may be at most 25 words.
+
+A ``Transparent'' copy of the Document means a machine-readable copy,
+represented in a format whose specification is available to the
+general public, that is suitable for revising the document
+straightforwardly with generic text editors or (for images composed of
+pixels) generic paint programs or (for drawings) some widely available
+drawing editor, and that is suitable for input to text formatters or
+for automatic translation to a variety of formats suitable for input
+to text formatters.  A copy made in an otherwise Transparent file
+format whose markup, or absence of markup, has been arranged to thwart
+or discourage subsequent modification by readers is not Transparent.
+An image format is not Transparent if used for any substantial amount
+of text.  A copy that is not ``Transparent'' is called ``Opaque''.
+
+Examples of suitable formats for Transparent copies include plain
+ASCII without markup, Texinfo input format, La@TeX{} input
+format, SGML or XML using a publicly available
+DTD, and standard-conforming simple HTML,
+PostScript or PDF designed for human modification.  Examples
+of transparent image formats include PNG, XCF and
+JPG@.  Opaque formats include proprietary formats that can be
+read and edited only by proprietary word processors, SGML or
+XML for which the DTD and/or processing tools are
+not generally available, and the machine-generated HTML,
+PostScript or PDF produced by some word processors for
+output purposes only.
+
+The ``Title Page'' means, for a printed book, the title page itself,
+plus such following pages as are needed to hold, legibly, the material
+this License requires to appear in the title page.  For works in
+formats which do not have any title page as such, ``Title Page'' means
+the text near the most prominent appearance of the work's title,
+preceding the beginning of the body of the text.
+
+The ``publisher'' means any person or entity that distributes copies
+of the Document to the public.
+
+A section ``Entitled XYZ'' means a named subunit of the Document whose
+title either is precisely XYZ or contains XYZ in parentheses following
+text that translates XYZ in another language.  (Here XYZ stands for a
+specific section name mentioned below, such as ``Acknowledgements'',
+``Dedications'', ``Endorsements'', or ``History''.)  To ``Preserve the Title''
+of such a section when you modify the Document means that it remains a
+section ``Entitled XYZ'' according to this definition.
+
+The Document may include Warranty Disclaimers next to the notice which
+states that this License applies to the Document.  These Warranty
+Disclaimers are considered to be included by reference in this
+License, but only as regards disclaiming warranties: any other
+implication that these Warranty Disclaimers may have is void and has
+no effect on the meaning of this License.
+
+@item
+VERBATIM COPYING
+
+You may copy and distribute the Document in any medium, either
+commercially or noncommercially, provided that this License, the
+copyright notices, and the license notice saying this License applies
+to the Document are reproduced in all copies, and that you add no other
+conditions whatsoever to those of this License.  You may not use
+technical measures to obstruct or control the reading or further
+copying of the copies you make or distribute.  However, you may accept
+compensation in exchange for copies.  If you distribute a large enough
+number of copies you must also follow the conditions in section 3.
+
+You may also lend copies, under the same conditions stated above, and
+you may publicly display copies.
+
+@item
+COPYING IN QUANTITY
+
+If you publish printed copies (or copies in media that commonly have
+printed covers) of the Document, numbering more than 100, and the
+Document's license notice requires Cover Texts, you must enclose the
+copies in covers that carry, clearly and legibly, all these Cover
+Texts: Front-Cover Texts on the front cover, and Back-Cover Texts on
+the back cover.  Both covers must also clearly and legibly identify
+you as the publisher of these copies.  The front cover must present
+the full title with all words of the title equally prominent and
+visible.  You may add other material on the covers in addition.
+Copying with changes limited to the covers, as long as they preserve
+the title of the Document and satisfy these conditions, can be treated
+as verbatim copying in other respects.
+
+If the required texts for either cover are too voluminous to fit
+legibly, you should put the first ones listed (as many as fit
+reasonably) on the actual cover, and continue the rest onto adjacent
+pages.
+
+If you publish or distribute Opaque copies of the Document numbering
+more than 100, you must either include a machine-readable Transparent
+copy along with each Opaque copy, or state in or with each Opaque copy
+a computer-network location from which the general network-using
+public has access to download using public-standard network protocols
+a complete Transparent copy of the Document, free of added material.
+If you use the latter option, you must take reasonably prudent steps,
+when you begin distribution of Opaque copies in quantity, to ensure
+that this Transparent copy will remain thus accessible at the stated
+location until at least one year after the last time you distribute an
+Opaque copy (directly or through your agents or retailers) of that
+edition to the public.
+
+It is requested, but not required, that you contact the authors of the
+Document well before redistributing any large number of copies, to give
+them a chance to provide you with an updated version of the Document.
+
+@item
+MODIFICATIONS
+
+You may copy and distribute a Modified Version of the Document under
+the conditions of sections 2 and 3 above, provided that you release
+the Modified Version under precisely this License, with the Modified
+Version filling the role of the Document, thus licensing distribution
+and modification of the Modified Version to whoever possesses a copy
+of it.  In addition, you must do these things in the Modified Version:
+
+@enumerate A
+@item
+Use in the Title Page (and on the covers, if any) a title distinct
+from that of the Document, and from those of previous versions
+(which should, if there were any, be listed in the History section
+of the Document).  You may use the same title as a previous version
+if the original publisher of that version gives permission.
+
+@item
+List on the Title Page, as authors, one or more persons or entities
+responsible for authorship of the modifications in the Modified
+Version, together with at least five of the principal authors of the
+Document (all of its principal authors, if it has fewer than five),
+unless they release you from this requirement.
+
+@item
+State on the Title page the name of the publisher of the
+Modified Version, as the publisher.
+
+@item
+Preserve all the copyright notices of the Document.
+
+@item
+Add an appropriate copyright notice for your modifications
+adjacent to the other copyright notices.
+
+@item
+Include, immediately after the copyright notices, a license notice
+giving the public permission to use the Modified Version under the
+terms of this License, in the form shown in the Addendum below.
+
+@item
+Preserve in that license notice the full lists of Invariant Sections
+and required Cover Texts given in the Document's license notice.
+
+@item
+Include an unaltered copy of this License.
+
+@item
+Preserve the section Entitled ``History'', Preserve its Title, and add
+to it an item stating at least the title, year, new authors, and
+publisher of the Modified Version as given on the Title Page.  If
+there is no section Entitled ``History'' in the Document, create one
+stating the title, year, authors, and publisher of the Document as
+given on its Title Page, then add an item describing the Modified
+Version as stated in the previous sentence.
+
+@item
+Preserve the network location, if any, given in the Document for
+public access to a Transparent copy of the Document, and likewise
+the network locations given in the Document for previous versions
+it was based on.  These may be placed in the ``History'' section.
+You may omit a network location for a work that was published at
+least four years before the Document itself, or if the original
+publisher of the version it refers to gives permission.
+
+@item
+For any section Entitled ``Acknowledgements'' or ``Dedications'', Preserve
+the Title of the section, and preserve in the section all the
+substance and tone of each of the contributor acknowledgements and/or
+dedications given therein.
+
+@item
+Preserve all the Invariant Sections of the Document,
+unaltered in their text and in their titles.  Section numbers
+or the equivalent are not considered part of the section titles.
+
+@item
+Delete any section Entitled ``Endorsements''.  Such a section
+may not be included in the Modified Version.
+
+@item
+Do not retitle any existing section to be Entitled ``Endorsements'' or
+to conflict in title with any Invariant Section.
+
+@item
+Preserve any Warranty Disclaimers.
+@end enumerate
+
+If the Modified Version includes new front-matter sections or
+appendices that qualify as Secondary Sections and contain no material
+copied from the Document, you may at your option designate some or all
+of these sections as invariant.  To do this, add their titles to the
+list of Invariant Sections in the Modified Version's license notice.
+These titles must be distinct from any other section titles.
+
+You may add a section Entitled ``Endorsements'', provided it contains
+nothing but endorsements of your Modified Version by various
+parties---for example, statements of peer review or that the text has
+been approved by an organization as the authoritative definition of a
+standard.
+
+You may add a passage of up to five words as a Front-Cover Text, and a
+passage of up to 25 words as a Back-Cover Text, to the end of the list
+of Cover Texts in the Modified Version.  Only one passage of
+Front-Cover Text and one of Back-Cover Text may be added by (or
+through arrangements made by) any one entity.  If the Document already
+includes a cover text for the same cover, previously added by you or
+by arrangement made by the same entity you are acting on behalf of,
+you may not add another; but you may replace the old one, on explicit
+permission from the previous publisher that added the old one.
+
+The author(s) and publisher(s) of the Document do not by this License
+give permission to use their names for publicity for or to assert or
+imply endorsement of any Modified Version.
+
+@item
+COMBINING DOCUMENTS
+
+You may combine the Document with other documents released under this
+License, under the terms defined in section 4 above for modified
+versions, provided that you include in the combination all of the
+Invariant Sections of all of the original documents, unmodified, and
+list them all as Invariant Sections of your combined work in its
+license notice, and that you preserve all their Warranty Disclaimers.
+
+The combined work need only contain one copy of this License, and
+multiple identical Invariant Sections may be replaced with a single
+copy.  If there are multiple Invariant Sections with the same name but
+different contents, make the title of each such section unique by
+adding at the end of it, in parentheses, the name of the original
+author or publisher of that section if known, or else a unique number.
+Make the same adjustment to the section titles in the list of
+Invariant Sections in the license notice of the combined work.
+
+In the combination, you must combine any sections Entitled ``History''
+in the various original documents, forming one section Entitled
+``History''; likewise combine any sections Entitled ``Acknowledgements'',
+and any sections Entitled ``Dedications''.  You must delete all
+sections Entitled ``Endorsements.''
+
+@item
+COLLECTIONS OF DOCUMENTS
+
+You may make a collection consisting of the Document and other documents
+released under this License, and replace the individual copies of this
+License in the various documents with a single copy that is included in
+the collection, provided that you follow the rules of this License for
+verbatim copying of each of the documents in all other respects.
+
+You may extract a single document from such a collection, and distribute
+it individually under this License, provided you insert a copy of this
+License into the extracted document, and follow this License in all
+other respects regarding verbatim copying of that document.
+
+@item
+AGGREGATION WITH INDEPENDENT WORKS
+
+A compilation of the Document or its derivatives with other separate
+and independent documents or works, in or on a volume of a storage or
+distribution medium, is called an ``aggregate'' if the copyright
+resulting from the compilation is not used to limit the legal rights
+of the compilation's users beyond what the individual works permit.
+When the Document is included in an aggregate, this License does not
+apply to the other works in the aggregate which are not themselves
+derivative works of the Document.
+
+If the Cover Text requirement of section 3 is applicable to these
+copies of the Document, then if the Document is less than one half of
+the entire aggregate, the Document's Cover Texts may be placed on
+covers that bracket the Document within the aggregate, or the
+electronic equivalent of covers if the Document is in electronic form.
+Otherwise they must appear on printed covers that bracket the whole
+aggregate.
+
+@item
+TRANSLATION
+
+Translation is considered a kind of modification, so you may
+distribute translations of the Document under the terms of section 4.
+Replacing Invariant Sections with translations requires special
+permission from their copyright holders, but you may include
+translations of some or all Invariant Sections in addition to the
+original versions of these Invariant Sections.  You may include a
+translation of this License, and all the license notices in the
+Document, and any Warranty Disclaimers, provided that you also include
+the original English version of this License and the original versions
+of those notices and disclaimers.  In case of a disagreement between
+the translation and the original version of this License or a notice
+or disclaimer, the original version will prevail.
+
+If a section in the Document is Entitled ``Acknowledgements'',
+``Dedications'', or ``History'', the requirement (section 4) to Preserve
+its Title (section 1) will typically require changing the actual
+title.
+
+@item
+TERMINATION
+
+You may not copy, modify, sublicense, or distribute the Document
+except as expressly provided under this License.  Any attempt
+otherwise to copy, modify, sublicense, or distribute it is void, and
+will automatically terminate your rights under this License.
+
+However, if you cease all violation of this License, then your license
+from a particular copyright holder is reinstated (a) provisionally,
+unless and until the copyright holder explicitly and finally
+terminates your license, and (b) permanently, if the copyright holder
+fails to notify you of the violation by some reasonable means prior to
+60 days after the cessation.
+
+Moreover, your license from a particular copyright holder is
+reinstated permanently if the copyright holder notifies you of the
+violation by some reasonable means, this is the first time you have
+received notice of violation of this License (for any work) from that
+copyright holder, and you cure the violation prior to 30 days after
+your receipt of the notice.
+
+Termination of your rights under this section does not terminate the
+licenses of parties who have received copies or rights from you under
+this License.  If your rights have been terminated and not permanently
+reinstated, receipt of a copy of some or all of the same material does
+not give you any rights to use it.
+
+@item
+FUTURE REVISIONS OF THIS LICENSE
+
+The Free Software Foundation may publish new, revised versions
+of the GNU Free Documentation License from time to time.  Such new
+versions will be similar in spirit to the present version, but may
+differ in detail to address new problems or concerns.  See
+@uref{https://www.gnu.org/licenses/}.
+
+Each version of the License is given a distinguishing version number.
+If the Document specifies that a particular numbered version of this
+License ``or any later version'' applies to it, you have the option of
+following the terms and conditions either of that specified version or
+of any later version that has been published (not as a draft) by the
+Free Software Foundation.  If the Document does not specify a version
+number of this License, you may choose any version ever published (not
+as a draft) by the Free Software Foundation.  If the Document
+specifies that a proxy can decide which future versions of this
+License can be used, that proxy's public statement of acceptance of a
+version permanently authorizes you to choose that version for the
+Document.
+
+@item
+RELICENSING
+
+``Massive Multiauthor Collaboration Site'' (or ``MMC Site'') means any
+World Wide Web server that publishes copyrightable works and also
+provides prominent facilities for anybody to edit those works.  A
+public wiki that anybody can edit is an example of such a server.  A
+``Massive Multiauthor Collaboration'' (or ``MMC'') contained in the
+site means any set of copyrightable works thus published on the MMC
+site.
+
+``CC-BY-SA'' means the Creative Commons Attribution-Share Alike 3.0
+license published by Creative Commons Corporation, a not-for-profit
+corporation with a principal place of business in San Francisco,
+California, as well as future copyleft versions of that license
+published by that same organization.
+
+``Incorporate'' means to publish or republish a Document, in whole or
+in part, as part of another Document.
+
+An MMC is ``eligible for relicensing'' if it is licensed under this
+License, and if all works that were first published under this License
+somewhere other than this MMC, and subsequently incorporated in whole
+or in part into the MMC, (1) had no cover texts or invariant sections,
+and (2) were thus incorporated prior to November 1, 2008.
+
+The operator of an MMC Site may republish an MMC contained in the site
+under CC-BY-SA on the same site at any time before August 1, 2009,
+provided the MMC is eligible for relicensing.
+
+@end enumerate
+
+@page
+@heading ADDENDUM: How to use this License for your documents
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and
+license notices just after the title page:
+
+@smallexample
+@group
+  Copyright (C)  @var{year}  @var{your name}.
+  Permission is granted to copy, distribute and/or modify this document
+  under the terms of the GNU Free Documentation License, Version 1.3
+  or any later version published by the Free Software Foundation;
+  with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+  Texts.  A copy of the license is included in the section entitled ``GNU
+  Free Documentation License''.
+@end group
+@end smallexample
+
+If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
+replace the ``with@dots{}Texts.''@: line with this:
+
+@smallexample
+@group
+    with the Invariant Sections being @var{list their titles}, with
+    the Front-Cover Texts being @var{list}, and with the Back-Cover Texts
+    being @var{list}.
+@end group
+@end smallexample
+
+If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License,
+to permit their use in free software.
+
+@c Local Variables:
+@c ispell-local-pdict: "ispell-dict"
+@c End:
+@bye
