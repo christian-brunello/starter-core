@@ -49,7 +49,7 @@ typedef struct
   GDBusServer *server;
   GPtrArray *connections;
   gchar *name;
-  guint16 port;
+  guint port;
   STVersion version;
   GPtrArray *inputs;
   GPtrArray *outputs;
@@ -691,44 +691,6 @@ st_server_set_outputs (STServer * self, GPtrArray * outputs, GError * error)
   return TRUE;
 }
 
-static gint
-st_server_find_first_free_port (gint start_port, gint end_port)
-{
-  gint found_port = 0;
-
-  if (start_port >= end_port)
-    return 0;
-
-  for (gint port = start_port; port <= end_port; port++)
-    {
-      int sockfd;
-      struct sockaddr_in serv_addr;
-      int opt = 1;
-
-      if ((sockfd = socket (AF_INET, SOCK_STREAM, 0)) < 0)
-	continue;
-
-      setsockopt (sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt));
-
-      memset (&serv_addr, 0, sizeof (serv_addr));
-      serv_addr.sin_family = AF_INET;
-      serv_addr.sin_addr.s_addr = INADDR_ANY;
-      serv_addr.sin_port = htons ((uint16_t) port);
-
-      if (bind (sockfd, (struct sockaddr *) &serv_addr, sizeof (serv_addr)) ==
-	  0)
-	{
-	  found_port = port;
-	  close (sockfd);
-	  break;
-	}
-
-      close (sockfd);
-    }
-
-  return found_port;
-}
-
 gboolean
 st_server_start (STServer * self, guint16 port, GError ** error)
 {
@@ -736,28 +698,42 @@ st_server_start (STServer * self, guint16 port, GError ** error)
   STServerPrivate *priv = ST_SERVER_GET_PRIVATE (self);
   gchar *guid;
   char b[0x20];
+  const gchar *addr = NULL;
 
   guid = g_dbus_generate_guid ();
-
-  if (!port)
-    port =
-      st_server_find_first_free_port (ST_SERVER_FIRST_ALLOC_PORT,
-				      ST_SERVER_LAST_ALLOC_PORT);
 
   snprintf (b, sizeof b, "tcp:host=0.0.0.0,port=%hu", port);
 
   LOGD ("try create new dbus server with address '%s'", b);
 
+  priv->port = port;
+
   priv->server = g_dbus_server_new_sync (b,
 					 G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS,
 					 guid, NULL, NULL, error);
 
+  g_free(guid);
+
   if (priv->server)
     {
+      const gchar *addr;
+
+      addr = g_dbus_server_get_client_address(priv->server);
+
+      if(addr)
+	{
+	  const gchar *port;
+
+	  port = strstr(addr, "port=");
+
+	  if(port == NULL || sscanf(port + 0x05, "%u", &priv->port) != 1)
+	    LOGW("error parsing local bind address!");
+	}
+      else
+	LOGW("error retrieve local bind address!");
+
       g_signal_connect (priv->server, "new-connection",
 			G_CALLBACK (on_new_connection), self);
-
-      priv->port = port;
 
       g_dbus_server_start (priv->server);
 

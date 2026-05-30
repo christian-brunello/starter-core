@@ -333,7 +333,7 @@ foreach_add_inputs (gpointer key, gpointer value, gpointer user_data)
       p->client = c;
       p->index = i;
 
-      LOGD ("%s: add entry for input %s", __FUNCTION__, name);
+      VERBOSE_1_PRINTF("  %s", name);
 
       g_hash_table_insert (user_data, name, p);
     }
@@ -343,6 +343,8 @@ GHashTable *
 st_core_setup_inputs_hash_table (STCore * self)
 {
   GHashTable *r;
+
+  VERBOSE_1_PRINTF("Rebuild inputs table");
 
   r = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
@@ -368,7 +370,7 @@ foreach_add_outputs (gpointer key, gpointer value, gpointer user_data)
       p->client = c;
       p->index = i;
 
-      LOGD ("%s: add entry for output %s", __FUNCTION__, name);
+      VERBOSE_1_PRINTF("  %s", name);
 
       g_hash_table_insert (user_data, name, p);
     }
@@ -378,6 +380,8 @@ GHashTable *
 st_core_setup_outputs_hash_table (STCore * self)
 {
   GHashTable *r;
+
+  VERBOSE_1_PRINTF("Rebuild outputs table");
 
   r = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
