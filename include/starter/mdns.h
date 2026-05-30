@@ -26,12 +26,21 @@
 #include <starter/mdns-service.h>
 
 G_BEGIN_DECLS
+
+#define ST_MDNS_OPTION_NO_DISCOVERY 0x00000001
+
 #define ST_TYPE_MDNS (st_mdns_get_type ())
 G_DECLARE_FINAL_TYPE (STMDNS, st_mdns, ST, MDNS, GObject)
-     STMDNS *st_mdns_new (void);
-     const GList *st_mdns_get_all_services (STMDNS * self);
-     gboolean st_mdns_publish_service (STMDNS * self, const gchar * name,
-				       const gchar * type, guint16 port);
+
+STMDNS *st_mdns_new (void);
+
+STMDNS *
+st_mdns_new_with_options (int options);
+
+const GList *st_mdns_get_all_services (STMDNS * self);
+
+gboolean st_mdns_publish_service (STMDNS * self, const gchar * name,
+				  const gchar * type, guint16 port);
 
 G_END_DECLS
 #endif /* STARTER_MDNS_H_INCLUDED */

@@ -37,6 +37,7 @@
 struct _STMDNS
 {
   GObject parent_instance;
+  gint options;
   AvahiGLibPoll *poll;
   AvahiClient *client;
   AvahiEntryGroup *group;
@@ -320,18 +321,23 @@ client_state_cb (AvahiClient * c, AvahiClientState state, gpointer userdata)
       {
 	LOGD ("avahi client running");
 
-	if ((self->service_type_browser =
-	     avahi_service_type_browser_new (c, AVAHI_IF_UNSPEC,
-					     AVAHI_PROTO_UNSPEC, "", 0,
-					     service_type_browser_cb,
-					     self)) != NULL)
+	if((self->options & ST_MDNS_OPTION_NO_DISCOVERY) == 0)
 	  {
-	    LOGD ("service type browser created successfully");
+	    if ((self->service_type_browser =
+		 avahi_service_type_browser_new (c, AVAHI_IF_UNSPEC,
+						 AVAHI_PROTO_UNSPEC, "", 0,
+						 service_type_browser_cb,
+						 self)) != NULL)
+	      {
+		LOGD ("service type browser created successfully");
+	      }
+	    else
+	      {
+		LOGE ("error create avahi service browser");
+	      }
 	  }
 	else
-	  {
-	    LOGE ("error create avahi service browser");
-	  }
+	  LOGD("got option ST_MDNS_OPTION_NO_DISCOVERY. do not create service_type_browser");
 
 	if ((self->group =
 	     avahi_entry_group_new (c, entry_group_callback, self)) != NULL)
@@ -407,18 +413,35 @@ st_mdns_class_init (STMDNSClass * klass)
 static void
 st_mdns_init (STMDNS * self)
 {
-  if ((self->poll = avahi_glib_poll_new (NULL, G_PRIORITY_DEFAULT)) != NULL)
+  self->options = 0;
+  self->poll = 0;
+  self->client = NULL;
+  self->group = NULL;
+  self->service_type_browser = NULL;
+  self->service_browsers =
+    g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+			   g_object_unref);
+  self->services = NULL;
+}
+
+
+
+STMDNS *
+st_mdns_new_with_options (int options)
+{
+  STMDNS *r;
+
+  r = g_object_new (ST_TYPE_MDNS, NULL);
+
+  r->options = options;
+
+  if ((r->poll = avahi_glib_poll_new (NULL, G_PRIORITY_DEFAULT)) != NULL)
     {
       int error;
 
-      self->service_browsers =
-	g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-			       g_object_unref);
-      self->services = NULL;
-
-      if ((self->client =
-	   avahi_client_new (avahi_glib_poll_get (self->poll), 0,
-			     client_state_cb, self, &error)) != NULL)
+      if ((r->client =
+	   avahi_client_new (avahi_glib_poll_get (r->poll), 0,
+			     client_state_cb, r, &error)) != NULL)
 	{
 	  LOGD ("avahi client created successfully");
 	}
@@ -427,18 +450,14 @@ st_mdns_init (STMDNS * self)
     }
   else
     LOGE ("error allocate glib poll");
+
+  return r;
 }
-
-
 
 STMDNS *
 st_mdns_new (void)
 {
-  STMDNS *r;
-
-  r = g_object_new (ST_TYPE_MDNS, NULL);
-
-  return r;
+  return st_mdns_new_with_options(0);
 }
 
 const GList *
