@@ -17,6 +17,8 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <math.h>
+
 #include <glib.h>
 
 #include <starter/error.h>
@@ -55,11 +57,40 @@ static gint st_input_signals[ST_INPUT_SIGNAL_COUNT];
 G_DEFINE_TYPE_WITH_PRIVATE (STInput, st_input, G_TYPE_OBJECT)
 #define ST_INPUT_GET_PRIVATE(obj) \
     ((STInputPrivate *) st_input_get_instance_private (ST_INPUT (obj)))
+static gboolean
+ismul (double a, double b)
+{
+  gboolean r = FALSE;
+  const double epsilon = 1e-9; // Tolleranza per errori di precisione
+
+  if (ABS(b) < epsilon) 
+    {
+      // Se b è quasi zero, è multiplo solo se anche a è quasi zero
+      r = (ABS(a) < epsilon);
+    }
+  else 
+    {
+      /* Calcoliamo quante volte b sta in a */
+      double quotient = a / b;
+      
+      /* Verifichiamo se il quoziente è un intero con una piccola tolleranza.
+         round(quotient) ci dà l'intero più vicino, poi controlliamo la distanza. */
+      if (ABS(quotient - round(quotient)) < epsilon)
+        r = TRUE;
+    }
+
+  LOGD("check ismul(%lf, %lf) => %d", a, b, r);
+
+  return r;
+}
+
+#if 0
      static gboolean ismul (double a, double b)
 {
   gboolean r = FALSE;
   gint xa = (a * 1000000);
   gint xb = (b * 1000000);
+
 
   if (xb == 0)
     {
@@ -72,9 +103,11 @@ G_DEFINE_TYPE_WITH_PRIVATE (STInput, st_input, G_TYPE_OBJECT)
 	r = TRUE;
     }
 
+  LOGD("check ismul(%lf, %lf) => %d", a, b, r);
+
   return r;
 }
-
+#endif
 static void
 st_input_emit_changed_signal (STInput * self)
 {
