@@ -694,8 +694,6 @@ call_set_output_method (STClient * self, const gchar * name, gdouble value,
       g_variant_unref (result);
     }
 
-  g_variant_unref (params);
-
   LOGD ("%s completed with r: %u", __FUNCTION__, r);
 
   return r;
