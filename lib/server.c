@@ -501,14 +501,24 @@ st_server_finalize (GObject * object)
 
   LOGD ("finalize STServer %p", object);
 
-  g_object_unref (priv->stats);
-  g_object_unref (priv->stats_coll);
-  g_object_unref (priv->introspection_data);
+  g_clear_object(&priv->stats);
+  g_clear_object(&priv->stats_coll);
+  g_dbus_node_info_unref (priv->introspection_data);
   g_ptr_array_unref (priv->connections);
-  g_object_unref (priv->server);
+
+  if(priv->server)
+    {
+      g_dbus_server_stop (priv->server);
+      g_clear_object(&priv->server);
+    }
+
   g_free (priv->name);
-  g_ptr_array_unref (priv->inputs);
-  g_ptr_array_unref (priv->outputs);
+
+  if(priv->inputs)
+    g_ptr_array_unref (priv->inputs);
+
+  if(priv->outputs)
+    g_ptr_array_unref (priv->outputs);
 
   G_OBJECT_CLASS (st_server_parent_class)->finalize (object);
 }

@@ -256,6 +256,77 @@ st_mysql_client_get_last_history_value (STMYSQLClient * self,
 
 gboolean
 st_mysql_client_store_stats (STMYSQLClient * self, const STStats * stats,
+                             GError ** error)
+{
+  gboolean r = FALSE;
+  const gchar *name = NULL;
+  STStatsEntry vmsize, vmrss, vmswap, io_read, io_write, priority, threads, icswitch, cpu;
+  GString *s;
+
+  st_stats_get_full (stats,
+                     &name,
+                     &vmsize,
+                     &vmrss,
+                     &vmswap,
+                     &io_read,
+                     &io_write, &priority, &threads, &icswitch, &cpu);
+
+  s = g_string_new ("");
+
+  g_string_printf (s,
+    "INSERT INTO %s.stats (service_name, "
+    "  vmsize_min,vmsize_max,vmsize_last, "
+    "  vmrss_min,vmrss_max,vmrss_last, "
+    "  vmswap_min,vmswap_max,vmswap_last, "
+    "  io_read_min,io_read_max,io_read_last, "
+    "  io_write_min,io_write_max,io_write_last, "
+    "  cpu_min,cpu_max,cpu_last, "
+    "  icswitch_min,icswitch_max,icswitch_last, "
+    "  priority_min,priority_max,priority_last, "
+    "  threads_min,threads_max,threads_last) "
+    "VALUES('%s', "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf, "
+    "  %lf,%lf,%lf) "
+    "ON DUPLICATE KEY UPDATE "
+    "  updated_at=NOW(), "
+    "  vmsize_min=VALUES(vmsize_min), vmsize_max=VALUES(vmsize_max), vmsize_last=VALUES(vmsize_last), "
+    "  vmrss_min=VALUES(vmrss_min), vmrss_max=VALUES(vmrss_max), vmrss_last=VALUES(vmrss_last), "
+    "  vmswap_min=VALUES(vmswap_min), vmswap_max=VALUES(vmswap_max), vmswap_last=VALUES(vmswap_last), "
+    "  io_read_min=VALUES(io_read_min), io_read_max=VALUES(io_read_max), io_read_last=VALUES(io_read_last), "
+    "  io_write_min=VALUES(io_write_min), io_write_max=VALUES(io_write_max), io_write_last=VALUES(io_write_last), "
+    "  cpu_min=VALUES(cpu_min), cpu_max=VALUES(cpu_max), cpu_last=VALUES(cpu_last), "
+    "  icswitch_min=VALUES(icswitch_min), icswitch_max=VALUES(icswitch_max), icswitch_last=VALUES(icswitch_last), "
+    "  priority_min=VALUES(priority_min), priority_max=VALUES(priority_max), priority_last=VALUES(priority_last), "
+    "  threads_min=VALUES(threads_min), threads_max=VALUES(threads_max), threads_last=VALUES(threads_last);",
+    DB_NAME,
+    name,
+    vmsize.min, vmsize.max, vmsize.last,
+    vmrss.min, vmrss.max, vmrss.last,
+    vmswap.min, vmswap.max, vmswap.last,
+    io_read.min, io_read.max, io_read.last,
+    io_write.min, io_write.max, io_write.last,
+    cpu.min, cpu.max, cpu.last,
+    icswitch.min, icswitch.max, icswitch.last,
+    priority.min, priority.max, priority.last,
+    threads.min, threads.max, threads.last);
+
+  r = st_mysql_client_perform_query (self, s->str, error);
+
+  g_string_free (s, TRUE);
+
+  return r;
+}
+
+#if 0
+gboolean
+st_mysql_client_store_stats (STMYSQLClient * self, const STStats * stats,
 			     GError ** error)
 {
   STMYSQLClientPrivate *priv = ST_MYSQL_CLIENT_GET_PRIVATE (self);
@@ -332,3 +403,5 @@ st_mysql_client_store_stats (STMYSQLClient * self, const STStats * stats,
 
   return r;
 }
+
+#endif

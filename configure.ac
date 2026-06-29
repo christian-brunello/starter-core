@@ -63,6 +63,7 @@ AC_CONFIG_FILES([
   include/Makefile
   lib/Makefile
   src/Makefile
+  test/Makefile
   examples/Makefile
   doc/Makefile
 ])

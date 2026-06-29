@@ -419,8 +419,10 @@ st_mdns_init (STMDNS * self)
   self->group = NULL;
   self->service_type_browser = NULL;
   self->service_browsers =
-    g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-			   g_object_unref);
+    g_hash_table_new_full (g_str_hash, 
+			   g_str_equal, 
+			   g_free,
+			   (GDestroyNotify) avahi_service_browser_destroy);
   self->services = NULL;
 }
 

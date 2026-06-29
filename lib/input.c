@@ -18,6 +18,7 @@
  */
 
 #include <math.h>
+#include <float.h>
 
 #include <glib.h>
 
@@ -57,6 +58,44 @@ static gint st_input_signals[ST_INPUT_SIGNAL_COUNT];
 G_DEFINE_TYPE_WITH_PRIVATE (STInput, st_input, G_TYPE_OBJECT)
 #define ST_INPUT_GET_PRIVATE(obj) \
     ((STInputPrivate *) st_input_get_instance_private (ST_INPUT (obj)))
+
+static gboolean
+ismul (double a, double b)
+{
+  gboolean r = FALSE;
+
+  /* 1. Se 'a' è esattamente 0.0, è SEMPRE multiplo di qualsiasi numero 'b' (tranne b=0) */
+  if (a == 0.0)
+    {
+      /* Se b è anch'esso zero, decidiamo se considerarlo multiplo (solitamente TRUE o FALSE a seconda del design)
+         Se b != 0, allora 0 è sempre multiplo (es. 0.0001 * 0 = 0) */
+      r = (b != 0.0); 
+    }
+  /* 2. Se b è zero (o vicinissimo al limite hardware), allora 'a' deve essere zero */
+  else if (ABS (b) <= DBL_MIN) 
+    {
+      r = (a == 0.0);
+    }
+  /* 3. Caso generale su scale normali */
+  else 
+    {
+      double quotient = a / b;
+      double nearest_int = round (quotient);
+      double distance = ABS (quotient - nearest_int);
+
+      /* Epsilon adattivo basato sulla precisione hardware */
+      double adaptive_epsilon = DBL_EPSILON * MAX (ABS (quotient), ABS (nearest_int)) * 4.0;
+
+      if (distance < adaptive_epsilon)
+        r = TRUE;
+    }
+
+  LOGD ("ismul(%.17g, %.17g) => %d", a, b, r);
+
+  return r;
+}
+
+#if 0
 static gboolean
 ismul (double a, double b)
 {
@@ -84,7 +123,7 @@ ismul (double a, double b)
   return r;
 }
 
-#if 0
+
      static gboolean ismul (double a, double b)
 {
   gboolean r = FALSE;

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-SUBDIRS = include lib src examples doc
+SUBDIRS = include lib src test examples doc
 
 starterconfdir = $(sysconfdir)/starter
 starterconf_DATA = rules.conf

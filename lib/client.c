@@ -45,7 +45,8 @@ typedef struct
 G_DEFINE_TYPE_WITH_PRIVATE (STClient, st_client, G_TYPE_OBJECT)
 #define ST_CLIENT_GET_PRIVATE(obj) \
     ((STClientPrivate *) st_client_get_instance_private (ST_CLIENT (obj)))
-     static void handle_input_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Contiene gli argomenti del segnale
+
+static void handle_input_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Contiene gli argomenti del segnale
 					      gpointer user_data)
 {
   STClient *self = user_data;
@@ -330,37 +331,48 @@ call_get_name_method (STClient * self, GError ** error)
 {
   gchar *r = NULL;
   STClientPrivate *priv;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
   LOGD ("call get name on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"GetName",
-					NULL,
-					G_VARIANT_TYPE ("(s)"),
-					G_DBUS_CALL_FLAGS_NONE,
-					-1, NULL, error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "GetName",
+					    NULL,
+					    G_VARIANT_TYPE ("(s)"),
+					    G_DBUS_CALL_FLAGS_NONE,
+					    -1, NULL, error);
 
-      if (g_strcmp0 (signature, "(s)") == 0)
+      if (result)
 	{
-	  g_variant_get (result, "(s)", &r);
-	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
+	  const gchar *signature;
 
-      g_variant_unref (result);
+	  signature = g_variant_get_type_string (result);
+
+	  if (g_strcmp0 (signature, "(s)") == 0)
+	    {
+	      g_variant_get (result, "(s)", &r);
+	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
+
+	  g_variant_unref (result);
+	}
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   return r;
@@ -371,47 +383,58 @@ call_get_version_method (STClient * self, GError ** error)
 {
   STVersion *r = NULL;
   STClientPrivate *priv;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
   LOGD ("call get name on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"GetVersion",
-					NULL,
-					G_VARIANT_TYPE ("(iii)"),
-					G_DBUS_CALL_FLAGS_NONE,
-					-1, NULL, error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "GetVersion",
+					    NULL,
+					    G_VARIANT_TYPE ("(iii)"),
+					    G_DBUS_CALL_FLAGS_NONE,
+					    -1, NULL, error);
 
-      if (g_strcmp0 (signature, "(iii)") == 0)
+      if (result)
 	{
-	  gint major;
-	  gint minor;
-	  gint micro;
+	  const gchar *signature;
 
-	  g_variant_get (result, "(iii)", &major, &minor, &micro);
+	  signature = g_variant_get_type_string (result);
 
-	  r = g_malloc0 (sizeof (STVersion));
+	  if (g_strcmp0 (signature, "(iii)") == 0)
+	    {
+	      gint major;
+	      gint minor;
+	      gint micro;
 
-	  r->major = major;
-	  r->minor = minor;
-	  r->micro = micro;
+	      g_variant_get (result, "(iii)", &major, &minor, &micro);
+
+	      r = g_malloc0 (sizeof (STVersion));
+
+	      r->major = major;
+	      r->minor = minor;
+	      r->micro = micro;
+	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
+
+	  g_variant_unref (result);
 	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
-
-      g_variant_unref (result);
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   return r;
@@ -422,76 +445,87 @@ call_get_inputs_method (STClient * self, GError ** error)
 {
   gboolean r = FALSE;
   STClientPrivate *priv;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
   LOGD ("call get inputs on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"GetInputs",
-					NULL,
-					G_VARIANT_TYPE ("(a{s(siddddt)})"),
-					G_DBUS_CALL_FLAGS_NONE,
-					-1, NULL, error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "GetInputs",
+					    NULL,
+					    G_VARIANT_TYPE ("(a{s(siddddt)})"),
+					    G_DBUS_CALL_FLAGS_NONE,
+					    -1, NULL, error);
 
-      if (g_strcmp0 (signature, "(a{s(siddddt)})") == 0)
+      if (result)
 	{
-	  GVariant *map_variant;
-	  GVariantIter iter;
-	  GVariant *key_value_pair;
+	  const gchar *signature;
 
-	  g_variant_get (result, "(@a{s(siddddt)})", &map_variant);
+	  signature = g_variant_get_type_string (result);
 
-	  g_variant_iter_init (&iter, map_variant);
-
-	  g_ptr_array_steal (priv->inputs, NULL);
-
-	  while ((key_value_pair = g_variant_iter_next_value (&iter)))
+	  if (g_strcmp0 (signature, "(a{s(siddddt)})") == 0)
 	    {
-	      gchar *name;
-	      gchar *description;
-	      STUnit unit;
-	      gdouble min;
-	      gdouble max;
-	      gdouble step;
-	      gdouble val;
-	      guint64 flags;
-	      STInput *in;
+	      GVariant *map_variant;
+	      GVariantIter iter;
+	      GVariant *key_value_pair;
 
-	      g_variant_get (key_value_pair, "{s(siddddt)}", &name,
-			     &description, &unit, &min, &max, &step, &val,
-			     &flags);
+	      g_variant_get (result, "(@a{s(siddddt)})", &map_variant);
 
-	      LOGD
-		("found input with: name: %s, description: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
-		 PRIu64, name, description, unit, min, max, step, val, flags);
+	      g_variant_iter_init (&iter, map_variant);
 
-	      g_ptr_array_add (priv->inputs,
-			       st_input_new (name, description, unit, min,
-					     max, step, val, flags));
+	      g_ptr_array_steal (priv->inputs, NULL);
 
-	      g_variant_unref (key_value_pair);
+	      while ((key_value_pair = g_variant_iter_next_value (&iter)))
+		{
+		  gchar *name;
+		  gchar *description;
+		  STUnit unit;
+		  gdouble min;
+		  gdouble max;
+		  gdouble step;
+		  gdouble val;
+		  guint64 flags;
+		  STInput *in;
+
+		  g_variant_get (key_value_pair, "{s(siddddt)}", &name,
+				 &description, &unit, &min, &max, &step, &val,
+				 &flags);
+
+		  LOGD
+		    ("found input with: name: %s, description: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
+		     PRIu64, name, description, unit, min, max, step, val, flags);
+
+		  g_ptr_array_add (priv->inputs,
+				   st_input_new (name, description, unit, min,
+						 max, step, val, flags));
+
+		  g_variant_unref (key_value_pair);
+		}
+
+	      g_variant_unref (map_variant);
+
+	      r = TRUE;
 	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
 
-	  g_variant_unref (map_variant);
-
-	  r = TRUE;
+	  g_variant_unref (result);
 	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
-
-      g_variant_unref (result);
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   return r;
@@ -502,76 +536,87 @@ call_get_outputs_method (STClient * self, GError ** error)
 {
   gboolean r = FALSE;
   STClientPrivate *priv;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
   LOGD ("call get outputs on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"GetOutputs",
-					NULL,
-					G_VARIANT_TYPE ("(a{s(siddddt)})"),
-					G_DBUS_CALL_FLAGS_NONE,
-					-1, NULL, error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "GetOutputs",
+					    NULL,
+					    G_VARIANT_TYPE ("(a{s(siddddt)})"),
+					    G_DBUS_CALL_FLAGS_NONE,
+					    -1, NULL, error);
 
-      if (g_strcmp0 (signature, "(a{s(siddddt)})") == 0)
+      if (result)
 	{
-	  GVariant *map_variant;
-	  GVariantIter iter;
-	  GVariant *key_value_pair;
+	  const gchar *signature;
 
-	  g_variant_get (result, "(@a{s(siddddt)})", &map_variant);
+	  signature = g_variant_get_type_string (result);
 
-	  g_variant_iter_init (&iter, map_variant);
-
-	  g_ptr_array_steal (priv->outputs, NULL);
-
-	  while ((key_value_pair = g_variant_iter_next_value (&iter)))
+	  if (g_strcmp0 (signature, "(a{s(siddddt)})") == 0)
 	    {
-	      gchar *name;
-	      gchar *description;
-	      STUnit unit;
-	      gdouble min;
-	      gdouble max;
-	      gdouble step;
-	      gdouble val;
-	      guint64 flags;
-	      STInput *in;
+	      GVariant *map_variant;
+	      GVariantIter iter;
+	      GVariant *key_value_pair;
 
-	      g_variant_get (key_value_pair, "{s(siddddt)}", &name,
-			     &description, &unit, &min, &max, &step, &val,
-			     &flags);
+	      g_variant_get (result, "(@a{s(siddddt)})", &map_variant);
 
-	      LOGD
-		("found output with: name: %s, description: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
-		 PRIu64, name, description, unit, min, max, step, val, flags);
+	      g_variant_iter_init (&iter, map_variant);
 
-	      g_ptr_array_add (priv->outputs,
-			       st_output_new (name, description, unit, min,
-					      max, step, val, flags));
+	      g_ptr_array_steal (priv->outputs, NULL);
 
-	      g_variant_unref (key_value_pair);
+	      while ((key_value_pair = g_variant_iter_next_value (&iter)))
+		{
+		  gchar *name;
+		  gchar *description;
+		  STUnit unit;
+		  gdouble min;
+		  gdouble max;
+		  gdouble step;
+		  gdouble val;
+		  guint64 flags;
+		  STInput *in;
+
+		  g_variant_get (key_value_pair, "{s(siddddt)}", &name,
+				 &description, &unit, &min, &max, &step, &val,
+				 &flags);
+
+		  LOGD
+		    ("found output with: name: %s, description: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
+		     PRIu64, name, description, unit, min, max, step, val, flags);
+
+		  g_ptr_array_add (priv->outputs,
+				   st_output_new (name, description, unit, min,
+						  max, step, val, flags));
+
+		  g_variant_unref (key_value_pair);
+		}
+
+	      g_variant_unref (map_variant);
+
+	      r = TRUE;
 	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
 
-	  g_variant_unref (map_variant);
-
-	  r = TRUE;
+	  g_variant_unref (result);
 	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
-
-      g_variant_unref (result);
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   return r;
@@ -582,71 +627,82 @@ call_get_stats_method (STClient * self, GError ** error)
 {
   gboolean r = FALSE;
   STClientPrivate *priv;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
   LOGD ("call get stats on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"GetStats",
-					NULL,
-					G_VARIANT_TYPE
-					("((sddddddddddddddddddddddddddd))"),
-					G_DBUS_CALL_FLAGS_NONE, -1, NULL,
-					error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "GetStats",
+					    NULL,
+					    G_VARIANT_TYPE
+					    ("((sddddddddddddddddddddddddddd))"),
+					    G_DBUS_CALL_FLAGS_NONE, -1, NULL,
+					    error);
 
-      if (g_strcmp0 (signature, "((sddddddddddddddddddddddddddd))") == 0)
+      if (result)
 	{
-	  gchar *name;
-	  STStatsEntry vmsize;
-	  STStatsEntry vmrss;
-	  STStatsEntry vmswap;
-	  STStatsEntry io_read;
-	  STStatsEntry io_write;
-	  STStatsEntry priority;
-	  STStatsEntry threads;
-	  STStatsEntry icswitch;
-	  STStatsEntry cpu;
+	  const gchar *signature;
 
-	  g_variant_get (result,
-			 "((sddddddddddddddddddddddddddd))",
-			 &name,
-			 &vmsize.min, &vmsize.max, &vmsize.last,
-			 &vmrss.min, &vmrss.max, &vmrss.last,
-			 &vmswap.min, &vmswap.max, &vmswap.last,
-			 &io_read.min, &io_read.max, &io_read.last,
-			 &io_write.min, &io_write.max, &io_write.last,
-			 &priority.min, &priority.max, &priority.last,
-			 &threads.min, &threads.max, &threads.last,
-			 &icswitch.min, &icswitch.max, &icswitch.last,
-			 &cpu.min, &cpu.max, &cpu.last);
+	  signature = g_variant_get_type_string (result);
 
-	  st_stats_set_full (priv->stats,
-			     name,
-			     &vmsize,
-			     &vmrss,
-			     &vmswap,
-			     &io_read,
-			     &io_write, &priority, &threads, &icswitch, &cpu);
-	  g_free (name);
+	  if (g_strcmp0 (signature, "((sddddddddddddddddddddddddddd))") == 0)
+	    {
+	      gchar *name;
+	      STStatsEntry vmsize;
+	      STStatsEntry vmrss;
+	      STStatsEntry vmswap;
+	      STStatsEntry io_read;
+	      STStatsEntry io_write;
+	      STStatsEntry priority;
+	      STStatsEntry threads;
+	      STStatsEntry icswitch;
+	      STStatsEntry cpu;
 
-	  r = TRUE;
+	      g_variant_get (result,
+			     "((sddddddddddddddddddddddddddd))",
+			     &name,
+			     &vmsize.min, &vmsize.max, &vmsize.last,
+			     &vmrss.min, &vmrss.max, &vmrss.last,
+			     &vmswap.min, &vmswap.max, &vmswap.last,
+			     &io_read.min, &io_read.max, &io_read.last,
+			     &io_write.min, &io_write.max, &io_write.last,
+			     &priority.min, &priority.max, &priority.last,
+			     &threads.min, &threads.max, &threads.last,
+			     &icswitch.min, &icswitch.max, &icswitch.last,
+			     &cpu.min, &cpu.max, &cpu.last);
+
+	      st_stats_set_full (priv->stats,
+				 name,
+				 &vmsize,
+				 &vmrss,
+				 &vmswap,
+				 &io_read,
+				 &io_write, &priority, &threads, &icswitch, &cpu);
+	      g_free (name);
+
+	      r = TRUE;
+	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
+
+	  g_variant_unref (result);
 	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
-
-      g_variant_unref (result);
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   return r;
@@ -658,40 +714,52 @@ call_set_output_method (STClient * self, const gchar * name, gdouble value,
 {
   guint32 r = 0;
   STClientPrivate *priv;
-  GVariant *params;
-  GVariant *result;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
-  params = g_variant_new ("(sdt)", name, value, flags);
-
   LOGD ("call set output on connection %p", priv->connection);
 
-  result = g_dbus_connection_call_sync (priv->connection,
-					NULL,
-					"/org/starter/service",
-					"org.starter.Service",
-					"SetOutput",
-					params,
-					G_VARIANT_TYPE ("(i)"),
-					G_DBUS_CALL_FLAGS_NONE,
-					-1, NULL, error);
-
-  if (result)
+  if(priv->connection)
     {
-      const gchar *signature;
+      GVariant *params;
+      GVariant *result;
 
-      signature = g_variant_get_type_string (result);
+      params = g_variant_new ("(sdt)", name, value, flags);
 
-      if (g_strcmp0 (signature, "(i)") == 0)
+      result = g_dbus_connection_call_sync (priv->connection,
+					    NULL,
+					    "/org/starter/service",
+					    "org.starter.Service",
+					    "SetOutput",
+					    params,
+					    G_VARIANT_TYPE ("(i)"),
+					    G_DBUS_CALL_FLAGS_NONE,
+					    -1, NULL, error);
+
+      if (result)
 	{
-	  g_variant_get (result, "(i)", &r);
-	}
-      else
-	g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
-		     "bad response signature: %s", signature);
+	  const gchar *signature;
 
-      g_variant_unref (result);
+	  signature = g_variant_get_type_string (result);
+
+	  if (g_strcmp0 (signature, "(i)") == 0)
+	    {
+	      g_variant_get (result, "(i)", &r);
+	    }
+	  else
+	    g_set_error (error, ST_ERROR, ST_ERROR_INVALID_RESPONSE,
+			 "bad response signature: %s", signature);
+
+	  g_variant_unref (result);
+	}
+
+    }
+  else
+    {
+      g_set_error_literal (error,
+                           ST_ERROR,
+                           ST_ERROR_NOT_CONNECTED, 
+                           "client is not connected to D-Bus server");
     }
 
   LOGD ("%s completed with r: %u", __FUNCTION__, r);
@@ -706,9 +774,10 @@ st_client_finalize (GObject * object)
 
   LOGD ("finalize STClient %p", object);
 
-  g_object_unref (priv->connection);
+  g_clear_object(&priv->connection);
   g_ptr_array_free (priv->inputs, TRUE);
   g_ptr_array_free (priv->outputs, TRUE);
+  g_clear_object(&priv->stats);
 
   G_OBJECT_CLASS (st_client_parent_class)->finalize (object);
 }
@@ -804,8 +873,8 @@ st_client_start (STClient * self, const gchar * address, guint16 port,
 	  && call_get_outputs_method (self, error))
 	r = call_get_stats_method (self, error);
     }
-  else
-    LOGE ("dbus connection failure");
+  // else
+  //  LOGE ("dbus connection failure");
 
   return r;
 }
@@ -838,16 +907,15 @@ gchar *
 st_client_get_service_name (STClient * self)
 {
   GError *error = NULL;
+  gchar *r = NULL;
 
-  if (!call_get_name_method (self, &error))
+  if ((r = call_get_name_method (self, &error)) == NULL)
     {
-      LOGE ("error call get name method: %s",
-	    error ? error->message : "unknown error");
+      // LOGE ("error call get name method: %s", error ? error->message : "unknown error");
       g_error_free (error);
-      return NULL;
     }
 
-  return g_strdup ("ST:X");
+  return r;
 }
 
 gboolean

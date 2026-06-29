@@ -13753,7 +13753,7 @@ fi
 # =========================================================
 
 # Definisce i file Makefile da creare
-ac_config_files="$ac_config_files Makefile include/Makefile lib/Makefile src/Makefile examples/Makefile doc/Makefile"
+ac_config_files="$ac_config_files Makefile include/Makefile lib/Makefile src/Makefile test/Makefile examples/Makefile doc/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -14766,6 +14766,7 @@ do
     "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
 
