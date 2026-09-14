@@ -20,7 +20,9 @@ bin_PROGRAMS = starter-core
 
 starter_core_SOURCES = internals.h rules.y lex.l main.c mdns.c expr.c var.c engine.c 
 
-starter_core_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) -I$(top_srcdir)/include
+starter_core_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) \
+			-I$(top_srcdir)/include \
+			-I$(top_srcdir)/lib
 starter_core_LDADD = $(ST_CORE_LIBS) -L$(top_builddir)/lib -lstarter-core -lm
 starter_core_LDFLAGS = 
 

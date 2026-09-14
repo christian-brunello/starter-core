@@ -36,6 +36,8 @@
 #include "config.h"
 #endif
 
+#include "glib-compat.h"
+
 #define ST_CORE_LOG_DOMAIN "starter-core"
 
 #define LOGD(...) g_log (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)

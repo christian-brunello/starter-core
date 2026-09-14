@@ -3,14 +3,29 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the `g_memdup2' function. */
+#undef HAVE_G_MEMDUP2
+
+/* Define to 1 if you have the `g_ptr_array_copy' function. */
+#undef HAVE_G_PTR_ARRAY_COPY
+
+/* Define to 1 if you have the `g_ptr_array_steal' function. */
+#undef HAVE_G_PTR_ARRAY_STEAL
+
+/* Define to 1 if you have the `g_string_replace' function. */
+#undef HAVE_G_STRING_REPLACE
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define if MYSQL_OPT_RECONNECT is available */
+#undef HAVE_MYSQL_OPT_RECONNECT
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
-
-/* Define to 1 if you have the <stdio.h> header file. */
-#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -54,9 +69,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
-   required in a freestanding environment). This macro is provided for
-   backward compatibility; new code need not use it. */
+/* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Version number of package */

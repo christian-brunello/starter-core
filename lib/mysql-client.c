@@ -112,9 +112,11 @@ st_mysql_client_new (const gchar * source, const gchar * host, guint16 port,
     }
   else
     {
+#ifdef HAVE_MYSQL_OPT_RECONNECT
       int reconnect = 1;
 
       mysql_options (priv->handle, MYSQL_OPT_RECONNECT, &reconnect);
+#endif
     }
 
 

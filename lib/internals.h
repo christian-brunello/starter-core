@@ -24,6 +24,8 @@
 
 #include <glib.h>
 
+#include "glib-compat.h"
+
 #define LIBSTARTER_CORE_LOG_DOMAIN "libstarter-core"
 
 #define LOGD(...) g_log (LIBSTARTER_CORE_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)

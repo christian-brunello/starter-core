@@ -1,3 +1,25 @@
+2026-09-14  Christian Brunello  <brncrs@gmail.com>
+
+	Compatibility with older GLib and MySQL client libraries.
+
+	* configure.ac: Require GLib >= 2.44. Add AC_CHECK_FUNCS for
+	g_memdup2, g_ptr_array_copy, g_ptr_array_steal and
+	g_string_replace; AC_CHECK_DECL for MYSQL_OPT_RECONNECT.
+	* lib/glib-compat.h, lib/glib-compat.c: New files. Provide
+	fallbacks when those GLib APIs are missing.
+	* lib/internals.h, src/internals.h: Include glib-compat.h.
+	* lib/Makefile.am: Build glib-compat and add src/ to include path
+	for config.h.
+	* src/Makefile.am: Add lib/ to include path for glib-compat.h.
+	* lib/mysql-client.c: Use MYSQL_OPT_RECONNECT only when declared.
+
+	Bug fixes.
+
+	* lib/server.c (st_server_dup_outputs): Duplicate outputs with
+	copy_st_output instead of copying inputs.
+	* lib/client.c: Free allocated name and description after handling
+	InputChanged and OutputChanged D-Bus signals.
+
 commit 8935fb399ab09a0b60952614ed51124dd57d65dd
 Author: Christian Brunello <brncrs@gmail.com>
 Date:   Sat May 9 18:14:34 2026 +0200
@@ -5,4 +27,3 @@ Date:   Sat May 9 18:14:34 2026 +0200
     First commit
     
     Signed-off-by: Christian Brunello <brncrs@gmail.com>
-

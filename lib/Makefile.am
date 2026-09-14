@@ -19,6 +19,8 @@
 lib_LTLIBRARIES = libstarter-core.la
 
 libstarter_core_la_SOURCES = internals.h \
+			     glib-compat.h \
+			     glib-compat.c \
 			     error.c \
 			     input.c \
 			     output.c \
@@ -32,6 +34,8 @@ libstarter_core_la_SOURCES = internals.h \
 			     server.c \
 			     core.c
 
-libstarter_core_la_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) -I$(top_srcdir)/include
+libstarter_core_la_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) \
+			      -I$(top_srcdir)/include \
+			      -I$(top_builddir)/src
 libstarter_core_la_LIBADD = $(ST_CORE_LIBS) -L$(top_builddir)/lib 
 libstarter_core_la_LDFLAGS = -version-info 0:0:0

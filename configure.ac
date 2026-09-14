@@ -34,7 +34,7 @@ LT_INIT
 
 PKG_PROG_PKG_CONFIG
 
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.30 gobject-2.0 >= 2.30 gio-2.0 >= 2.30 gio-unix-2.0 avahi-glib avahi-client])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.44 gobject-2.0 >= 2.44 gio-2.0 >= 2.44 gio-unix-2.0 avahi-glib avahi-client])
 PKG_CHECK_MODULES([MYSQLCLIENT], [mysqlclient])
 
 GLIB_GSETTINGS
@@ -49,6 +49,23 @@ ST_CORE_LIBS="$GLIB_LIBS $MYSQLCLIENT_LIBS"
 
 AC_SUBST(ST_CORE_CFLAGS)
 AC_SUBST(ST_CORE_LIBS)
+
+# Compatibility checks for APIs that vary across GLib / MySQL versions
+save_CFLAGS="$CFLAGS"
+save_LIBS="$LIBS"
+CFLAGS="$CFLAGS $GLIB_CFLAGS $MYSQLCLIENT_CFLAGS"
+LIBS="$LIBS $GLIB_LIBS $MYSQLCLIENT_LIBS"
+
+AC_CHECK_FUNCS([g_memdup2 g_ptr_array_copy g_ptr_array_steal g_string_replace])
+
+AC_CHECK_DECL([MYSQL_OPT_RECONNECT],
+  [AC_DEFINE([HAVE_MYSQL_OPT_RECONNECT], [1],
+    [Define if MYSQL_OPT_RECONNECT is available])],
+  [],
+  [[#include <mysql.h>]])
+
+CFLAGS="$save_CFLAGS"
+LIBS="$save_LIBS"
 
 AC_PATH_TOOL([MAKEINFO], [makeinfo], [:])
 if test "$MAKEINFO" = ":" ; then
