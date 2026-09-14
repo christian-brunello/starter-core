@@ -19,6 +19,8 @@
 	copy_st_output instead of copying inputs.
 	* lib/client.c: Free allocated name and description after handling
 	InputChanged and OutputChanged D-Bus signals.
+	* examples/beep.c: Replace non-existent g_beep() with terminal
+	bell (putchar('\a') / fflush).
 
 commit 8935fb399ab09a0b60952614ed51124dd57d65dd
 Author: Christian Brunello <brncrs@gmail.com>

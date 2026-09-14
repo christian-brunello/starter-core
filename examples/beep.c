@@ -63,7 +63,10 @@ static gint
 tick (gpointer user_data)
 {
   if (status)
-    g_beep ();
+    {
+      putchar ('\a');
+      fflush (stdout);
+    }
 
   return G_SOURCE_CONTINUE;
 }
