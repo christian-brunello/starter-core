@@ -60,9 +60,9 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
 
   if (key_value_pair != NULL)
     {
-      const gchar *name;
+      gchar *name;
       GVariant *tuple_variant;
-      const gchar *descr;
+      gchar *descr;
       gint unit;
       gdouble min, max, step, val;
       guint64 flags;
@@ -148,6 +148,9 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
 	      break;
 	    }
 	}
+
+      g_free(name);
+      g_free(descr);
     }
   else
     LOGE ("error decode signal parameters");
@@ -168,9 +171,9 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
 
   if (key_value_pair != NULL)
     {
-      const gchar *name;
+      gchar *name;
       GVariant *tuple_variant;
-      const gchar *descr;
+      gchar *descr;
       gint unit;
       gdouble min, max, step, val;
       guint64 flags;
@@ -256,6 +259,9 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
 	      break;
 	    }
 	}
+
+      g_free(name);
+      g_free(descr);
     }
   else
     LOGE ("error decode signal parameters");

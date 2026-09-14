@@ -683,7 +683,7 @@ st_server_dup_outputs (const STServer * self)
 {
   STServerPrivate *priv = ST_SERVER_GET_PRIVATE ((STServer *) self);
 
-  return g_ptr_array_copy (priv->inputs, copy_st_input, NULL);
+  return g_ptr_array_copy (priv->outputs, copy_st_output, NULL);
 }
 
 gboolean
