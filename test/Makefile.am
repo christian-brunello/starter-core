@@ -19,7 +19,7 @@
 AM_CFLAGS = $(ST_CORE_CFLAGS) -I$(top_srcdir)/include
 AM_LDFLAGS = $(ST_CORE_LIBS) -L$(top_builddir)/lib -lstarter-core -lm
 
-TESTS = test-input test-output test-stats test-process-stats-collector test-mdns test-mysql-client test-server test-client test-client-server test-client-server-armageddon
+TESTS = test-input test-output test-stats test-process-stats-collector test-mdns test-mysql-client test-server test-client test-client-async test-client-server test-client-server-async test-client-server-armageddon test-client-server-armageddon-async
 check_PROGRAMS = $(TESTS)
 
 test_input_SOURCES = test-input.c
@@ -44,8 +44,8 @@ test_mdns_LDADD = $(AM_LDFLAGS)
 
 test_mysql_client_SOURCES = test-mysql-client.c
 test_mysql_client_CFLAGS = $(AM_CFLAGS)
-test_mysql_client_LDFLAGS = $(AM_LDFLAGS) -export-dynamic
-test_mysql_client_LDADD = $(LDADD)
+test_mysql_client_LDFLAGS = -export-dynamic
+test_mysql_client_LDADD = $(AM_LDFLAGS) -ldl
 test_mysql_client_DEPENDENCIES = .libs/libmysqlmock.so
 
 test_server_SOURCES = test-server.c
@@ -56,13 +56,25 @@ test_client_SOURCES = test-client.c
 test_client_CFLAGS = $(AM_CFLAGS)
 test_client_LDADD = $(AM_LDFLAGS) 
 
+test_client_async_SOURCES = test-client-async.c
+test_client_async_CFLAGS = $(AM_CFLAGS)
+test_client_async_LDADD = $(AM_LDFLAGS)
+
 test_client_server_SOURCES = test-client-server.c
 test_client_server_CFLAGS = $(AM_CFLAGS)
 test_client_server_LDADD = $(AM_LDFLAGS) 
 
+test_client_server_async_SOURCES = test-client-server-async.c
+test_client_server_async_CFLAGS = $(AM_CFLAGS)
+test_client_server_async_LDADD = $(AM_LDFLAGS)
+
 test_client_server_armageddon_SOURCES = test-client-server-armageddon.c
 test_client_server_armageddon_CFLAGS = $(AM_CFLAGS)
 test_client_server_armageddon_LDADD = $(AM_LDFLAGS) 
+
+test_client_server_armageddon_async_SOURCES = test-client-server-armageddon-async.c
+test_client_server_armageddon_async_CFLAGS = $(AM_CFLAGS)
+test_client_server_armageddon_async_LDADD = $(AM_LDFLAGS)
 
 # 1. Regola di compilazione automatica per il .so del mock
 # Viene compilato in automatico prima di lanciare i test

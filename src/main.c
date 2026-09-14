@@ -439,6 +439,7 @@ main (int argc, char *argv[])
 
   self.clients =
     g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
+  self.pending_clients = NULL;
   self.all_inputs = st_core_setup_inputs_hash_table (&self);
   self.all_outputs = st_core_setup_outputs_hash_table (&self);
 
@@ -464,6 +465,9 @@ main (int argc, char *argv[])
   g_main_loop_run (gloop);
 
   st_core_mdns_finish (&self);
+
+  if (self.pending_clients)
+    g_hash_table_unref (self.pending_clients);
 
   g_hash_table_unref (self.clients);
 

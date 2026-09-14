@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include <starter/version.h>
 #include <starter/stats.h>
@@ -29,6 +30,15 @@
 G_BEGIN_DECLS
 #define ST_TYPE_CLIENT (st_client_get_type ())
 G_DECLARE_DERIVABLE_TYPE (STClient, st_client, ST, CLIENT, GObject)
+
+     typedef enum
+     {
+       ST_CLIENT_STATE_IDLE = 0,
+       ST_CLIENT_STATE_PENDING,
+       ST_CLIENT_STATE_READY,
+       ST_CLIENT_STATE_FAILED
+     } STClientState;
+
      struct _STClientClass
      {
        GObjectClass parent_class;
@@ -38,8 +48,18 @@ G_DECLARE_DERIVABLE_TYPE (STClient, st_client, ST, CLIENT, GObject)
 
      STClient *st_client_new (void);
 
+     STClientState st_client_get_state (STClient * self);
+     gboolean st_client_is_ready (STClient * self);
+
      gboolean st_client_start (STClient * self, const gchar * address,
 			       guint16 port, GError ** error);
+
+     void st_client_start_async (STClient * self, const gchar * address,
+				 guint16 port, GCancellable * cancellable,
+				 GAsyncReadyCallback callback,
+				 gpointer user_data);
+     gboolean st_client_start_finish (STClient * self, GAsyncResult * result,
+				      GError ** error);
 
      const GPtrArray *st_client_get_inputs (STClient * self);
      const GPtrArray *st_client_get_outputs (STClient * self);

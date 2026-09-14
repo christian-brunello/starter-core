@@ -23,11 +23,196 @@
 
 #include "internals.h"
 
+typedef struct
+{
+  STCore *core;
+  gchar *name;
+  STClient *client;
+  GCancellable *cancellable;
+} PendingClient;
+
+static void
+pending_client_free (gpointer data)
+{
+  PendingClient *pending = data;
+
+  if (pending->cancellable)
+    g_cancellable_cancel (pending->cancellable);
+
+  g_clear_object (&pending->cancellable);
+  g_clear_object (&pending->client);
+  g_free (pending->name);
+  g_free (pending);
+}
+
+static void
+register_ready_client (STCore * self, const gchar * name, STClient * client)
+{
+  const GPtrArray *inputs;
+  const GPtrArray *outputs;
+  const STStats *stats;
+  guint i;
+
+  LOGD ("Client ready for service %s, add to map", name);
+
+  g_hash_table_insert (self->clients, g_strdup (name), g_object_ref (client));
+
+  inputs = st_client_get_inputs (client);
+
+  for (i = 0; i < inputs->len; i++)
+    {
+      const STInput *in = inputs->pdata[i];
+      guint64 flags;
+
+      LOGD ("connect changed signal from Input %s", st_input_get_name (in));
+
+      g_signal_connect ((STInput *) in, "val-changed",
+			G_CALLBACK (st_core_input_changed_callback), self);
+
+      flags = st_input_get_flags (in);
+
+      if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
+	{
+	  gdouble db_val;
+
+	  st_mysql_client_store_input_label (self->mysql, in, NULL);
+
+	  db_val =
+	    st_mysql_client_get_last_history_value (self->mysql,
+						    st_input_get_name (in),
+						    NULL);
+
+	  if (db_val != st_input_get_val (in))
+	    {
+	      GError *error = NULL;
+
+	      if (!st_mysql_client_store_history
+		  (self->mysql, st_input_get_name (in),
+		   st_input_get_val (in), st_input_get_flags (in), &error))
+		{
+		  LOGE ("error insert history: %s",
+			error ? error->message : "unknown error");
+		  g_error_free (error);
+		}
+	    }
+	}
+    }
+
+  outputs = st_client_get_outputs (client);
+
+  for (i = 0; i < outputs->len; i++)
+    {
+      const STOutput *out = outputs->pdata[i];
+      guint64 flags;
+
+      LOGD ("connect changed signal from Output %s",
+	    st_output_get_name (out));
+
+      g_signal_connect ((STOutput *) out, "val-changed",
+			G_CALLBACK (st_core_output_changed_callback), self);
+
+      flags = st_output_get_flags (out);
+
+      if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
+	{
+	  gdouble db_val;
+
+	  st_mysql_client_store_output_label (self->mysql, out, NULL);
+
+	  db_val =
+	    st_mysql_client_get_last_history_value (self->mysql,
+						    st_output_get_name (out),
+						    NULL);
+
+	  if (db_val != st_output_get_val (out))
+	    {
+	      GError *error = NULL;
+
+	      if (!st_mysql_client_store_history
+		  (self->mysql, st_output_get_name (out),
+		   st_output_get_val (out), st_output_get_flags (out),
+		   &error))
+		{
+		  LOGE ("error insert history: %s",
+			error ? error->message : "unknown error");
+		  g_error_free (error);
+		}
+	    }
+	}
+    }
+
+  stats = st_client_get_stats (client);
+
+  g_signal_connect ((STStats *) stats, "changed",
+		    G_CALLBACK (st_core_stats_changed_callback), self);
+
+  g_hash_table_unref (self->all_inputs);
+  self->all_inputs = st_core_setup_inputs_hash_table (self);
+
+  g_hash_table_unref (self->all_outputs);
+  self->all_outputs = st_core_setup_outputs_hash_table (self);
+
+  {
+    GError *error = NULL;
+
+    if (!engine_apply
+	(self->engine, self->all_inputs, self->all_outputs, NULL, &error))
+      {
+	LOGW ("error from engine_apply: %s",
+	      error ? error->message : "unknown error");
+	g_error_free (error);
+      }
+  }
+}
+
+static void
+on_client_start_finished (GObject * source, GAsyncResult * result,
+			  gpointer user_data)
+{
+  PendingClient *pending = user_data;
+  STCore *self = pending->core;
+  STClient *client = ST_CLIENT (source);
+  GError *error = NULL;
+  PendingClient *still_pending;
+
+  still_pending = g_hash_table_lookup (self->pending_clients, pending->name);
+  if (still_pending != pending)
+    {
+      /* Removed/cancelled while start was in flight. */
+      LOGD ("Ignoring start result for %s (no longer pending)",
+	    pending->name);
+      return;
+    }
+
+  if (!st_client_start_finish (client, result, &error))
+    {
+      LOGE ("error starting client for service %s: %s", pending->name,
+	    error ? error->message : "unknown error");
+      g_clear_error (&error);
+      g_hash_table_remove (self->pending_clients, pending->name);
+      return;
+    }
+
+  /* Steal so pending_client_free does not cancel/unref the live client. */
+  g_hash_table_steal (self->pending_clients, pending->name);
+  register_ready_client (self, pending->name, pending->client);
+  g_clear_object (&pending->cancellable);
+  g_clear_object (&pending->client);
+  g_free (pending->name);
+  g_free (pending);
+}
+
 static void
 on_mdns_service_removed (STMDNS * mdns, const gchar * name,
 			 gpointer user_data)
 {
   STCore *self = user_data;
+
+  if (g_hash_table_contains (self->pending_clients, name))
+    {
+      LOGD ("cancel pending client with name: %s", name);
+      g_hash_table_remove (self->pending_clients, name);
+    }
 
   if (g_hash_table_contains (self->clients, name))
     {
@@ -59,150 +244,26 @@ on_mdns_service_added (STMDNS * mdns, STMDNSService * service,
   LOGD ("service added: %s:%s:%d", name, type, proto);
 
   if (g_regex_match_simple (self->srvmatch, name, G_REGEX_OPTIMIZE, 0)
-      && !g_hash_table_contains (self->clients, name))
+      && !g_hash_table_contains (self->clients, name)
+      && !g_hash_table_contains (self->pending_clients, name))
     {
-      STClient *client;
-      GError *error = NULL;
+      PendingClient *pending;
 
-      client = st_client_new ();
+      pending = g_malloc0 (sizeof (PendingClient));
+      pending->core = self;
+      pending->name = g_strdup (name);
+      pending->client = st_client_new ();
+      pending->cancellable = g_cancellable_new ();
 
-      if (st_client_start
-	  (client, st_mdns_service_get_address (service),
-	   st_mdns_service_get_port (service), &error))
-	{
-	  const GPtrArray *inputs;
-	  const GPtrArray *outputs;
-	  const STStats *stats;
-	  guint i;
+      g_hash_table_insert (self->pending_clients, g_strdup (name), pending);
 
-	  LOGD ("Client created and started successfully, add to map");
+      LOGD ("starting async client for service %s", name);
 
-	  g_hash_table_insert (self->clients, g_strdup (name), client);
-
-	  inputs = st_client_get_inputs (client);
-
-	  for (i = 0; i < inputs->len; i++)
-	    {
-	      const STInput *in = inputs->pdata[i];
-	      guint64 flags;
-
-	      LOGD ("connect changed signal from Input %s",
-		    st_input_get_name (in));
-
-	      g_signal_connect ((STInput *) in, "val-changed",
-				G_CALLBACK (st_core_input_changed_callback),
-				self);
-
-	      flags = st_input_get_flags (in);
-
-	      if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
-		{
-		  gdouble db_val;
-
-		  st_mysql_client_store_input_label (self->mysql, in, NULL);
-
-		  db_val =
-		    st_mysql_client_get_last_history_value (self->mysql,
-							    st_input_get_name
-							    (in), NULL);
-
-		  if (db_val != st_input_get_val (in))
-		    {
-		      GError *error = NULL;
-
-		      if (!st_mysql_client_store_history
-			  (self->mysql, st_input_get_name (in),
-			   st_input_get_val (in), st_input_get_flags (in),
-			   &error))
-			{
-			  LOGE ("error insert history: %s",
-				error ? error->message : "unknown error");
-			  g_error_free (error);
-			}
-		    }
-		}
-	    }
-
-	  outputs = st_client_get_outputs (client);
-
-	  for (i = 0; i < outputs->len; i++)
-	    {
-	      const STOutput *out = outputs->pdata[i];
-	      guint64 flags;
-
-	      LOGD ("connect changed signal from Output %s",
-		    st_output_get_name (out));
-
-	      g_signal_connect ((STOutput *) out, "val-changed",
-				G_CALLBACK (st_core_output_changed_callback),
-				self);
-
-	      flags = st_output_get_flags (out);
-
-	      if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
-		{
-		  gdouble db_val;
-
-		  st_mysql_client_store_output_label (self->mysql, out, NULL);
-
-		  db_val =
-		    st_mysql_client_get_last_history_value (self->mysql,
-							    st_output_get_name
-							    (out), NULL);
-
-		  if (db_val != st_output_get_val (out))
-		    {
-		      GError *error = NULL;
-
-		      if (!st_mysql_client_store_history
-			  (self->mysql, st_output_get_name (out),
-			   st_output_get_val (out), st_output_get_flags (out),
-			   &error))
-			{
-			  LOGE ("error insert history: %s",
-				error ? error->message : "unknown error");
-			  g_error_free (error);
-			}
-		    }
-		}
-	    }
-
-	  stats = st_client_get_stats (client);
-
-	  g_signal_connect ((STStats *) stats, "changed",
-			    G_CALLBACK (st_core_stats_changed_callback),
-			    self);
-
-	  g_hash_table_unref (self->all_inputs);
-	  self->all_inputs = st_core_setup_inputs_hash_table (self);
-
-	  g_hash_table_unref (self->all_outputs);
-	  self->all_outputs = st_core_setup_outputs_hash_table (self);
-
-	  if (1)
-	    {
-	      GError *error = NULL;
-
-	      if (!engine_apply
-		  (self->engine, self->all_inputs, self->all_outputs, NULL,
-		   &error))
-		{
-		  LOGW ("error from engine_apply: %s",
-			error ? error->message : "unknown error");
-		  g_error_free (error);
-		}
-	    }
-	}
-      else
-	{
-	  LOGE ("error starting client for service %s: %s", name,
-		error ? error->message : "unknown error");
-
-	  g_object_unref (client);
-	}
-
-      if (error)
-	g_error_free (error);
+      st_client_start_async (pending->client,
+			     st_mdns_service_get_address (service),
+			     st_mdns_service_get_port (service),
+			     pending->cancellable,
+			     on_client_start_finished, pending);
     }
 
   g_free (name);
@@ -213,6 +274,10 @@ gboolean
 st_core_mdns_init (STCore * self)
 {
   gboolean r = FALSE;
+
+  self->pending_clients =
+    g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+			   pending_client_free);
 
   if (DISCOVERY_ENABLED (self))
     {
@@ -235,6 +300,9 @@ st_core_mdns_init (STCore * self)
 void
 st_core_mdns_finish (STCore * self)
 {
+  if (self->pending_clients)
+    g_hash_table_remove_all (self->pending_clients);
+
   if (DISCOVERY_ENABLED (self) && self->mdns)
     g_object_unref (G_OBJECT (self->mdns));
 }

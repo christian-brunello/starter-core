@@ -108,8 +108,10 @@ host_triplet = @host@
 TESTS = test-input$(EXEEXT) test-output$(EXEEXT) test-stats$(EXEEXT) \
 	test-process-stats-collector$(EXEEXT) test-mdns$(EXEEXT) \
 	test-mysql-client$(EXEEXT) test-server$(EXEEXT) \
-	test-client$(EXEEXT) test-client-server$(EXEEXT) \
-	test-client-server-armageddon$(EXEEXT)
+	test-client$(EXEEXT) test-client-async$(EXEEXT) \
+	test-client-server$(EXEEXT) test-client-server-async$(EXEEXT) \
+	test-client-server-armageddon$(EXEEXT) \
+	test-client-server-armageddon-async$(EXEEXT)
 check_PROGRAMS = $(am__EXEEXT_1)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -128,8 +130,10 @@ am__EXEEXT_1 = test-input$(EXEEXT) test-output$(EXEEXT) \
 	test-stats$(EXEEXT) test-process-stats-collector$(EXEEXT) \
 	test-mdns$(EXEEXT) test-mysql-client$(EXEEXT) \
 	test-server$(EXEEXT) test-client$(EXEEXT) \
-	test-client-server$(EXEEXT) \
-	test-client-server-armageddon$(EXEEXT)
+	test-client-async$(EXEEXT) test-client-server$(EXEEXT) \
+	test-client-server-async$(EXEEXT) \
+	test-client-server-armageddon$(EXEEXT) \
+	test-client-server-armageddon-async$(EXEEXT)
 am_test_client_OBJECTS = test_client-test-client.$(OBJEXT)
 test_client_OBJECTS = $(am_test_client_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -142,6 +146,14 @@ am__v_lt_1 =
 test_client_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_client_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_test_client_async_OBJECTS =  \
+	test_client_async-test-client-async.$(OBJEXT)
+test_client_async_OBJECTS = $(am_test_client_async_OBJECTS)
+test_client_async_DEPENDENCIES = $(am__DEPENDENCIES_2)
+test_client_async_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_client_async_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 am_test_client_server_OBJECTS =  \
 	test_client_server-test-client-server.$(OBJEXT)
 test_client_server_OBJECTS = $(am_test_client_server_OBJECTS)
@@ -158,6 +170,24 @@ test_client_server_armageddon_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_client_server_armageddon_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_test_client_server_armageddon_async_OBJECTS = test_client_server_armageddon_async-test-client-server-armageddon-async.$(OBJEXT)
+test_client_server_armageddon_async_OBJECTS =  \
+	$(am_test_client_server_armageddon_async_OBJECTS)
+test_client_server_armageddon_async_DEPENDENCIES =  \
+	$(am__DEPENDENCIES_2)
+test_client_server_armageddon_async_LINK = $(LIBTOOL) $(AM_V_lt) \
+	--tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
+	$(CCLD) $(test_client_server_armageddon_async_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_test_client_server_async_OBJECTS =  \
+	test_client_server_async-test-client-server-async.$(OBJEXT)
+test_client_server_async_OBJECTS =  \
+	$(am_test_client_server_async_OBJECTS)
+test_client_server_async_DEPENDENCIES = $(am__DEPENDENCIES_2)
+test_client_server_async_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_client_server_async_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_test_input_OBJECTS = test_input-test-input.$(OBJEXT)
 test_input_OBJECTS = $(am_test_input_OBJECTS)
 test_input_DEPENDENCIES = $(am__DEPENDENCIES_2)
@@ -219,8 +249,11 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/test_client-test-client.Po \
+	./$(DEPDIR)/test_client_async-test-client-async.Po \
 	./$(DEPDIR)/test_client_server-test-client-server.Po \
 	./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po \
+	./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po \
+	./$(DEPDIR)/test_client_server_async-test-client-server-async.Po \
 	./$(DEPDIR)/test_input-test-input.Po \
 	./$(DEPDIR)/test_mdns-test-mdns.Po \
 	./$(DEPDIR)/test_mysql_client-test-mysql-client.Po \
@@ -247,13 +280,19 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(test_client_SOURCES) $(test_client_server_SOURCES) \
-	$(test_client_server_armageddon_SOURCES) $(test_input_SOURCES) \
+SOURCES = $(test_client_SOURCES) $(test_client_async_SOURCES) \
+	$(test_client_server_SOURCES) \
+	$(test_client_server_armageddon_SOURCES) \
+	$(test_client_server_armageddon_async_SOURCES) \
+	$(test_client_server_async_SOURCES) $(test_input_SOURCES) \
 	$(test_mdns_SOURCES) $(test_mysql_client_SOURCES) \
 	$(test_output_SOURCES) $(test_process_stats_collector_SOURCES) \
 	$(test_server_SOURCES) $(test_stats_SOURCES)
-DIST_SOURCES = $(test_client_SOURCES) $(test_client_server_SOURCES) \
-	$(test_client_server_armageddon_SOURCES) $(test_input_SOURCES) \
+DIST_SOURCES = $(test_client_SOURCES) $(test_client_async_SOURCES) \
+	$(test_client_server_SOURCES) \
+	$(test_client_server_armageddon_SOURCES) \
+	$(test_client_server_armageddon_async_SOURCES) \
+	$(test_client_server_async_SOURCES) $(test_input_SOURCES) \
 	$(test_mdns_SOURCES) $(test_mysql_client_SOURCES) \
 	$(test_output_SOURCES) $(test_process_stats_collector_SOURCES) \
 	$(test_server_SOURCES) $(test_stats_SOURCES)
@@ -640,8 +679,8 @@ test_mdns_CFLAGS = $(AM_CFLAGS)
 test_mdns_LDADD = $(AM_LDFLAGS) 
 test_mysql_client_SOURCES = test-mysql-client.c
 test_mysql_client_CFLAGS = $(AM_CFLAGS)
-test_mysql_client_LDFLAGS = $(AM_LDFLAGS) -export-dynamic
-test_mysql_client_LDADD = $(LDADD)
+test_mysql_client_LDFLAGS = -export-dynamic
+test_mysql_client_LDADD = $(AM_LDFLAGS) -ldl
 test_mysql_client_DEPENDENCIES = .libs/libmysqlmock.so
 test_server_SOURCES = test-server.c
 test_server_CFLAGS = $(AM_CFLAGS)
@@ -649,12 +688,21 @@ test_server_LDADD = $(AM_LDFLAGS)
 test_client_SOURCES = test-client.c
 test_client_CFLAGS = $(AM_CFLAGS)
 test_client_LDADD = $(AM_LDFLAGS) 
+test_client_async_SOURCES = test-client-async.c
+test_client_async_CFLAGS = $(AM_CFLAGS)
+test_client_async_LDADD = $(AM_LDFLAGS)
 test_client_server_SOURCES = test-client-server.c
 test_client_server_CFLAGS = $(AM_CFLAGS)
 test_client_server_LDADD = $(AM_LDFLAGS) 
+test_client_server_async_SOURCES = test-client-server-async.c
+test_client_server_async_CFLAGS = $(AM_CFLAGS)
+test_client_server_async_LDADD = $(AM_LDFLAGS)
 test_client_server_armageddon_SOURCES = test-client-server-armageddon.c
 test_client_server_armageddon_CFLAGS = $(AM_CFLAGS)
 test_client_server_armageddon_LDADD = $(AM_LDFLAGS) 
+test_client_server_armageddon_async_SOURCES = test-client-server-armageddon-async.c
+test_client_server_armageddon_async_CFLAGS = $(AM_CFLAGS)
+test_client_server_armageddon_async_LDADD = $(AM_LDFLAGS)
 
 # 3. L'AUTOMAZIONE CRUCIALE: Inietta il preload automaticamente in 'make check'
 # Usiamo abs_builddir per avere il percorso assoluto inattaccabile da ld.so
@@ -712,6 +760,10 @@ test-client$(EXEEXT): $(test_client_OBJECTS) $(test_client_DEPENDENCIES) $(EXTRA
 	@rm -f test-client$(EXEEXT)
 	$(AM_V_CCLD)$(test_client_LINK) $(test_client_OBJECTS) $(test_client_LDADD) $(LIBS)
 
+test-client-async$(EXEEXT): $(test_client_async_OBJECTS) $(test_client_async_DEPENDENCIES) $(EXTRA_test_client_async_DEPENDENCIES) 
+	@rm -f test-client-async$(EXEEXT)
+	$(AM_V_CCLD)$(test_client_async_LINK) $(test_client_async_OBJECTS) $(test_client_async_LDADD) $(LIBS)
+
 test-client-server$(EXEEXT): $(test_client_server_OBJECTS) $(test_client_server_DEPENDENCIES) $(EXTRA_test_client_server_DEPENDENCIES) 
 	@rm -f test-client-server$(EXEEXT)
 	$(AM_V_CCLD)$(test_client_server_LINK) $(test_client_server_OBJECTS) $(test_client_server_LDADD) $(LIBS)
@@ -719,6 +771,14 @@ test-client-server$(EXEEXT): $(test_client_server_OBJECTS) $(test_client_server_
 test-client-server-armageddon$(EXEEXT): $(test_client_server_armageddon_OBJECTS) $(test_client_server_armageddon_DEPENDENCIES) $(EXTRA_test_client_server_armageddon_DEPENDENCIES) 
 	@rm -f test-client-server-armageddon$(EXEEXT)
 	$(AM_V_CCLD)$(test_client_server_armageddon_LINK) $(test_client_server_armageddon_OBJECTS) $(test_client_server_armageddon_LDADD) $(LIBS)
+
+test-client-server-armageddon-async$(EXEEXT): $(test_client_server_armageddon_async_OBJECTS) $(test_client_server_armageddon_async_DEPENDENCIES) $(EXTRA_test_client_server_armageddon_async_DEPENDENCIES) 
+	@rm -f test-client-server-armageddon-async$(EXEEXT)
+	$(AM_V_CCLD)$(test_client_server_armageddon_async_LINK) $(test_client_server_armageddon_async_OBJECTS) $(test_client_server_armageddon_async_LDADD) $(LIBS)
+
+test-client-server-async$(EXEEXT): $(test_client_server_async_OBJECTS) $(test_client_server_async_DEPENDENCIES) $(EXTRA_test_client_server_async_DEPENDENCIES) 
+	@rm -f test-client-server-async$(EXEEXT)
+	$(AM_V_CCLD)$(test_client_server_async_LINK) $(test_client_server_async_OBJECTS) $(test_client_server_async_LDADD) $(LIBS)
 
 test-input$(EXEEXT): $(test_input_OBJECTS) $(test_input_DEPENDENCIES) $(EXTRA_test_input_DEPENDENCIES) 
 	@rm -f test-input$(EXEEXT)
@@ -755,8 +815,11 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client-test-client.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_async-test-client-async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server-test-client-server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_async-test-client-server-async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_input-test-input.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mdns-test-mdns.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mysql_client-test-mysql-client.Po@am__quote@ # am--include-marker
@@ -806,6 +869,20 @@ test_client-test-client.obj: test-client.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_CFLAGS) $(CFLAGS) -c -o test_client-test-client.obj `if test -f 'test-client.c'; then $(CYGPATH_W) 'test-client.c'; else $(CYGPATH_W) '$(srcdir)/test-client.c'; fi`
 
+test_client_async-test-client-async.o: test-client-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_async_CFLAGS) $(CFLAGS) -MT test_client_async-test-client-async.o -MD -MP -MF $(DEPDIR)/test_client_async-test-client-async.Tpo -c -o test_client_async-test-client-async.o `test -f 'test-client-async.c' || echo '$(srcdir)/'`test-client-async.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_async-test-client-async.Tpo $(DEPDIR)/test_client_async-test-client-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-async.c' object='test_client_async-test-client-async.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_async_CFLAGS) $(CFLAGS) -c -o test_client_async-test-client-async.o `test -f 'test-client-async.c' || echo '$(srcdir)/'`test-client-async.c
+
+test_client_async-test-client-async.obj: test-client-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_async_CFLAGS) $(CFLAGS) -MT test_client_async-test-client-async.obj -MD -MP -MF $(DEPDIR)/test_client_async-test-client-async.Tpo -c -o test_client_async-test-client-async.obj `if test -f 'test-client-async.c'; then $(CYGPATH_W) 'test-client-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-async.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_async-test-client-async.Tpo $(DEPDIR)/test_client_async-test-client-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-async.c' object='test_client_async-test-client-async.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_async_CFLAGS) $(CFLAGS) -c -o test_client_async-test-client-async.obj `if test -f 'test-client-async.c'; then $(CYGPATH_W) 'test-client-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-async.c'; fi`
+
 test_client_server-test-client-server.o: test-client-server.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_CFLAGS) $(CFLAGS) -MT test_client_server-test-client-server.o -MD -MP -MF $(DEPDIR)/test_client_server-test-client-server.Tpo -c -o test_client_server-test-client-server.o `test -f 'test-client-server.c' || echo '$(srcdir)/'`test-client-server.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_server-test-client-server.Tpo $(DEPDIR)/test_client_server-test-client-server.Po
@@ -833,6 +910,34 @@ test_client_server_armageddon-test-client-server-armageddon.obj: test-client-ser
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-armageddon.c' object='test_client_server_armageddon-test-client-server-armageddon.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_armageddon_CFLAGS) $(CFLAGS) -c -o test_client_server_armageddon-test-client-server-armageddon.obj `if test -f 'test-client-server-armageddon.c'; then $(CYGPATH_W) 'test-client-server-armageddon.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-armageddon.c'; fi`
+
+test_client_server_armageddon_async-test-client-server-armageddon-async.o: test-client-server-armageddon-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_armageddon_async_CFLAGS) $(CFLAGS) -MT test_client_server_armageddon_async-test-client-server-armageddon-async.o -MD -MP -MF $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Tpo -c -o test_client_server_armageddon_async-test-client-server-armageddon-async.o `test -f 'test-client-server-armageddon-async.c' || echo '$(srcdir)/'`test-client-server-armageddon-async.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Tpo $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-armageddon-async.c' object='test_client_server_armageddon_async-test-client-server-armageddon-async.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_armageddon_async_CFLAGS) $(CFLAGS) -c -o test_client_server_armageddon_async-test-client-server-armageddon-async.o `test -f 'test-client-server-armageddon-async.c' || echo '$(srcdir)/'`test-client-server-armageddon-async.c
+
+test_client_server_armageddon_async-test-client-server-armageddon-async.obj: test-client-server-armageddon-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_armageddon_async_CFLAGS) $(CFLAGS) -MT test_client_server_armageddon_async-test-client-server-armageddon-async.obj -MD -MP -MF $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Tpo -c -o test_client_server_armageddon_async-test-client-server-armageddon-async.obj `if test -f 'test-client-server-armageddon-async.c'; then $(CYGPATH_W) 'test-client-server-armageddon-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-armageddon-async.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Tpo $(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-armageddon-async.c' object='test_client_server_armageddon_async-test-client-server-armageddon-async.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_armageddon_async_CFLAGS) $(CFLAGS) -c -o test_client_server_armageddon_async-test-client-server-armageddon-async.obj `if test -f 'test-client-server-armageddon-async.c'; then $(CYGPATH_W) 'test-client-server-armageddon-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-armageddon-async.c'; fi`
+
+test_client_server_async-test-client-server-async.o: test-client-server-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_async_CFLAGS) $(CFLAGS) -MT test_client_server_async-test-client-server-async.o -MD -MP -MF $(DEPDIR)/test_client_server_async-test-client-server-async.Tpo -c -o test_client_server_async-test-client-server-async.o `test -f 'test-client-server-async.c' || echo '$(srcdir)/'`test-client-server-async.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_server_async-test-client-server-async.Tpo $(DEPDIR)/test_client_server_async-test-client-server-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-async.c' object='test_client_server_async-test-client-server-async.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_async_CFLAGS) $(CFLAGS) -c -o test_client_server_async-test-client-server-async.o `test -f 'test-client-server-async.c' || echo '$(srcdir)/'`test-client-server-async.c
+
+test_client_server_async-test-client-server-async.obj: test-client-server-async.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_async_CFLAGS) $(CFLAGS) -MT test_client_server_async-test-client-server-async.obj -MD -MP -MF $(DEPDIR)/test_client_server_async-test-client-server-async.Tpo -c -o test_client_server_async-test-client-server-async.obj `if test -f 'test-client-server-async.c'; then $(CYGPATH_W) 'test-client-server-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-async.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_client_server_async-test-client-server-async.Tpo $(DEPDIR)/test_client_server_async-test-client-server-async.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-async.c' object='test_client_server_async-test-client-server-async.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_async_CFLAGS) $(CFLAGS) -c -o test_client_server_async-test-client-server-async.obj `if test -f 'test-client-server-async.c'; then $(CYGPATH_W) 'test-client-server-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-async.c'; fi`
 
 test_input-test-input.o: test-input.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_input_CFLAGS) $(CFLAGS) -MT test_input-test-input.o -MD -MP -MF $(DEPDIR)/test_input-test-input.Tpo -c -o test_input-test-input.o `test -f 'test-input.c' || echo '$(srcdir)/'`test-input.c
@@ -1187,6 +1292,13 @@ test-client.log: test-client$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-client-async.log: test-client-async$(EXEEXT)
+	@p='test-client-async$(EXEEXT)'; \
+	b='test-client-async'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test-client-server.log: test-client-server$(EXEEXT)
 	@p='test-client-server$(EXEEXT)'; \
 	b='test-client-server'; \
@@ -1194,9 +1306,23 @@ test-client-server.log: test-client-server$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-client-server-async.log: test-client-server-async$(EXEEXT)
+	@p='test-client-server-async$(EXEEXT)'; \
+	b='test-client-server-async'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test-client-server-armageddon.log: test-client-server-armageddon$(EXEEXT)
 	@p='test-client-server-armageddon$(EXEEXT)'; \
 	b='test-client-server-armageddon'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-client-server-armageddon-async.log: test-client-server-armageddon-async$(EXEEXT)
+	@p='test-client-server-armageddon-async$(EXEEXT)'; \
+	b='test-client-server-armageddon-async'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1296,8 +1422,11 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/test_client-test-client.Po
+	-rm -f ./$(DEPDIR)/test_client_async-test-client-async.Po
 	-rm -f ./$(DEPDIR)/test_client_server-test-client-server.Po
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po
+	-rm -f ./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
+	-rm -f ./$(DEPDIR)/test_client_server_async-test-client-server-async.Po
 	-rm -f ./$(DEPDIR)/test_input-test-input.Po
 	-rm -f ./$(DEPDIR)/test_mdns-test-mdns.Po
 	-rm -f ./$(DEPDIR)/test_mysql_client-test-mysql-client.Po
@@ -1351,8 +1480,11 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/test_client-test-client.Po
+	-rm -f ./$(DEPDIR)/test_client_async-test-client-async.Po
 	-rm -f ./$(DEPDIR)/test_client_server-test-client-server.Po
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po
+	-rm -f ./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
+	-rm -f ./$(DEPDIR)/test_client_server_async-test-client-server-async.Po
 	-rm -f ./$(DEPDIR)/test_input-test-input.Po
 	-rm -f ./$(DEPDIR)/test_mdns-test-mdns.Po
 	-rm -f ./$(DEPDIR)/test_mysql_client-test-mysql-client.Po

@@ -213,6 +213,7 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
        STStats *self_stats;
        STStatsCollector *self_coll;
        GHashTable *clients;
+       GHashTable *pending_clients;
        GHashTable *all_inputs;
        GHashTable *all_outputs;
        STMYSQLClient *mysql;

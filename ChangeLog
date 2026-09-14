@@ -1,5 +1,23 @@
 2026-09-14  Christian Brunello  <brncrs@gmail.com>
 
+	Make client connect and initial snapshot asynchronous.
+
+	* include/starter/client.h, lib/client.c: Add STClientState,
+	st_client_start_async()/finish(); take snapshot before
+	subscribing to change signals.
+	* src/mdns.c, src/internals.h, src/main.c: Keep pending clients
+	until ready; cancel pending start on service-removed.
+	* test/test-client-async.c, test/test-client-server-async.c,
+	test/test-client-server-armageddon-async.c, test/Makefile.am,
+	test/Makefile.in: Cover async start fail/cancel/double-start,
+	full E2E snapshot path, and repeated async connect stress.
+	* test/Makefile.am, test/mysql-mock.c, test/test-mysql-client.c:
+	Link mysql client tests with -ldl; expect CRITICAL on query
+	failure; align mock error string with the assertion.
+	* TODO.md: Checkpoint of weak points and follow-up work.
+
+2026-09-14  Christian Brunello  <brncrs@gmail.com>
+
 	Compatibility with older GLib and MySQL client libraries.
 
 	* configure.ac: Require GLib >= 2.44. Add AC_CHECK_FUNCS for

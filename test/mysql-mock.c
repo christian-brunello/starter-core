@@ -28,7 +28,7 @@ const gchar *mock_mysql_get_last_query (void) { return last_intercepted_query; }
 
 MYSQL *mysql_init (MYSQL *mysql) { return (MYSQL *) 0xDEADBEEF; }
 void mysql_close (MYSQL *mysql) {}
-const char *mysql_error (MYSQL *mysql) { return "Simulated Mock Database Engine Error Engine Exception"; }
+const char *mysql_error (MYSQL *mysql) { return "Simulated Mock Database Engine Error Exception"; }
 void mysql_free_result (MYSQL_RES *res) {}
 
 int 
