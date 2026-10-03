@@ -4,7 +4,7 @@ After=network-online.target mysql.service dbus.socket avahi-daemon.service
 Wants=network-online.target mysql.service avahi-daemon.service
 
 [Service]
-ExecStartPre=/bin/sleep 60 
+ExecStartPre=/bin/sleep 15
 ExecStart=@bindir@/starter-core -R @sysconfdir@/starter/rules.conf
 Restart=on-failure
 RestartSec=15s

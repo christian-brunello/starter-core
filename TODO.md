@@ -1,73 +1,73 @@
 # STARTER-core — TODO / checkpoint
 
-Ultimo aggiornamento: 2026-09-14  
+Last updated: 2026-10-03  
 Branch: `async-client-start`  
-Contesto: compat GLib/MySQL fatto; connect+snapshot client reso async; SetOutput ancora sync.
+Context: GLib/MySQL compatibility done; client connect+snapshot is async; SetOutput still sync.
 
-## 0. Housekeeping git
+## 0. Git housekeeping
 
-- [x] Commit lavoro su `async-client-start` (API async + mdns pending + test + fix mysql-client/Makefile + TODO)
-- [ ] Decidere se `doc/starter-core.pdf` cancellato va committato o ripristinato (lasciato fuori dal commit async)
-- [ ] Push del branch (opzionale; finora non richiesto)
-- [ ] Verificare `make check` completo su una macchina “pulita” dopo il clone
+- [x] Commit work on `async-client-start` (async API + mdns pending + tests + mysql-client/Makefile fixes + TODO)
+- [ ] Decide whether the deleted `doc/starter-core.pdf` should be committed as a removal or restored (left out of the async commit)
+- [ ] Push the branch (optional; not requested so far)
+- [ ] Run a full `make check` on a clean machine after clone
 
-## 1. Async D-Bus — ancora da fare
+## 1. Async D-Bus — still to do
 
-- [ ] **`st_client_set_output` async** (priorità alta per non bloccare il main loop nelle regole)
-  - API `*_async` / `*_finish` o fire-and-forget + segnale errore
-  - Coalescing per output (ultimo valore vince)
-  - Update ottimistico della cache locale vs riconciliazione su `OutputChanged`
-  - `GCancellable` legato al lifetime del client
-  - Adattare `assign_apply` / `engine_apply` (oggi fallisce in sync se set_output fallisce)
-- [ ] **`GetName` async o cache** al connect (oggi ancora `call_sync` in `st_client_get_service_name`)
-- [ ] Timeout finiti al posto di `-1` su tutte le call D-Bus
-- [ ] Stress async parallelo (variante B armageddon: N start in volo insieme) — opzionale
+- [ ] **`st_client_set_output` async** (high priority: avoid blocking the main loop from rules)
+  - `*_async` / `*_finish` API, or fire-and-forget + error signal
+  - Per-output coalescing (last value wins)
+  - Optimistic local cache update vs reconciliation on `OutputChanged`
+  - `GCancellable` tied to the client lifetime
+  - Adapt `assign_apply` / `engine_apply` (today sync failure of set_output fails the apply)
+- [ ] **`GetName` async or cache** at connect (still `call_sync` in `st_client_get_service_name`)
+- [ ] Finite timeouts instead of `-1` on all D-Bus calls
+- [ ] Parallel async stress (armageddon variant B: N starts in flight together) — optional
 
-## 2. Bug / correttezza codice
+## 2. Bugs / code correctness
 
-- [ ] **`st_server_set_inputs` / `st_server_set_outputs`**: usano `g_object_unref` su `GPtrArray*` — dovrebbe essere `g_ptr_array_unref` / `g_ptr_array_ref` (bug serio se quei setter vengono usati; vedi `lib/server.c`)
-- [ ] **`g_ptr_array_steal` in `lib/client.c`** (GetInputs/GetOutputs): return value ignorato → leak degli elementi vecchi a ogni refresh snapshot
-- [ ] Leak potenziali di stringhe da `g_variant_get` dove non ancora `g_free` (verificare path sync/async oltre i signal handler già fixati)
-- [ ] `st_client_set_output`: messaggio di log dice ancora "error call get name method"
-- [ ] Typo storico: `lable_block_delete` vs `label_block_delete`
+- [ ] **`st_server_set_inputs` / `st_server_set_outputs`**: use `g_object_unref` on `GPtrArray*` — should be `g_ptr_array_unref` / `g_ptr_array_ref` (serious bug if those setters are used; see `lib/server.c`)
+- [ ] **`g_ptr_array_steal` in `lib/client.c`** (GetInputs/GetOutputs): return value ignored → leak of old elements on every snapshot refresh
+- [ ] Potential string leaks from `g_variant_get` where `g_free` is still missing (audit sync/async paths beyond the signal handlers already fixed)
+- [ ] `st_client_set_output`: log message still says "error call get name method"
+- [ ] Historical typo: `lable_block_delete` vs `label_block_delete`
 
-## 3. Sicurezza / produzione
+## 3. Security / production
 
-- [ ] **Password MySQL in chiaro** in `src/schemas/org.starter.gschema.xml` (default hardcoded) — rimuovere default reale; usare secret/env/file 0600
-- [ ] D-Bus server: `G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS` su TCP `0.0.0.0` — ok solo in LAN fidata; documentare o restringere bind/auth
-- [ ] `starter-core.service.in`: `ExecStartPre=/bin/sleep 60` — fragile; sostituire con dipendenze systemd corrette / `Restart` + readiness
-- [ ] Rules preprocessor (`m4 {F}` / comando da GSettings): rischio se il setting è controllabile — validare/escaping
+- [ ] **MySQL password in cleartext** in `src/schemas/org.starter.gschema.xml` (hardcoded default) — remove the real default; use a secret/env/0600 file
+- [ ] D-Bus server: `G_DBUS_SERVER_FLAGS_AUTHENTICATION_ALLOW_ANONYMOUS` on TCP `0.0.0.0` — acceptable only on a trusted LAN; document or tighten bind/auth
+- [ ] `starter-core.service.in`: `ExecStartPre=/bin/sleep …` is fragile; replace with proper systemd dependencies / `Restart` + readiness
+- [ ] Rules preprocessor (`m4 {F}` / GSettings command): risk if the setting is attacker-controlled — validate/escape
 
-## 4. Architettura / main loop
+## 4. Architecture / main loop
 
-- [ ] MySQL ancora **sincrono** nelle callback I/O (`store_history`, label) — blocca il loop anche con D-Bus async
-- [ ] Valutare worker thread / pool per DB, o API async MySQL
-- [ ] `engine_apply` può rientrare via segnali durante call sync (e in futuro via OutputChanged dopo SetOutput async) — valutare idle queue / anti-ricorsione
-- [ ] `engine_apply(..., NULL)` a ogni peer ready: carico se molti nodi si connettono insieme
+- [ ] MySQL is still **synchronous** in I/O callbacks (`store_history`, labels) — blocks the loop even with async D-Bus
+- [ ] Consider a worker thread/pool for DB, or an async MySQL API
+- [ ] `engine_apply` can re-enter via signals during sync calls (and later via `OutputChanged` after async SetOutput) — consider an idle queue / anti-recursion
+- [ ] `engine_apply(..., NULL)` on every peer ready: load spike if many nodes connect at once
 
-## 5. Qualità / tooling
+## 5. Quality / tooling
 
-- [ ] `.gitignore` robusto per artefatti autotools/build (oggi tanti untracked: `Makefile`, `.o`, `.libs`, `valgrind.log`, swap vim, …)
-- [ ] Aggiungere CI minima: `./autogen.sh && ./configure && make && make check`
-- [ ] Allineare README (D-Bus peer TCP, non solo “D-Bus” generico) e versioni minime (GLib ≥ 2.44)
+- [ ] Robust `.gitignore` for autotools/build artifacts (today many untracked files: `Makefile`, `.o`, `.libs`, `valgrind.log`, vim swap, …)
+- [ ] Add minimal CI: `./autogen.sh && ./configure && make && make check`
+- [ ] Align README (D-Bus peer TCP, not just generic “D-Bus”) and minimum versions (GLib ≥ 2.44)
 
-## 6. API / compatibilità
+## 6. API / compatibility
 
-- [ ] Decidere se deprecare `st_client_start` sync o tenerlo come wrapper di comodo per test
-- [ ] Documentare stati `IDLE/PENDING/READY/FAILED` in Texinfo
-- [ ] `glib-compat`: monitorare layout `GRealPtrArray` se si supportano GLib < 2.62 a lungo
+- [ ] Decide whether to deprecate sync `st_client_start` or keep it as a convenience wrapper for tests
+- [x] Document `IDLE` / `PENDING` / `READY` / `FAILED` states in Texinfo
+- [ ] `glib-compat`: watch `GRealPtrArray` layout if GLib < 2.62 stays supported long-term
 
-## 7. Test — gap
+## 7. Tests — gaps
 
-- [ ] Test esplicito su cancel durante pending + `service-removed` (path mdns)
-- [ ] Test SetOutput (sync oggi; async quando arriverà)
-- [ ] Test setter server inputs/outputs dopo fix refcounting
-- [ ] Valgrind mirato su client start async + armageddon-async
+- [ ] Explicit test for cancel while pending + `service-removed` (mdns path)
+- [ ] SetOutput tests (sync today; async when it lands)
+- [ ] Server inputs/outputs setter tests after the refcounting fix
+- [ ] Targeted Valgrind on async client start + armageddon-async
 
-## 8. Prossimi passi suggeriti (ordine)
+## 8. Suggested next steps (order)
 
-1. Push opzionale di `async-client-start`
-2. Fix `g_object_unref` su GPtrArray in server + leak `g_ptr_array_steal` in client
-3. SetOutput async + adattamento engine
-4. Hardening secrets/auth/systemd
-5. MySQL off-main-loop
+1. Optional push of `async-client-start`
+2. Fix `g_object_unref` on GPtrArray in server + `g_ptr_array_steal` leak in client
+3. Async SetOutput + engine adaptation
+4. Harden secrets / auth / systemd
+5. Move MySQL off the main loop

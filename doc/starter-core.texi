@@ -66,6 +66,7 @@ Set the boiler's flow temperature based on:
 @end itemize
 @end table
 
+@node Beyond Heating: The Monero Bonus
 @section Beyond Heating: The Monero Bonus
 Once the core was stable, more automations followed. The most satisfying one? Managing my photovoltaic surplus. When my solar panels are overproducing and the grid voltage spikes near 250V, the system automatically triggers my mining rigs to mine Monero. It’s the ultimate way to turn excess voltage into digital value.
 
@@ -135,6 +136,7 @@ We usually think of an @emph{Output} as something physical that clicks or turns-
 
 By treating outputs as abstract "writeable" points, we can control almost anything. For example, I created a small "Explain" service that gives my home automation a voice; it literally tells me when something changes. If you can send a value to it, @acronym{STARTER} considers it an output.
 
+@node Events: The Language of Change
 @subsection Events: The Language of Change
 In traditional automation, "events" are often binary: a gate opened, a relay closed. But let’s broaden our perspective. Since inputs and outputs are abstract, an @emph{Event} is simply a @emph{state change}.
 
@@ -195,7 +197,7 @@ To compile @acronym{STARTER}, you’ll need to prepare your environment. The sys
 @table @b
 @item Required packages:
 @itemize
-@item @command{glib-2.0} and @command{gio-2.0} (The backbone for system abstractions)
+@item @command{glib-2.0} and @command{gio-2.0} (version 2.44 or later; the backbone for system abstractions)
 @item @command{avahi-client} and @command{avahi-glib} (For zero-configuration networking/service discovery)
 @item @command{libmysqlclient-dev} (To enable database connectivity)
 @end itemize
@@ -210,7 +212,7 @@ To compile @acronym{STARTER}, you’ll need to prepare your environment. The sys
 
 Before launching the Core, you need a place for it to store its "memory." You must create a MariaDB/MySQL database—either locally or on a remote server—named @code{STARTER}.
 
-The database requires three specific tables: @code{labels}, @code{history}, and @code{stats}. You can find the exact SQL schema and creation scripts in **Appendix XXX**.
+The database requires three specific tables: @code{labels}, @code{history}, and @code{stats}. You can find the exact SQL schema and creation scripts in @ref{Database Schema & Initialization}.
 
 @node Download and Installation
 @subsection Download and Installation
@@ -635,8 +637,8 @@ By default, the Core listens to any service starting with @code{STARTER:} or @co
 
 For example, you could have:
 @itemize @bullet
-@item A Core managing only critical infrastructure: @code{starter --service-match '^ST:CRITICAL:.*'}
-@item A Core managing leisure or lab services: @code{starter --service-match '^ST:LAB:.*'}
+@item A Core managing only critical infrastructure: @code{starter-core --service-match '^ST:CRITICAL:.*'}
+@item A Core managing leisure or lab services: @code{starter-core --service-match '^ST:LAB:.*'}
 @end itemize
 
 This segmentation ensures that a failure or a configuration error in one domain (like the lab) does not affect the stability of another (like the main heating system).
@@ -646,6 +648,7 @@ This segmentation ensures that a failure or a configuration error in one domain 
 
 Remember: @emph{Command-line arguments are king}. If you have a database host set via @command{gsettings} but specify a different rule path or service-match via the terminal, the command-line flag will always take precedence. This allows you to experiment with "sandbox" configurations without breaking your main production setup.
 
+@node System Architecture: Under the Hood
 @chapter System Architecture: Under the Hood
 
 Now that you’ve mastered the language and the installation, it’s time to look at the "nervous system" of @acronym{STARTER}. Understanding how the Core communicates with its services is key to building a truly robust automation network.
@@ -676,11 +679,11 @@ The Core constantly listens for @emph{mDNS (Multicast DNS)} events. The moment a
 
 The "dialogue" between clients and servers happens over the @emph{D-Bus TCP protocol}. This Remote Procedure Call (@acronym{RPC}) mechanism allows for high-speed, reliable data exchange.
 
-When a service is discovered, the Core performs a "handshake" using three primary methods:
+When a service is discovered, the Core performs a "handshake" using three primary methods. Importantly, it always takes a full @emph{snapshot} first and only @emph{then} subscribes to change signals—so no early updates are lost in the gap between the two steps.
 
 @table @code
 @item getInputs
-The Core requests a list of all available inputs from the service. Once received, it "hooks" into specific @emph{@code{*-changed} signals}. This ensures that the moment a sensor value shifts at the service level, the Core is notified instantly.
+The Core requests a list of all available inputs from the service. After the snapshot is complete, it "hooks" into specific @emph{@code{*-changed} signals}. This ensures that the moment a sensor value shifts at the service level, the Core is notified instantly.
 
 @item getOutputs
 Similar to inputs, the Core fetches the array of available outputs. It hooks the change signals here as well, keeping the Core’s internal map perfectly synchronized with the service’s real-world state.
@@ -688,6 +691,8 @@ Similar to inputs, the Core fetches the array of available outputs. It hooks the
 @item getStats
 Finally, the Core retrieves the service’s internal statistics. Like the I/O, these are monitored via signals so that any diagnostic or performance data is updated in real-time.
 @end table
+
+This handshake can run synchronously or asynchronously. The Core prefers the asynchronous path so that discovering many peers at once does not stall the main loop.
 
 @node The Operational Loop
 @subsection The Operational Loop
@@ -901,8 +906,8 @@ An @emph{Input} is a stream of data to be read; an @emph{Output} is a command wa
 
 We’re going to evolve our service into a living entity. We’ll implement a @emph{sensor simulation} (a timer that increments a value) and a @dfn{callback} that waits for the Core to bark an order.
 
-@node The Living Service: `first-service-v3.c`
-@subsection The Living Service: `first-service-v3.c`
+@node The Living Service: first-service-v3.c
+@subsection The Living Service: @file{first-service-v3.c}
 
 @example
 #include <starter/mdns.h>
@@ -977,9 +982,9 @@ Here is what happens when you hit "Run":
 @item Discovery
 Your service shouts its existence over mDNS; the Core hears it and hooks up via D-Bus.
 @item Telemetry
-Your code starts counting. Every second, the Core receives the updated `myFirstInput`.
+Your code starts counting. Every second, the Core receives the updated @code{myFirstInput}.
 @item Threshold
-The moment that counter hits **51**, the Core’s rule evaluates to `TRUE`.
+The moment that counter hits 51, the Core’s rule evaluates to @code{TRUE}.
 @item Reaction
 The Core calls @code{SetOutput} on your service. Your @code{on_output_changed} function fires, and you see the confirmation in your console. 
 @end table
@@ -1106,8 +1111,6 @@ CREATE TABLE stats (
     threads_last      REAL NOT NULL,
     INDEX idx_service_name (service_name)
 );
-
-CREATE INDEX idx_service_name ON stats (service_name);
 @end verbatim
 
 @quotation Security Note
@@ -1132,13 +1135,19 @@ This enumeration defines the failure modes that can occur during I/O operations 
 
 @table @code
 @item ST_ERROR_INVALID_VALUE
-The value provided for an operation is outside the allowed range (defined by @var{min} and @var{max}) or is incompatible with the expected @code{STUnit}.
+The value provided for an operation is outside the allowed range (defined by @var{min} and @var{max}) after snapping to @var{step}, or is otherwise incompatible with the expected constraints. Off-step values are rounded rather than rejected.
 
 @item ST_ERROR_INVALID_RESPONSE
 The remote service or the Core sent a response that does not match the expected D-Bus signature or contains malformed data.
 
 @item ST_ERROR_NOT_IMPLEMENTED
 The requested method or operation is recognized but not currently supported by the specific version of the service or the library.
+
+@item ST_ERROR_NOT_CONNECTED
+The client is not connected (or not yet @code{READY}) and cannot perform the requested remote operation.
+
+@item ST_ERROR_SYSTEM
+A lower-level system or library failure occurred (for example, an unexpected GLib or network error wrapped into the @acronym{STARTER} domain).
 @end table
 @end deftp
 
@@ -1161,6 +1170,7 @@ if (error->domain == ST_ERROR) @{
 Returns a @code{GQuark} that uniquely identifies the @acronym{STARTER} error domain. This function is typically called via the @code{ST_ERROR} macro.
 @end deftypefun
 
+@node API Definitions: Constants and Enumerations
 @section API Definitions: Constants and Enumerations
 
 This section describes the foundational constants and types defined in @file{starter/defs.h}. These definitions are shared across the entire ecosystem to ensure consistent behavior between services and the Core.
@@ -1282,19 +1292,25 @@ Gets or sets the measurement unit.
 
 @deftypefun {gdouble} st_input_get_val (const STInput *@var{self})
 @deftypefunx {gboolean} st_input_set_val (STInput *@var{self}, gdouble @var{val}, GError **@var{error})
-Returns or updates the current value. If @var{val} is outside the @var{min}/@var{max} range, the function will fail and return @code{ST_ERROR_INVALID_VALUE}.
+Returns or updates the current value. Values that are not aligned with @var{step}
+are rounded to the nearest multiple (a warning is logged when this happens). If the
+rounded value is outside the @var{min}/@var{max} range, the function fails with
+@code{ST_ERROR_INVALID_VALUE}.
 @end deftypefun
 
 @deftypefun {gdouble} st_input_get_min (const STInput *@var{self})
 @deftypefunx {gboolean} st_input_set_min (STInput *@var{self}, gdouble @var{min}, GError **@var{error})
 @deftypefunx {gdouble} st_input_get_max (const STInput *@var{self})
 @deftypefunx {gboolean} st_input_set_max (STInput *@var{self}, gdouble @var{max}, GError **@var{error})
-Manage the operational boundaries of the input.
+Manage the operational boundaries of the input. Bounds are snapped to @var{step}
+the same way as values.
 @end deftypefun
 
 @deftypefun {gdouble} st_input_get_step (const STInput *@var{self})
 @deftypefunx {gboolean} st_input_set_step (STInput *@var{self}, gdouble @var{step}, GError **@var{error})
-Manage the value increment resolution.
+Manage the value increment resolution. Changing the step rounds the current
+@var{min}, @var{max}, and @var{val} onto the new grid (with warnings when they
+change). The call fails only if those rounded values are no longer ordered.
 @end deftypefun
 
 @deftypefun {guint64} st_input_get_flags (const STInput *@var{self})
@@ -1353,19 +1369,19 @@ Gets or sets the measurement unit.
 
 @deftypefun {gdouble} st_output_get_val (const STOutput *@var{self})
 @deftypefunx {gboolean} st_output_set_val (STOutput *@var{self}, gdouble @var{val}, GError **@var{error})
-Returns or updates the current value. For outputs, @code{st_output_set_val} is typically called by the service when it receives a command from the Core, or when a manual override is in effect. 
+Returns or updates the current value. For outputs, @code{st_output_set_val} is typically called by the service when it receives a command from the Core, or when a manual override is in effect. Values that are not aligned with @var{step} are rounded to the nearest multiple (a warning is logged when this happens). Values that remain outside @var{min}/@var{max} after rounding are rejected with @code{ST_ERROR_INVALID_VALUE}.
 @end deftypefun
 
 @deftypefun {gdouble} st_output_get_min (const STOutput *@var{self})
 @deftypefunx {gboolean} st_output_set_min (STOutput *@var{self}, gdouble @var{min}, GError **@var{error})
 @deftypefunx {gdouble} st_output_get_max (const STOutput *@var{self})
 @deftypefunx {gboolean} st_output_set_max (STOutput *@var{self}, gdouble @var{max}, GError **@var{error})
-Manage the operational range. Commands outside these bounds will be rejected.
+Manage the operational range. Bounds are snapped to @var{step}; commands that remain outside the range after rounding are rejected.
 @end deftypefun
 
 @deftypefun {gdouble} st_output_get_step (const STOutput *@var{self})
 @deftypefunx {gboolean} st_output_set_step (STOutput *@var{self}, gdouble @var{step}, GError **@var{error})
-Sets the precision required for value updates.
+Sets the precision required for value updates. Changing the step rounds the current @var{min}, @var{max}, and @var{val} onto the new grid (with warnings when they change).
 @end deftypefun
 
 @deftypefun {guint64} st_output_get_flags (const STOutput *@var{self})
@@ -1514,6 +1530,16 @@ Initializes a new server instance.
 
 @deftypefun {gboolean} st_server_start (STServer *@var{self}, guint16 @var{port}, GError **@var{error})
 Starts the server and begins listening for incoming connections on the specified @var{port}.
+If @var{port} is @code{0}, the library asks the operating system for an ephemeral (dynamically
+allocated) port—no need to pick one by hand. After a successful start, call
+@code{st_server_get_port} to learn which port was actually bound; that value is what you
+advertise over mDNS and what a client must pass to @code{st_client_start}.
+@end deftypefun
+
+@deftypefun {guint16} st_server_get_port (const STServer *@var{self})
+Returns the TCP port the server is listening on. Meaningful after a successful
+@code{st_server_start}; when the server was started with @var{port} @code{0}, this is the
+ephemeral port assigned by the system.
 @end deftypefun
 
 @node Service Metadata
@@ -1532,18 +1558,66 @@ Accessors to retrieve or modify the server's identity and its collection of I/O 
 
 The @code{STClient} is the counterpart to the server. It connects to a remote @code{STServer} and creates a local proxy of all its inputs, outputs, and statistics.
 
+Think of it as a living mirror: once the handshake completes, the Core can read remote sensors and command remote actuators as if they were local objects. The connection itself can be started @emph{synchronously} (handy for tests and simple tools) or @emph{asynchronously} (what the Core uses in production, so discovery never freezes the main loop).
+
+In both cases the sequence is the same: take a full snapshot first (@code{GetInputs}, @code{GetOutputs}, @code{GetStats}), then subscribe to change signals. That ordering is deliberate—it closes the race where an early @code{*-changed} notification would otherwise arrive before the local mirrors exist.
+
 @deftypefun {STClient *} st_client_new (void)
-Creates a new, uninitialized client object.
+Creates a new client in the @code{ST_CLIENT_STATE_IDLE} state.
 @end deftypefun
 
+@node Client Connection State
+@subsubsection Client Connection State
+
+A client is not a binary "connected / not connected" switch. It moves through an explicit state machine that tells you whether the mirrors are safe to use.
+
+@deftp {Enumeration} STClientState
+@table @code
+@item ST_CLIENT_STATE_IDLE
+Freshly created; no connection attempt has started yet.
+@item ST_CLIENT_STATE_PENDING
+Connect and snapshot are in flight. Local I/O mirrors are not ready.
+@item ST_CLIENT_STATE_READY
+Snapshot complete, signals subscribed, mirrors usable.
+@item ST_CLIENT_STATE_FAILED
+The last start attempt failed (network error, cancelled task, invalid response, @dots{}).
+@end table
+@end deftp
+
+@deftypefun {STClientState} st_client_get_state (STClient *@var{self})
+Returns the current connection state.
+@end deftypefun
+
+@deftypefun {gboolean} st_client_is_ready (STClient *@var{self})
+Convenience check equivalent to
+@code{st_client_get_state (self) == ST_CLIENT_STATE_READY}.
+@end deftypefun
+
+Calling @code{st_client_start} or @code{st_client_start_async} again while the state is already @code{PENDING} or @code{READY} is an error—create a new client, or wait until the current lifecycle ends.
+
+@node Starting a Client
+@subsubsection Starting a Client
+
 @deftypefun {gboolean} st_client_start (STClient *@var{self}, const gchar *@var{address}, guint16 @var{port}, GError **@var{error})
-Connects the client to a remote service at the given @var{address} and @var{port}. Upon success, the client will automatically synchronize all remote I/O objects.
+Connects synchronously to a remote service at @var{address}:@var{port}, performs the initial snapshot, then subscribes to change signals. On success the client enters @code{ST_CLIENT_STATE_READY}; on failure it enters @code{ST_CLIENT_STATE_FAILED} and returns @code{FALSE}.
+
+Unlike @code{st_server_start}, the client does @emph{not} treat @var{port} @code{0} as
+``pick any port'': it must be the real listening port of the peer (from mDNS, or from
+@code{st_server_get_port} when you own the server).
+@end deftypefun
+
+@deftypefun {void} st_client_start_async (STClient *@var{self}, const gchar *@var{address}, guint16 @var{port}, GCancellable *@var{cancellable}, GAsyncReadyCallback @var{callback}, gpointer @var{user_data})
+Starts the same connect/snapshot/subscribe sequence without blocking the caller. Progress is reported through @var{callback}. Pass a @code{GCancellable} when you need to abort a pending start—for example when mDNS reports that the service disappeared before the handshake finished. As with the synchronous start, @var{port} must be the peer's actual listening port.
+@end deftypefun
+
+@deftypefun {gboolean} st_client_start_finish (STClient *@var{self}, GAsyncResult *@var{result}, GError **@var{error})
+Completes a previous @code{st_client_start_async} call. Returns @code{TRUE} when the client is @code{READY}.
 @end deftypefun
 
 @node Remote Resource Access
 @subsubsection Remote Resource Access
 
-Once a client is started, it provides access to the remote service's data as if it were local.
+Once a client is @code{READY}, it provides access to the remote service's data as if it were local. Before that point the arrays may be empty or incomplete—always gate your logic on @code{st_client_is_ready}.
 
 @deftypefun {const GPtrArray *} st_client_get_inputs (STClient *@var{self})
 @deftypefunx {const GPtrArray *} st_client_get_outputs (STClient *@var{self})
@@ -1554,12 +1628,18 @@ Returns arrays of @code{STInput} and @code{STOutput} objects that represent the 
 Retrieves the performance statistics (@code{STStats}) of the remote process.
 @end deftypefun
 
+@deftypefun {gchar *} st_client_get_service_name (STClient *@var{self})
+Returns the remote service name as a newly allocated string. Free it with @code{g_free} when you are done.
+@end deftypefun
+
+@deftypefun {gboolean} st_client_set_output (STClient *@var{self}, const gchar *@var{name}, double @var{value}, guint64 @var{flags})
+Requests that the remote service set the named output. This call is still synchronous today; an asynchronous variant is planned so that rule evaluation never blocks the main loop on a slow peer.
+@end deftypefun
+
+@node GNU Free Documentation License
 @appendix GNU Free Documentation License
 @c The GNU Free Documentation License.
 @center Version 1.3, 3 November 2008
-
-@c This file is intended to be included within another document,
-@c hence no sectioning command or @node.
 
 @display
 Copyright @copyright{} 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.

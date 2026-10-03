@@ -113,14 +113,17 @@ test_input_set_value_boundaries (TestFixture *fixture, gconstpointer user_data)
     g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
     g_clear_error (&error);
 
-    // Set an invalid value violating the step constraint (26.3 is not divisible by 0.5)
+    // Off-step value is rounded to the nearest step (26.3 -> 26.5) instead of failing
+    g_test_expect_message ("libstarter-core", G_LOG_LEVEL_WARNING, "*to match step*");
     success = st_input_set_val (fixture->input, 26.3, &error);
-    g_assert_false (success);
-    g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
-    g_clear_error (&error);
+    g_test_assert_expected_messages ();
+    g_assert_true (success);
+    g_assert_no_error (error);
+    g_assert_cmpfloat_with_epsilon (st_input_get_val (fixture->input), 26.5, 1e-9);
+    g_assert_cmpint (fixture->tracker.val_changed_count, ==, 1);
 }
 
-/* Test 3: Verify precision handling of floating-point boundaries via ismul() */
+/* Test 3: Changing step snaps min/max/val to the new resolution */
 static void
 test_input_step_and_precision (TestFixture *fixture, gconstpointer user_data)
 {
@@ -132,11 +135,16 @@ test_input_step_and_precision (TestFixture *fixture, gconstpointer user_data)
     g_assert_true (success);
     g_assert_no_error (error);
 
-    // Changing step to 3.0 should fail because current val (25.0) is not a multiple of 3.0
+    // Changing step to 3.0 rounds val 25.0 -> 24.0 (and max 100.0 -> 99.0)
+    g_test_expect_message ("libstarter-core", G_LOG_LEVEL_WARNING, "*to match step*");
+    g_test_expect_message ("libstarter-core", G_LOG_LEVEL_WARNING, "*to match step*");
     success = st_input_set_step (fixture->input, 3.0, &error);
-    g_assert_false (success);
-    g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
-    g_clear_error (&error);
+    g_test_assert_expected_messages ();
+    g_assert_true (success);
+    g_assert_no_error (error);
+    g_assert_cmpfloat_with_epsilon (st_input_get_step (fixture->input), 3.0, 1e-9);
+    g_assert_cmpfloat_with_epsilon (st_input_get_val (fixture->input), 24.0, 1e-9);
+    g_assert_cmpfloat_with_epsilon (st_input_get_max (fixture->input), 99.0, 1e-9);
 }
 
 /* Test 4: Ensure changing values to identical targets skips signal emission */

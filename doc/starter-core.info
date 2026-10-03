@@ -39,10 +39,12 @@ Documentation License".
 * Introduction::
 * STARTER Concepts::
 * Using STARTER: From Theory to Practice::
+* System Architecture: Under the Hood::
 * The starter-core Library: Building Your Own Ecosystem::
 * Conclusions: The World is Your Input::
 * Database Schema & Initialization::
 * API Reference::
+* GNU Free Documentation License::
 
 
 File: starter-core.info,  Node: Introduction,  Next: STARTER Concepts,  Prev: Top,  Up: Top
@@ -67,6 +69,7 @@ between comfort or savings; there was simply no middle ground.
 
 * The Search for Intelligence::
 * The Pivot: Programmable Intent::
+* Beyond Heating: The Monero Bonus::
 * Giving Back to the Community::
 
 
@@ -90,7 +93,7 @@ unpredictable.  I couldn't risk spending the rest of the winter in the
 cold just for a neural network experiment.
 
 
-File: starter-core.info,  Node: The Pivot: Programmable Intent,  Prev: The Search for Intelligence,  Up: Introduction
+File: starter-core.info,  Node: The Pivot: Programmable Intent,  Next: Beyond Heating: The Monero Bonus,  Prev: The Search for Intelligence,  Up: Introduction
 
 The Pivot: Programmable Intent
 ==============================
@@ -116,6 +119,9 @@ _Dynamic Flow Control_
           for my home: at 0^\circC outdoors, a 48^\circC flow
           temperature perfectly balances the house's heat loss.
 
+
+File: starter-core.info,  Node: Beyond Heating: The Monero Bonus,  Next: Giving Back to the Community,  Prev: The Pivot: Programmable Intent,  Up: Introduction
+
 Beyond Heating: The Monero Bonus
 ================================
 
@@ -126,7 +132,7 @@ automatically triggers my mining rigs to mine Monero.  It’s the ultimate
 way to turn excess voltage into digital value.
 
 
-File: starter-core.info,  Node: Giving Back to the Community,  Up: Introduction
+File: starter-core.info,  Node: Giving Back to the Community,  Prev: Beyond Heating: The Monero Bonus,  Up: Introduction
 
 Giving Back to the Community
 ============================
@@ -217,6 +223,7 @@ perspective.
 
 * Input: More than just Sensors::
 * Output: A Channel for Action::
+* Events: The Language of Change::
 * Logic: Applying Our Intelligence::
 * Analysis: Data-Driven Decisions::
 
@@ -238,7 +245,7 @@ real-time cryptocurrency price.  If a service can feed data into the
 system, STARTER treats it as an input.
 
 
-File: starter-core.info,  Node: Output: A Channel for Action,  Prev: Input: More than just Sensors,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+File: starter-core.info,  Node: Output: A Channel for Action,  Next: Events: The Language of Change,  Prev: Input: More than just Sensors,  Up: Redefining the Foundations: Inputs, Outputs, and Events
 
 1.2.2 Output: A Channel for Action
 ----------------------------------
@@ -251,6 +258,9 @@ By treating outputs as abstract "writeable" points, we can control
 almost anything.  For example, I created a small "Explain" service that
 gives my home automation a voice; it literally tells me when something
 changes.  If you can send a value to it, STARTER considers it an output.
+
+
+File: starter-core.info,  Node: Events: The Language of Change,  Next: Logic: Applying Our Intelligence,  Prev: Output: A Channel for Action,  Up: Redefining the Foundations: Inputs, Outputs, and Events
 
 1.2.3 Events: The Language of Change
 ------------------------------------
@@ -265,7 +275,7 @@ just hit €60,000."  _Open your mind_: if the data changes, it’s an event
 you can act upon.
 
 
-File: starter-core.info,  Node: Logic: Applying Our Intelligence,  Next: Analysis: Data-Driven Decisions,  Up: Redefining the Foundations: Inputs, Outputs, and Events
+File: starter-core.info,  Node: Logic: Applying Our Intelligence,  Next: Analysis: Data-Driven Decisions,  Prev: Events: The Language of Change,  Up: Redefining the Foundations: Inputs, Outputs, and Events
 
 1.2.4 Logic: Applying Our Intelligence
 --------------------------------------
@@ -319,7 +329,7 @@ Once again, I want you to think abstractly: we have the data we’ve
 managed to encode.  _What that data represents is entirely up to you_!
 
 
-File: starter-core.info,  Node: Using STARTER: From Theory to Practice,  Prev: STARTER Concepts,  Up: Top
+File: starter-core.info,  Node: Using STARTER: From Theory to Practice,  Next: System Architecture: Under the Hood,  Prev: STARTER Concepts,  Up: Top
 
 2 Using STARTER: From Theory to Practice
 ****************************************
@@ -381,8 +391,8 @@ To compile STARTER, you’ll need to prepare your environment.  The system
 relies on several core libraries for networking and data management.
 
 Required packages:
-        * 'glib-2.0' and 'gio-2.0' (The backbone for system
-          abstractions)
+        * 'glib-2.0' and 'gio-2.0' (version 2.44 or later; the backbone
+          for system abstractions)
         * 'avahi-client' and 'avahi-glib' (For zero-configuration
           networking/service discovery)
         * 'libmysqlclient-dev' (To enable database connectivity)
@@ -402,7 +412,7 @@ a remote server—named 'STARTER'.
 
 The database requires three specific tables: 'labels', 'history', and
 'stats'.  You can find the exact SQL schema and creation scripts in
-**Appendix XXX**.
+*note Database Schema & Initialization::.
 
 
 File: starter-core.info,  Node: Download and Installation,  Next: Configuration,  Prev: Database Initialization,  Up: System Preparation
@@ -1048,10 +1058,10 @@ multiple Cores on the same network without interference.  Each Core will
 only "see" and manage services whose names match its specific pattern.
 
 For example, you could have:
-   * A Core managing only critical infrastructure: 'starter
+   * A Core managing only critical infrastructure: 'starter-core
      --service-match '^ST:CRITICAL:.*''
-   * A Core managing leisure or lab services: 'starter --service-match
-     '^ST:LAB:.*''
+   * A Core managing leisure or lab services: 'starter-core
+     --service-match '^ST:LAB:.*''
 
 This segmentation ensures that a failure or a configuration error in one
 domain (like the lab) does not affect the stability of another (like the
@@ -1069,6 +1079,9 @@ service-match via the terminal, the command-line flag will always take
 precedence.  This allows you to experiment with "sandbox" configurations
 without breaking your main production setup.
 
+
+File: starter-core.info,  Node: System Architecture: Under the Hood,  Next: The starter-core Library: Building Your Own Ecosystem,  Prev: Using STARTER: From Theory to Practice,  Up: Top
+
 3 System Architecture: Under the Hood
 *************************************
 
@@ -1077,8 +1090,12 @@ look at the "nervous system" of STARTER.  Understanding how the Core
 communicates with its services is key to building a truly robust
 automation network.
 
+* Menu:
+
+* A Truly Distributed Ecosystem::
+
 
-File: starter-core.info,  Node: A Truly Distributed Ecosystem
+File: starter-core.info,  Node: A Truly Distributed Ecosystem,  Up: System Architecture: Under the Hood
 
 3.1 A Truly Distributed Ecosystem
 =================================
@@ -1128,13 +1145,15 @@ protocol_.  This Remote Procedure Call (RPC) mechanism allows for
 high-speed, reliable data exchange.
 
 When a service is discovered, the Core performs a "handshake" using
-three primary methods:
+three primary methods.  Importantly, it always takes a full _snapshot_
+first and only _then_ subscribes to change signals—so no early updates
+are lost in the gap between the two steps.
 
 'getInputs'
      The Core requests a list of all available inputs from the service.
-     Once received, it "hooks" into specific _'*-changed' signals_.
-     This ensures that the moment a sensor value shifts at the service
-     level, the Core is notified instantly.
+     After the snapshot is complete, it "hooks" into specific
+     _'*-changed' signals_.  This ensures that the moment a sensor value
+     shifts at the service level, the Core is notified instantly.
 
 'getOutputs'
      Similar to inputs, the Core fetches the array of available outputs.
@@ -1146,6 +1165,10 @@ three primary methods:
      Finally, the Core retrieves the service’s internal statistics.
      Like the I/O, these are monitored via signals so that any
      diagnostic or performance data is updated in real-time.
+
+This handshake can run synchronously or asynchronously.  The Core
+prefers the asynchronous path so that discovering many peers at once
+does not stall the main loop.
 
 
 File: starter-core.info,  Node: The Operational Loop,  Prev: Communication via D-Bus RPC,  Up: A Truly Distributed Ecosystem
@@ -1171,7 +1194,7 @@ _Alignment_
      abstract hardware to match the requested value.
 
 
-File: starter-core.info,  Node: The starter-core Library: Building Your Own Ecosystem,  Next: Conclusions: The World is Your Input,  Up: Top
+File: starter-core.info,  Node: The starter-core Library: Building Your Own Ecosystem,  Next: Conclusions: The World is Your Input,  Prev: System Architecture: Under the Hood,  Up: Top
 
 4 The starter-core Library: Building Your Own Ecosystem
 *******************************************************
@@ -1445,12 +1468,12 @@ that waits for the Core to bark an order.
 
 * Menu:
 
-* The Living Service: `first-service-v3.c`::
+* The Living Service: first-service-v3.c::
 * The Rule: Closing the Loop::
 * The Result: A Symphony of Data::
 
 
-File: starter-core.info,  Node: The Living Service: `first-service-v3.c`,  Next: The Rule: Closing the Loop,  Up: The Grand Finale: Bridging Code and Logic
+File: starter-core.info,  Node: The Living Service: first-service-v3.c,  Next: The Rule: Closing the Loop,  Up: The Grand Finale: Bridging Code and Logic
 
 4.4.1 The Living Service: 'first-service-v3.c'
 ----------------------------------------------
@@ -1507,7 +1530,7 @@ File: starter-core.info,  Node: The Living Service: `first-service-v3.c`,  Next:
      }
 
 
-File: starter-core.info,  Node: The Rule: Closing the Loop,  Next: The Result: A Symphony of Data,  Prev: The Living Service: `first-service-v3.c`,  Up: The Grand Finale: Bridging Code and Logic
+File: starter-core.info,  Node: The Rule: Closing the Loop,  Next: The Result: A Symphony of Data,  Prev: The Living Service: first-service-v3.c,  Up: The Grand Finale: Bridging Code and Logic
 
 4.4.2 The Rule: Closing the Loop
 --------------------------------
@@ -1534,7 +1557,7 @@ _Telemetry_
      Your code starts counting.  Every second, the Core receives the
      updated 'myFirstInput'.
 _Threshold_
-     The moment that counter hits **51**, the Core’s rule evaluates to
+     The moment that counter hits 51, the Core’s rule evaluates to
      'TRUE'.
 _Reaction_
      The Core calls 'SetOutput' on your service.  Your
@@ -1714,15 +1737,13 @@ CREATE TABLE stats (
     INDEX idx_service_name (service_name)
 );
 
-CREATE INDEX idx_service_name ON stats (service_name);
-
      Security Note: Ensure the DB-USER defined in your 'gsettings'
      configuration has full Read/Write permissions ('GRANT ALL
      PRIVILEGES') on these tables.  Without this, the Core will be
      unable to commit the "memory" of your system to the disk.
 
 
-File: starter-core.info,  Node: API Reference,  Prev: Database Schema & Initialization,  Up: Top
+File: starter-core.info,  Node: API Reference,  Next: GNU Free Documentation License,  Prev: Database Schema & Initialization,  Up: Top
 
 Appendix B API Reference
 ************************
@@ -1730,6 +1751,7 @@ Appendix B API Reference
 * Menu:
 
 * Error Handling::
+* API Definitions: Constants and Enumerations::
 * STInput: The Sensor Abstraction::
 * STOutput: The Actuator Abstraction::
 * Network Discovery: mDNS and Service Location::
@@ -1737,7 +1759,7 @@ Appendix B API Reference
 * Services and Communication: Server and Client::
 
 
-File: starter-core.info,  Node: Error Handling,  Up: API Reference
+File: starter-core.info,  Node: Error Handling,  Next: API Definitions: Constants and Enumerations,  Up: API Reference
 
 B.1 Error Handling: The 'STError' Domain
 ========================================
@@ -1766,8 +1788,9 @@ the library.  These errors are associated with the 'ST_ERROR' quark.
 
      'ST_ERROR_INVALID_VALUE'
           The value provided for an operation is outside the allowed
-          range (defined by MIN and MAX) or is incompatible with the
-          expected 'STUnit'.
+          range (defined by MIN and MAX) after snapping to STEP, or is
+          otherwise incompatible with the expected constraints.
+          Off-step values are rounded rather than rejected.
 
      'ST_ERROR_INVALID_RESPONSE'
           The remote service or the Core sent a response that does not
@@ -1777,6 +1800,15 @@ the library.  These errors are associated with the 'ST_ERROR' quark.
           The requested method or operation is recognized but not
           currently supported by the specific version of the service or
           the library.
+
+     'ST_ERROR_NOT_CONNECTED'
+          The client is not connected (or not yet 'READY') and cannot
+          perform the requested remote operation.
+
+     'ST_ERROR_SYSTEM'
+          A lower-level system or library failure occurred (for example,
+          an unexpected GLib or network error wrapped into the STARTER
+          domain).
 
 
 File: starter-core.info,  Node: Error Quarks and Macros,  Prev: STError,  Up: Error Handling
@@ -1800,6 +1832,9 @@ error domain.
      domain.  This function is typically called via the 'ST_ERROR'
      macro.
 
+
+File: starter-core.info,  Node: API Definitions: Constants and Enumerations,  Next: STInput: The Sensor Abstraction,  Prev: Error Handling,  Up: API Reference
+
 B.2 API Definitions: Constants and Enumerations
 ===============================================
 
@@ -1807,8 +1842,14 @@ This section describes the foundational constants and types defined in
 'starter/defs.h'.  These definitions are shared across the entire
 ecosystem to ensure consistent behavior between services and the Core.
 
+* Menu:
+
+* I/O Flags::
+* STUnit Enumeration::
+* Special Constants::
+
 
-File: starter-core.info,  Node: I/O Flags,  Next: STUnit Enumeration
+File: starter-core.info,  Node: I/O Flags,  Next: STUnit Enumeration,  Up: API Definitions: Constants and Enumerations
 
 B.2.1 I/O Flags
 ---------------
@@ -1841,7 +1882,7 @@ objects.  They are defined as bitwise constants of type 'guint64'.
      clear all user-defined flags.
 
 
-File: starter-core.info,  Node: STUnit Enumeration,  Next: Special Constants,  Prev: I/O Flags
+File: starter-core.info,  Node: STUnit Enumeration,  Next: Special Constants,  Prev: I/O Flags,  Up: API Definitions: Constants and Enumerations
 
 B.2.2 STUnit Enumeration
 ------------------------
@@ -1879,7 +1920,7 @@ dashboards).
           Time duration units.
 
 
-File: starter-core.info,  Node: Special Constants,  Prev: STUnit Enumeration
+File: starter-core.info,  Node: Special Constants,  Prev: STUnit Enumeration,  Up: API Definitions: Constants and Enumerations
 
 B.2.3 Special Constants
 -----------------------
@@ -1890,7 +1931,7 @@ B.2.3 Special Constants
      not yet been initialized.
 
 
-File: starter-core.info,  Node: STInput: The Sensor Abstraction,  Next: STOutput: The Actuator Abstraction,  Up: API Reference
+File: starter-core.info,  Node: STInput: The Sensor Abstraction,  Next: STOutput: The Actuator Abstraction,  Prev: API Definitions: Constants and Enumerations,  Up: API Reference
 
 B.3 STInput: The Sensor Abstraction
 ===================================
@@ -1964,9 +2005,10 @@ B.3.3 Range and Value Control
  -- Function: gdouble st_input_get_val (const STInput *SELF)
  -- Function: gboolean st_input_set_val (STInput *SELF, gdouble VAL,
           GError **ERROR)
-     Returns or updates the current value.  If VAL is outside the
-     MIN/MAX range, the function will fail and return
-     'ST_ERROR_INVALID_VALUE'.
+     Returns or updates the current value.  Values that are not aligned
+     with STEP are rounded to the nearest multiple (a warning is logged
+     when this happens).  If the rounded value is outside the MIN/MAX
+     range, the function fails with 'ST_ERROR_INVALID_VALUE'.
 
  -- Function: gdouble st_input_get_min (const STInput *SELF)
  -- Function: gboolean st_input_set_min (STInput *SELF, gdouble MIN,
@@ -1974,12 +2016,16 @@ B.3.3 Range and Value Control
  -- Function: gdouble st_input_get_max (const STInput *SELF)
  -- Function: gboolean st_input_set_max (STInput *SELF, gdouble MAX,
           GError **ERROR)
-     Manage the operational boundaries of the input.
+     Manage the operational boundaries of the input.  Bounds are snapped
+     to STEP the same way as values.
 
  -- Function: gdouble st_input_get_step (const STInput *SELF)
  -- Function: gboolean st_input_set_step (STInput *SELF, gdouble STEP,
           GError **ERROR)
-     Manage the value increment resolution.
+     Manage the value increment resolution.  Changing the step rounds
+     the current MIN, MAX, and VAL onto the new grid (with warnings when
+     they change).  The call fails only if those rounded values are no
+     longer ordered.
 
  -- Function: guint64 st_input_get_flags (const STInput *SELF)
  -- Function: gboolean st_input_set_flags (STInput *SELF, guint64 FLAGS,
@@ -2064,7 +2110,10 @@ B.4.3 Value and State Control
      Returns or updates the current value.  For outputs,
      'st_output_set_val' is typically called by the service when it
      receives a command from the Core, or when a manual override is in
-     effect.
+     effect.  Values that are not aligned with STEP are rounded to the
+     nearest multiple (a warning is logged when this happens).  Values
+     that remain outside MIN/MAX after rounding are rejected with
+     'ST_ERROR_INVALID_VALUE'.
 
  -- Function: gdouble st_output_get_min (const STOutput *SELF)
  -- Function: gboolean st_output_set_min (STOutput *SELF, gdouble MIN,
@@ -2072,13 +2121,15 @@ B.4.3 Value and State Control
  -- Function: gdouble st_output_get_max (const STOutput *SELF)
  -- Function: gboolean st_output_set_max (STOutput *SELF, gdouble MAX,
           GError **ERROR)
-     Manage the operational range.  Commands outside these bounds will
-     be rejected.
+     Manage the operational range.  Bounds are snapped to STEP; commands
+     that remain outside the range after rounding are rejected.
 
  -- Function: gdouble st_output_get_step (const STOutput *SELF)
  -- Function: gboolean st_output_set_step (STOutput *SELF, gdouble STEP,
           GError **ERROR)
-     Sets the precision required for value updates.
+     Sets the precision required for value updates.  Changing the step
+     rounds the current MIN, MAX, and VAL onto the new grid (with
+     warnings when they change).
 
  -- Function: guint64 st_output_get_flags (const STOutput *SELF)
  -- Function: gboolean st_output_set_flags (STOutput *SELF, guint64
@@ -2318,7 +2369,17 @@ It handles the low-level registration and message dispatching.
  -- Function: gboolean st_server_start (STServer *SELF, guint16 PORT,
           GError **ERROR)
      Starts the server and begins listening for incoming connections on
-     the specified PORT.
+     the specified PORT.  If PORT is '0', the library asks the operating
+     system for an ephemeral (dynamically allocated) port—no need to
+     pick one by hand.  After a successful start, call
+     'st_server_get_port' to learn which port was actually bound; that
+     value is what you advertise over mDNS and what a client must pass
+     to 'st_client_start'.
+
+ -- Function: guint16 st_server_get_port (const STServer *SELF)
+     Returns the TCP port the server is listening on.  Meaningful after
+     a successful 'st_server_start'; when the server was started with
+     PORT '0', this is the ephemeral port assigned by the system.
 
 * Menu:
 
@@ -2352,27 +2413,101 @@ The 'STClient' is the counterpart to the server.  It connects to a
 remote 'STServer' and creates a local proxy of all its inputs, outputs,
 and statistics.
 
- -- Function: STClient * st_client_new (void)
-     Creates a new, uninitialized client object.
+Think of it as a living mirror: once the handshake completes, the Core
+can read remote sensors and command remote actuators as if they were
+local objects.  The connection itself can be started _synchronously_
+(handy for tests and simple tools) or _asynchronously_ (what the Core
+uses in production, so discovery never freezes the main loop).
 
- -- Function: gboolean st_client_start (STClient *SELF, const gchar
-          *ADDRESS, guint16 PORT, GError **ERROR)
-     Connects the client to a remote service at the given ADDRESS and
-     PORT.  Upon success, the client will automatically synchronize all
-     remote I/O objects.
+In both cases the sequence is the same: take a full snapshot first
+('GetInputs', 'GetOutputs', 'GetStats'), then subscribe to change
+signals.  That ordering is deliberate—it closes the race where an early
+'*-changed' notification would otherwise arrive before the local mirrors
+exist.
+
+ -- Function: STClient * st_client_new (void)
+     Creates a new client in the 'ST_CLIENT_STATE_IDLE' state.
 
 * Menu:
 
+* Client Connection State::
+* Starting a Client::
 * Remote Resource Access::
 
 
-File: starter-core.info,  Node: Remote Resource Access,  Up: STClient: Consuming a Service
+File: starter-core.info,  Node: Client Connection State,  Next: Starting a Client,  Up: STClient: Consuming a Service
 
-B.7.2.1 Remote Resource Access
+B.7.2.1 Client Connection State
+...............................
+
+A client is not a binary "connected / not connected" switch.  It moves
+through an explicit state machine that tells you whether the mirrors are
+safe to use.
+
+ -- Enumeration: STClientState
+     'ST_CLIENT_STATE_IDLE'
+          Freshly created; no connection attempt has started yet.
+     'ST_CLIENT_STATE_PENDING'
+          Connect and snapshot are in flight.  Local I/O mirrors are not
+          ready.
+     'ST_CLIENT_STATE_READY'
+          Snapshot complete, signals subscribed, mirrors usable.
+     'ST_CLIENT_STATE_FAILED'
+          The last start attempt failed (network error, cancelled task,
+          invalid response, ...).
+
+ -- Function: STClientState st_client_get_state (STClient *SELF)
+     Returns the current connection state.
+
+ -- Function: gboolean st_client_is_ready (STClient *SELF)
+     Convenience check equivalent to 'st_client_get_state (self) ==
+     ST_CLIENT_STATE_READY'.
+
+Calling 'st_client_start' or 'st_client_start_async' again while the
+state is already 'PENDING' or 'READY' is an error—create a new client,
+or wait until the current lifecycle ends.
+
+
+File: starter-core.info,  Node: Starting a Client,  Next: Remote Resource Access,  Prev: Client Connection State,  Up: STClient: Consuming a Service
+
+B.7.2.2 Starting a Client
+.........................
+
+ -- Function: gboolean st_client_start (STClient *SELF, const gchar
+          *ADDRESS, guint16 PORT, GError **ERROR)
+     Connects synchronously to a remote service at ADDRESS:PORT,
+     performs the initial snapshot, then subscribes to change signals.
+     On success the client enters 'ST_CLIENT_STATE_READY'; on failure it
+     enters 'ST_CLIENT_STATE_FAILED' and returns 'FALSE'.
+
+     Unlike 'st_server_start', the client does _not_ treat PORT '0' as
+     "pick any port": it must be the real listening port of the peer
+     (from mDNS, or from 'st_server_get_port' when you own the server).
+
+ -- Function: void st_client_start_async (STClient *SELF, const gchar
+          *ADDRESS, guint16 PORT, GCancellable *CANCELLABLE,
+          GAsyncReadyCallback CALLBACK, gpointer USER_DATA)
+     Starts the same connect/snapshot/subscribe sequence without
+     blocking the caller.  Progress is reported through CALLBACK.  Pass
+     a 'GCancellable' when you need to abort a pending start—for example
+     when mDNS reports that the service disappeared before the handshake
+     finished.  As with the synchronous start, PORT must be the peer's
+     actual listening port.
+
+ -- Function: gboolean st_client_start_finish (STClient *SELF,
+          GAsyncResult *RESULT, GError **ERROR)
+     Completes a previous 'st_client_start_async' call.  Returns 'TRUE'
+     when the client is 'READY'.
+
+
+File: starter-core.info,  Node: Remote Resource Access,  Prev: Starting a Client,  Up: STClient: Consuming a Service
+
+B.7.2.3 Remote Resource Access
 ..............................
 
-Once a client is started, it provides access to the remote service's
-data as if it were local.
+Once a client is 'READY', it provides access to the remote service's
+data as if it were local.  Before that point the arrays may be empty or
+incomplete—always gate your logic on 'st_client_is_ready'.
 
  -- Function: const GPtrArray * st_client_get_inputs (STClient *SELF)
  -- Function: const GPtrArray * st_client_get_outputs (STClient *SELF)
@@ -2382,6 +2517,19 @@ data as if it were local.
  -- Function: const STStats * st_client_get_stats (STClient *SELF)
      Retrieves the performance statistics ('STStats') of the remote
      process.
+
+ -- Function: gchar * st_client_get_service_name (STClient *SELF)
+     Returns the remote service name as a newly allocated string.  Free
+     it with 'g_free' when you are done.
+
+ -- Function: gboolean st_client_set_output (STClient *SELF, const gchar
+          *NAME, double VALUE, guint64 FLAGS)
+     Requests that the remote service set the named output.  This call
+     is still synchronous today; an asynchronous variant is planned so
+     that rule evaluation never blocks the main loop on a slow peer.
+
+
+File: starter-core.info,  Node: GNU Free Documentation License,  Prev: API Reference,  Up: Top
 
 Appendix C GNU Free Documentation License
 *****************************************
@@ -2866,104 +3014,111 @@ their use in free software.
 
 Tag Table:
 Node: Top905
-Node: Introduction1649
-Node: The Search for Intelligence2502
-Node: The Pivot: Programmable Intent3486
-Node: Giving Back to the Community5072
-Node: STARTER Concepts5624
-Node: Unlimited Scalability7354
-Node: Redefining the Foundations: Inputs, Outputs, and Events8251
-Node: Input: More than just Sensors8812
-Node: Output: A Channel for Action9590
-Node: Logic: Applying Our Intelligence10822
-Node: Analysis: Data-Driven Decisions12025
-Node: Using STARTER: From Theory to Practice13289
-Node: A Quick Disclaimer13805
-Node: System Preparation14390
-Node: Dependencies15179
-Node: Database Initialization15874
-Node: Download and Installation16406
-Node: Configuration17136
-Node: Where to go from here?17819
-Node: The Rules File: Where the Magic Happens18515
-Node: Identifiers: The Power of Abstraction19913
-Node: The Anatomy of a Logic Block20930
-Node: Connecting the Dots: Events in Action21683
-Node: Dynamic Control: The TRIGGER Construct23367
-Node: Choosing Your Tool24409
-Node: Examples25064
-Node: Variables: The Connective Tissue25690
-Node: The Power of Propagation26415
-Node: How the System "Thinks"26958
-Node: Why Use Variables?27713
-Node: Expressions: The Engine of STARTER28440
-Node: Constant Values and Types29127
-Node: Boolean Logic: Everything is a Number29692
-Node: Comparison and Logical Operators30631
-Node: Mathematical Operators31616
-Node: Built-in Functions32205
-Node: The Mechanics of Evaluation: Snapshots vs. Live Streams32982
-Node: The EVAL Function: Killing the Link34364
-Node: Why This Matters: Architectural Elegance35357
-Node: The Boot-Time Paradox36193
-Node: Preprocessing: The Secret Weapon36872
-Node: Power Unleashed: The M4 Default37811
-Node: Swapping the Engine38524
-Node: Command Line Options: Taking the Reins39400
-Node: Advanced Orchestration41146
-Node: The Override Hierarchy42214
-Node: A Truly Distributed Ecosystem43041
-Node: ZeroConf: Plug & Play Reality43901
-Node: Communication via D-Bus RPC44508
-Node: The Operational Loop45723
-Node: The starter-core Library: Building Your Own Ecosystem46516
-Node: The Skeleton: first-service.c47253
-Node: Compiling and Running48635
-Node: Breaking Down the Code49444
-Node: Adding Substance: Inputs and Outputs50536
-Node: The Anatomy of an I/O Object51716
-Node: The Power of Flags: Customizing I/O Behavior52688
-Node: Signals: The Reactive Core54338
-Node: Input vs. Output: What's the difference?55339
-Node: The Grand Finale: Bridging Code and Logic55944
-Node: The Living Service: `first-service-v3.c`56689
-Node: The Rule: Closing the Loop58996
-Node: The Result: A Symphony of Data59488
-Node: Conclusions: The World is Your Input60478
-Node: Thinking in STARTER61030
-Node: The Power of Generalization61868
-Node: Where Will You Take It?62452
-Node: Database Schema & Initialization63218
-Node: API Reference66516
-Node: Error Handling66916
-Node: STError67337
-Node: Error Quarks and Macros68339
-Node: I/O Flags69347
-Node: STUnit Enumeration70364
-Node: Special Constants71467
-Node: STInput: The Sensor Abstraction71800
-Node: STInput Lifecycle Management72363
-Node: STInput Metadata Accessors73319
-Node: Range and Value Control74395
-Node: STOutput: The Actuator Abstraction75701
-Node: STOutput Lifecycle Management76336
-Node: STOutput Metadata Accessors77333
-Node: Value and State Control78418
-Node: Network Discovery: mDNS and Service Location79843
-Node: STMDNSService: Service Representation80402
-Node: Property Management81377
-Node: STMDNS: The Discovery Engine82539
-Node: Signals83378
-Node: System Statistics: Performance Monitoring83747
-Node: STStats: The Telemetry Container84390
-Node: Metric Accessors85153
-Node: STStatsCollector: The Abstract Engine85796
-Node: STProcessStatsCollector: Process Monitoring86445
-Node: Services and Communication: Server and Client87126
-Node: STServer: Publishing a Service87704
-Node: Service Metadata88830
-Node: STClient: Consuming a Service89504
-Node: Remote Resource Access90308
+Node: Introduction1724
+Node: The Search for Intelligence2614
+Node: The Pivot: Programmable Intent3598
+Node: Beyond Heating: The Monero Bonus4831
+Node: Giving Back to the Community5388
+Node: STARTER Concepts5981
+Node: Unlimited Scalability7711
+Node: Redefining the Foundations: Inputs, Outputs, and Events8608
+Node: Input: More than just Sensors9204
+Node: Output: A Channel for Action9982
+Node: Events: The Language of Change10732
+Node: Logic: Applying Our Intelligence11459
+Node: Analysis: Data-Driven Decisions12701
+Node: Using STARTER: From Theory to Practice13965
+Node: A Quick Disclaimer14525
+Node: System Preparation15110
+Node: Dependencies15899
+Node: Database Initialization16617
+Node: Download and Installation17173
+Node: Configuration17903
+Node: Where to go from here?18586
+Node: The Rules File: Where the Magic Happens19282
+Node: Identifiers: The Power of Abstraction20680
+Node: The Anatomy of a Logic Block21697
+Node: Connecting the Dots: Events in Action22450
+Node: Dynamic Control: The TRIGGER Construct24134
+Node: Choosing Your Tool25176
+Node: Examples25831
+Node: Variables: The Connective Tissue26457
+Node: The Power of Propagation27182
+Node: How the System "Thinks"27725
+Node: Why Use Variables?28480
+Node: Expressions: The Engine of STARTER29207
+Node: Constant Values and Types29894
+Node: Boolean Logic: Everything is a Number30459
+Node: Comparison and Logical Operators31398
+Node: Mathematical Operators32383
+Node: Built-in Functions32972
+Node: The Mechanics of Evaluation: Snapshots vs. Live Streams33749
+Node: The EVAL Function: Killing the Link35131
+Node: Why This Matters: Architectural Elegance36124
+Node: The Boot-Time Paradox36960
+Node: Preprocessing: The Secret Weapon37639
+Node: Power Unleashed: The M4 Default38578
+Node: Swapping the Engine39291
+Node: Command Line Options: Taking the Reins40167
+Node: Advanced Orchestration41913
+Node: The Override Hierarchy42991
+Node: System Architecture: Under the Hood43509
+Node: A Truly Distributed Ecosystem44052
+Node: ZeroConf: Plug & Play Reality44954
+Node: Communication via D-Bus RPC45561
+Node: The Operational Loop47124
+Node: The starter-core Library: Building Your Own Ecosystem47917
+Node: The Skeleton: first-service.c48698
+Node: Compiling and Running50080
+Node: Breaking Down the Code50889
+Node: Adding Substance: Inputs and Outputs51981
+Node: The Anatomy of an I/O Object53161
+Node: The Power of Flags: Customizing I/O Behavior54133
+Node: Signals: The Reactive Core55783
+Node: Input vs. Output: What's the difference?56784
+Node: The Grand Finale: Bridging Code and Logic57389
+Node: The Living Service: first-service-v3.c58132
+Node: The Rule: Closing the Loop60437
+Node: The Result: A Symphony of Data60927
+Node: Conclusions: The World is Your Input61913
+Node: Thinking in STARTER62465
+Node: The Power of Generalization63303
+Node: Where Will You Take It?63887
+Node: Database Schema & Initialization64653
+Node: API Reference67895
+Node: Error Handling68382
+Node: STError68855
+Node: Error Quarks and Macros70292
+Node: API Definitions: Constants and Enumerations70994
+Node: I/O Flags71531
+Node: STUnit Enumeration72598
+Node: Special Constants73751
+Node: STInput: The Sensor Abstraction74134
+Node: STInput Lifecycle Management74749
+Node: STInput Metadata Accessors75705
+Node: Range and Value Control76781
+Node: STOutput: The Actuator Abstraction78460
+Node: STOutput Lifecycle Management79095
+Node: STOutput Metadata Accessors80092
+Node: Value and State Control81177
+Node: Network Discovery: mDNS and Service Location82994
+Node: STMDNSService: Service Representation83553
+Node: Property Management84528
+Node: STMDNS: The Discovery Engine85690
+Node: Signals86529
+Node: System Statistics: Performance Monitoring86898
+Node: STStats: The Telemetry Container87541
+Node: Metric Accessors88304
+Node: STStatsCollector: The Abstract Engine88947
+Node: STProcessStatsCollector: Process Monitoring89596
+Node: Services and Communication: Server and Client90277
+Node: STServer: Publishing a Service90855
+Node: Service Metadata92597
+Node: STClient: Consuming a Service93271
+Node: Client Connection State94484
+Node: Starting a Client95756
+Node: Remote Resource Access97353
+Node: GNU Free Documentation License98650
 
 End Tag Table
 

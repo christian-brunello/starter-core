@@ -48,7 +48,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (STClient, st_client, G_TYPE_OBJECT)
 #define ST_CLIENT_GET_PRIVATE(obj) \
     ((STClientPrivate *) st_client_get_instance_private (ST_CLIENT (obj)))
 
-static void handle_input_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Contiene gli argomenti del segnale
+static void handle_input_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Signal arguments
 					      gpointer user_data)
 {
   STClient *self = user_data;
@@ -159,7 +159,7 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
 }
 
 static void
-handle_output_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Contiene gli argomenti del segnale
+handle_output_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Signal arguments
 			      gpointer user_data)
 {
   STClient *self = user_data;
@@ -270,7 +270,7 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
 }
 
 static void
-handle_stats_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Contiene gli argomenti del segnale
+handle_stats_changed_signal (GDBusConnection * connection, const gchar * sender_name, const gchar * object_path, const gchar * interface_name, const gchar * signal_name, GVariant * parameters,	// Signal arguments
 			     gpointer user_data)
 {
   STClient *self = user_data;

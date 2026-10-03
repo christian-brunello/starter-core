@@ -116,20 +116,23 @@ test_output_set_value_boundaries (TestFixture *fixture, gconstpointer user_data)
     g_assert_cmpint (fixture->tracker.val_changed_count, ==, 1);
     g_assert_cmpint (fixture->tracker.changed_count, ==, 1);
 
-    // Set an invalid value violating maximum range constraint (255.0 > 240.0)
+    // Set an invalid value violating maximum range constraint (255.0 > 250.0)
     success = st_output_set_val (fixture->output, 255.0, &error);
     g_assert_false (success);
     g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
     g_clear_error (&error);
 
-    // Set an invalid value violating the step constraint (50.5 is not divisible by 1.0)
+    // Off-step value is rounded to the nearest step (50.5 -> 51.0 with C round())
+    g_test_expect_message ("libstarter-core", G_LOG_LEVEL_WARNING, "*to match step*");
     success = st_output_set_val (fixture->output, 50.5, &error);
-    g_assert_false (success);
-    g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
-    g_clear_error (&error);
+    g_test_assert_expected_messages ();
+    g_assert_true (success);
+    g_assert_no_error (error);
+    g_assert_cmpfloat_with_epsilon (st_output_get_val (fixture->output), 51.0, 1e-9);
+    g_assert_cmpint (fixture->tracker.val_changed_count, ==, 2);
 }
 
-/* Test 3: Verify precision handling of floating-point boundaries via ismul() */
+/* Test 3: Changing step snaps min/max/val to the new resolution */
 static void
 test_output_step_and_precision (TestFixture *fixture, gconstpointer user_data)
 {
@@ -146,11 +149,14 @@ test_output_step_and_precision (TestFixture *fixture, gconstpointer user_data)
     g_assert_true (success);
     g_clear_error (&error);
 
-    // Changing step to 2.0 should fail because current val (5.5) is not a multiple of 2.0
+    // Changing step to 2.0 rounds val 5.5 -> 6.0
+    g_test_expect_message ("libstarter-core", G_LOG_LEVEL_WARNING, "*to match step*");
     success = st_output_set_step (fixture->output, 2.0, &error);
-    g_assert_false (success);
-    g_assert_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE);
-    g_clear_error (&error);
+    g_test_assert_expected_messages ();
+    g_assert_true (success);
+    g_assert_no_error (error);
+    g_assert_cmpfloat_with_epsilon (st_output_get_step (fixture->output), 2.0, 1e-9);
+    g_assert_cmpfloat_with_epsilon (st_output_get_val (fixture->output), 6.0, 1e-9);
 }
 
 /* Test 4: Ensure changing values to identical targets skips signal emission */

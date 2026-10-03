@@ -1,3 +1,28 @@
+2026-10-03  Christian Brunello  <brncrs@gmail.com>
+
+	Snap I/O values to step instead of rejecting off-grid writes.
+
+	* lib/input.c, lib/output.c: Replace ismul() checks with
+	round-to-step; LOGW when the requested value is adjusted.
+	* test/test-input.c, test/test-output.c: Expect snap success and
+	warnings via g_test_expect_message.
+	* doc/starter-core.texi: Document rounding behaviour for set_val,
+	bounds, and set_step.
+
+	Document async STClient API and fix Texinfo inconsistencies.
+
+	* doc/starter-core.texi, doc/starter-core.info: Document
+	STClientState, start_async/finish, snapshot-before-subscribe;
+	document st_server_start port 0 (ephemeral) and
+	st_server_get_port; clarify client needs a real port;
+	fix Appendix XXX ref, missing @node lines, markdown leftovers,
+	starter vs starter-core CLI examples, STError codes, step checks
+	on set_val, duplicate stats index.
+	* TODO.md: Mark Texinfo state documentation done; translate
+	TODO.md to English.
+	* lib/input.c, lib/output.c, lib/client.c: Translate remaining
+	Italian comments to English.
+
 2026-09-14  Christian Brunello  <brncrs@gmail.com>
 
 	Make client connect and initial snapshot asynchronous.

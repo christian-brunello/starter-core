@@ -18,6 +18,7 @@
  */
 
 #include <math.h>
+#include <float.h>
 
 #include <glib.h>
 
@@ -72,93 +73,40 @@ G_DEFINE_TYPE_WITH_PRIVATE (STOutput, st_output, G_TYPE_OBJECT)
 #define ST_OUTPUT_GET_PRIVATE(obj) \
     ((STOutputPrivate *) st_output_get_instance_private (ST_OUTPUT (obj)))
 
-static gboolean
-ismul (double a, double b)
+static gdouble
+round_to_step (gdouble value, gdouble step)
 {
-  gboolean r = FALSE;
+  if (ABS (step) <= DBL_MIN)
+    return value;
 
-  /* 1. Se 'a' è esattamente 0.0, è SEMPRE multiplo di qualsiasi numero 'b' (tranne b=0) */
-  if (a == 0.0)
-    {
-      /* Se b è anch'esso zero, decidiamo se considerarlo multiplo (solitamente TRUE o FALSE a seconda del design)
-         Se b != 0, allora 0 è sempre multiplo (es. 0.0001 * 0 = 0) */
-      r = (b != 0.0); 
-    }
-  /* 2. Se b è zero (o vicinissimo al limite hardware), allora 'a' deve essere zero */
-  else if (ABS (b) <= DBL_MIN) 
-    {
-      r = (a == 0.0);
-    }
-  /* 3. Caso generale su scale normali */
-  else 
-    {
-      double quotient = a / b;
-      double nearest_int = round (quotient);
-      double distance = ABS (quotient - nearest_int);
-
-      /* Epsilon adattivo basato sulla precisione hardware */
-      double adaptive_epsilon = DBL_EPSILON * MAX (ABS (quotient), ABS (nearest_int)) * 4.0;
-
-      if (distance < adaptive_epsilon)
-        r = TRUE;
-    }
-
-  LOGD ("ismul(%.17g, %.17g) => %d", a, b, r);
-
-  return r;
-}
-
-#if 0
-static gboolean
-ismul (double a, double b)
-{
-  gboolean r = FALSE;
-  const double epsilon = 1e-9; // Tolleranza per errori di precisione
-
-  if (ABS(b) < epsilon) 
-    {
-      // Se b è quasi zero, è multiplo solo se anche a è quasi zero
-      r = (ABS(a) < epsilon);
-    }
-  else 
-    {
-      /* Calcoliamo quante volte b sta in a */
-      double quotient = a / b;
-      
-      /* Verifichiamo se il quoziente è un intero con una piccola tolleranza.
-         round(quotient) ci dà l'intero più vicino, poi controlliamo la distanza. */
-      if (ABS(quotient - round(quotient)) < epsilon)
-        r = TRUE;
-    }
-
-  LOGD("check ismul(%lf, %lf) => %d", a, b, r);
-
-  return r;
+  return round (value / step) * step;
 }
 
 static gboolean
-ismul (double a, double b)
+nearly_equal (gdouble a, gdouble b, gdouble step)
 {
-  gboolean r = FALSE;
-  gint xa = (a * 1000000);
-  gint xb = (b * 1000000);
+  gdouble tol = DBL_EPSILON * (1.0 + ABS (a) + ABS (b)) * 8.0;
 
-  if (xb == 0)
-    {
-      if (xa == 0)
-	r = TRUE;
-    }
-  else
-    {
-      if (xa % xb == 0)
-	r = TRUE;
-    }
+  if (ABS (step) > DBL_MIN)
+    tol = MAX (tol, ABS (step) * 1e-9);
 
-  LOGD("check ismul(%lf, %lf) => %d", a, b, r);
-
-  return r;
+  return ABS (a - b) <= tol;
 }
-#endif
+
+/* Round value to the nearest multiple of step; warn when it changes. */
+static gdouble
+snap_to_step (gdouble requested, gdouble step, const gchar * what,
+	      const gchar * name)
+{
+  gdouble snapped = round_to_step (requested, step);
+
+  if (!nearly_equal (requested, snapped, step))
+    LOGW ("%s %s: requested %.17g, set %.17g to match step %.17g",
+	  what, name ? name : "?", requested, snapped, step);
+
+  return snapped;
+}
+
 static void
 st_output_emit_changed_signal (STOutput * self)
 {
@@ -290,9 +238,14 @@ st_output_new (const gchar * name, const gchar * description, STUnit unit,
   STOutputPrivate *priv;
 
   g_assert (name != NULL);
-  g_assert (min <= val && ismul (min, step));
-  g_assert (max >= val && ismul (max, step));
-  g_assert (ismul (val, step));
+  g_assert (ABS (step) > DBL_MIN);
+
+  min = snap_to_step (min, step, "output min", name);
+  max = snap_to_step (max, step, "output max", name);
+  val = snap_to_step (val, step, "output val", name);
+
+  g_assert (min <= val);
+  g_assert (max >= val);
 
   r = g_object_new (ST_TYPE_OUTPUT, NULL);
   priv = ST_OUTPUT_GET_PRIVATE (r);
@@ -451,11 +404,13 @@ st_output_set_min (STOutput * self, gdouble min, GError ** error)
   STOutputPrivate *priv = ST_OUTPUT_GET_PRIVATE (self);
   gboolean r = FALSE;
 
-  if (min <= priv->val && ismul (min, priv->step))
+  min = snap_to_step (min, priv->step, "output min", priv->name);
+
+  if (min <= priv->val)
     {
       gboolean chg = FALSE;
 
-      if (priv->min != min)
+      if (!nearly_equal (priv->min, min, priv->step))
 	chg = TRUE;
 
       priv->min = min;
@@ -469,7 +424,7 @@ st_output_set_min (STOutput * self, gdouble min, GError ** error)
     }
   else
     g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
-		 "minimum value is not compatible with val/step");
+		 "minimum value is not compatible with val");
 
   return r;
 }
@@ -488,11 +443,13 @@ st_output_set_max (STOutput * self, gdouble max, GError ** error)
   STOutputPrivate *priv = ST_OUTPUT_GET_PRIVATE (self);
   gboolean r = FALSE;
 
-  if (max >= priv->val && ismul (max, priv->step))
+  max = snap_to_step (max, priv->step, "output max", priv->name);
+
+  if (max >= priv->val)
     {
       gboolean chg = FALSE;
 
-      if (priv->max != max)
+      if (!nearly_equal (priv->max, max, priv->step))
 	chg = TRUE;
 
       priv->max = max;
@@ -506,7 +463,7 @@ st_output_set_max (STOutput * self, gdouble max, GError ** error)
     }
   else
     g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
-		 "maximum value is not compatible with val/step");
+		 "maximum value is not compatible with val");
 
   return r;
 }
@@ -524,14 +481,46 @@ st_output_set_step (STOutput * self, gdouble step, GError ** error)
 {
   STOutputPrivate *priv = ST_OUTPUT_GET_PRIVATE (self);
   gboolean r = FALSE;
+  gdouble min, max, val;
 
-  if (ismul (priv->min, step) && ismul (priv->max, step)
-      && ismul (priv->val, step))
+  if (ABS (step) <= DBL_MIN)
+    {
+      g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
+		   "step must be non-zero");
+      return FALSE;
+    }
+
+  min = snap_to_step (priv->min, step, "output min", priv->name);
+  max = snap_to_step (priv->max, step, "output max", priv->name);
+  val = snap_to_step (priv->val, step, "output val", priv->name);
+
+  if (min <= val && val <= max)
     {
       gboolean chg = FALSE;
 
-      if (priv->step != step)
+      if (!nearly_equal (priv->step, step, step))
 	chg = TRUE;
+
+      if (!nearly_equal (priv->min, min, step))
+	{
+	  priv->min = min;
+	  st_output_emit_min_changed_signal (self);
+	  chg = TRUE;
+	}
+
+      if (!nearly_equal (priv->max, max, step))
+	{
+	  priv->max = max;
+	  st_output_emit_max_changed_signal (self);
+	  chg = TRUE;
+	}
+
+      if (!nearly_equal (priv->val, val, step))
+	{
+	  priv->val = val;
+	  st_output_emit_val_changed_signal (self);
+	  chg = TRUE;
+	}
 
       priv->step = step;
       r = TRUE;
@@ -544,7 +533,7 @@ st_output_set_step (STOutput * self, gdouble step, GError ** error)
     }
   else
     g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
-		 "output min/max/val not divisible by step");
+		 "output min/max/val not compatible with step after rounding");
 
   return r;
 }
@@ -563,11 +552,13 @@ st_output_set_val (STOutput * self, gdouble val, GError ** error)
   STOutputPrivate *priv = ST_OUTPUT_GET_PRIVATE (self);
   gboolean r = FALSE;
 
-  if (val >= priv->min && val <= priv->max && ismul (val, priv->step))
+  val = snap_to_step (val, priv->step, "output val", priv->name);
+
+  if (val >= priv->min && val <= priv->max)
     {
       gboolean chg = FALSE;
 
-      if (priv->val != val)
+      if (!nearly_equal (priv->val, val, priv->step))
 	chg = TRUE;
 
       priv->val = val;
@@ -581,7 +572,7 @@ st_output_set_val (STOutput * self, gdouble val, GError ** error)
     }
   else
     g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
-		 "val is not compatible with min/max/step");
+		 "val is not compatible with min/max");
 
   return r;
 }
