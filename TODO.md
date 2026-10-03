@@ -47,7 +47,7 @@ Context: GLib/MySQL compatibility done; client connect+snapshot is async; SetOut
 
 ## 5. Quality / tooling
 
-- [ ] Robust `.gitignore` for autotools/build artifacts (today many untracked files: `Makefile`, `.o`, `.libs`, `valgrind.log`, vim swap, …)
+- [x] Robust `.gitignore` for autotools/build artifacts (today many untracked files: `Makefile`, `.o`, `.libs`, `valgrind.log`, vim swap, …)
 - [ ] Add minimal CI: `./autogen.sh && ./configure && make && make check`
 - [ ] Align README (D-Bus peer TCP, not just generic “D-Bus”) and minimum versions (GLib ≥ 2.44)
 

@@ -1,0 +1,74 @@
+# Autotools / configure output
+Makefile
+autom4te.cache/
+config.log
+config.status
+libtool
+configure~
+*.in~
+stamp-h1
+src/stamp-h1
+src/config.h
+
+# Libtool / compiler products
+.deps/
+.libs/
+*.o
+*.lo
+*.la
+*.lai
+*.a
+*.so
+*.so.*
+*.d
+
+# Generated install helpers
+starter-core.pc
+starter-core.service
+
+# Built programs
+/src/starter-core
+/examples/time-example
+/examples/oil-example
+/examples/beep-example
+/test/test-input
+/test/test-output
+/test/test-stats
+/test/test-process-stats-collector
+/test/test-mdns
+/test/test-mysql-client
+/test/test-server
+/test/test-client
+/test/test-client-async
+/test/test-client-server
+/test/test-client-server-async
+/test/test-client-server-armageddon
+/test/test-client-server-armageddon-async
+
+# Texinfo / TeX intermediate files
+doc/*.t2p/
+doc/*.t2d/
+doc/*.aux
+doc/*.cp
+doc/*.cps
+doc/*.fn
+doc/*.fns
+doc/*.ky
+doc/*.log
+doc/*.pg
+doc/*.toc
+doc/*.tp
+doc/*.vr
+doc/*.vrs
+
+# Editor / OS junk
+*~
+*.swp
+*.swo
+.DS_Store
+
+# Local debug / tooling output
+*.log
+core
+core.*
+vgcore.*
