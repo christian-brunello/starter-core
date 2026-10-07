@@ -1399,7 +1399,7 @@ STARTER uses Multicast DNS (mDNS) to achieve true zero-configuration networking.
 
 The @code{STMDNSService} object is a data container that represents a discovered service or a service ready to be published.
 
-@deftypefun {STMDNSService *} st_mdns_service_new (const gchar *@var{name}, const gchar *@var{type}, const gchar *@var{host}, const gchar *@var{address}, const guint16 @var{port}, const gint @var{proto})
+@deftypefun {STMDNSService *} st_mdns_service_new (const gchar *@var{name}, const gchar *@var{type}, const gchar *@var{host}, const gchar *@var{address}, const guint16 @var{port}, const gint @var{proto}, const gint @var{iface})
 Creates a new @code{STMDNSService} descriptor.
 @itemize @bullet
 @item @var{name}: The service instance name (e.g., "ST:MyFirstService").

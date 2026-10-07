@@ -19,7 +19,8 @@
 SUBDIRS = include lib src test examples doc
 
 starterconfdir = $(sysconfdir)/starter
-starterconf_DATA = rules.conf
+# Install example only — never overwrite live production rules.conf
+starterconf_DATA = rules.conf.example
 
 systemdsystemunitdir = /lib/systemd/system
 systemdsystemunit_DATA = starter-core.service
@@ -32,7 +33,7 @@ starter-core.service: starter-core.service.in
 
 all-local: starter-core.service
 
-EXTRA_DIST = starter-core.service.in rules.conf starter-core.pc.in
+EXTRA_DIST = starter-core.service.in rules.conf rules.conf.example starter-core.pc.in
 CLEANFILES = starter-core.service starter-core.pc
 
 pkgconfigdir = $(libdir)/pkgconfig

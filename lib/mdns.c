@@ -64,13 +64,13 @@ avahi_service_browser_destroy (gpointer p)
 static const STMDNSService *
 lookup_service (STMDNS * self, const gchar * name, const gchar * type,
 		const gchar * host, const gchar * address, guint16 port,
-		int proto)
+		int proto, int iface)
 {
   GList *node;
   STMDNSService *b;
   STMDNSService *r = NULL;
 
-  b = st_mdns_service_new (name, type, host, address, port, proto);
+  b = st_mdns_service_new (name, type, host, address, port, proto, iface);
 
   node =
     g_list_find_custom (self->services, b,
@@ -84,43 +84,61 @@ lookup_service (STMDNS * self, const gchar * name, const gchar * type,
   return r;
 }
 
-static void
-remove_services_by_name_and_type (STMDNS * self, const gchar * name,
-				  const gchar * type)
+static guint
+count_services_by_name_and_type (STMDNS * self, const gchar * name,
+				 const gchar * type)
 {
+  guint n = 0;
+  GList *node;
+
+  for (node = self->services; node; node = node->next)
+    {
+      STMDNSService *service = node->data;
+
+      if (g_strcmp0 (name, st_mdns_service_get_name (service)) == 0
+	  && g_strcmp0 (type, st_mdns_service_get_mdns_type (service)) == 0)
+	n++;
+    }
+
+  return n;
+}
+
+/* Remove only the instance for this Avahi interface (+ AF proto). */
+static guint
+remove_service_instance (STMDNS * self, const gchar * name,
+			 const gchar * type, gint iface, gint proto)
+{
+  guint removed = 0;
   gboolean done = FALSE;
 
   while (!done)
     {
-      GList *new_services = self->services;
-      gboolean removed = FALSE;
+      GList *node;
+      gboolean found = FALSE;
 
-      while (new_services)
+      for (node = self->services; node; node = node->next)
 	{
-	  STMDNSService *service = new_services->data;
-	  gchar *xname;
-	  gchar *xtype;
+	  STMDNSService *service = node->data;
 
-	  xname = st_mdns_service_dup_name (service);
-	  xtype = st_mdns_service_dup_mdns_type (service);
-
-	  if (strcmp (name, xname) == 0 && strcmp (type, xtype) == 0)
+	  if (g_strcmp0 (name, st_mdns_service_get_name (service)) == 0
+	      && g_strcmp0 (type,
+			    st_mdns_service_get_mdns_type (service)) == 0
+	      && st_mdns_service_get_iface (service) == iface
+	      && st_mdns_service_get_proto (service) == proto)
 	    {
 	      self->services = g_list_remove (self->services, service);
-
-	      new_services = NULL;
-	      removed = TRUE;
+	      g_object_unref (service);
+	      removed++;
+	      found = TRUE;
+	      break;
 	    }
-	  else
-	    new_services = new_services->next;
-
-	  g_free (xname);
-	  g_free (xtype);
 	}
 
-      if (!removed)
+      if (!found)
 	done = TRUE;
     }
+
+  return removed;
 }
 
 static void
@@ -140,7 +158,7 @@ entry_group_callback (AvahiEntryGroup * g, AvahiEntryGroupState state,
 	break;
       }
     case AVAHI_ENTRY_GROUP_FAILURE:
-      LOGE ("Entry group failure: %s\n",
+      LOGE ("Entry group failure: %s",
 	    avahi_strerror (avahi_client_errno
 			    (avahi_entry_group_get_client (g))));
       break;
@@ -173,7 +191,7 @@ resolve_cb (AvahiServiceResolver * r, AvahiIfIndex interface,
 
       if (self->services == NULL
 	  || lookup_service (self, name, type, host_name, addr_str, port,
-			     avahi_proto_to_af (protocol)) == NULL)
+			     avahi_proto_to_af (protocol), interface) == NULL)
 	{
 	  STMDNSService *p;
 
@@ -181,16 +199,17 @@ resolve_cb (AvahiServiceResolver * r, AvahiIfIndex interface,
 
 	  p =
 	    st_mdns_service_new (name, type, host_name, addr_str, port,
-				 avahi_proto_to_af (protocol));
+				 avahi_proto_to_af (protocol), interface);
 
 	  self->services = g_list_append (self->services, p);
 
 	  g_signal_emit (self, st_mdns_signals[ST_MDNS_SIGNAL_SERVICE_ADDED],
 			 0, p);
 
-	  LOGI
-	    ("new service: name: %s, type: %s, host: %s, address: %s, port: %hu, proto: %d",
-	     name, type, host_name, addr_str, port, protocol);
+	  LOGI ("new service: %s %s:%hu", name, addr_str, port);
+	  LOGD
+	    ("new service detail: name=%s type=%s host=%s address=%s port=%hu proto=%d iface=%d",
+	     name, type, host_name, addr_str, port, protocol, interface);
 	}
       else
 	LOGD ("service already in list");
@@ -233,14 +252,31 @@ service_browser_cb (AvahiServiceBrowser * b,
 		avahi_strerror (avahi_client_errno (self->client)));
 	}
     }
-  else if (event == AVAHI_BROWSER_REMOVE)
+    else if (event == AVAHI_BROWSER_REMOVE)
     {
-      LOGD ("Service instance removed: %s", name);
+      guint remaining;
+      guint removed;
 
-      remove_services_by_name_and_type (self, name, type);
+      LOGD ("Service instance removed: %s (iface=%d proto=%d)", name,
+	    interface, protocol);
 
-      g_signal_emit (self, st_mdns_signals[ST_MDNS_SIGNAL_SERVICE_REMOVED], 0,
-		     name);
+      removed =
+	remove_service_instance (self, name, type, interface,
+				 avahi_proto_to_af (protocol));
+      remaining = count_services_by_name_and_type (self, name, type);
+
+      /* Only drop the peer when no interface still advertises it. */
+      if (remaining == 0)
+	{
+	  LOGI ("service removed: %s", name);
+	  LOGD ("last instance of %s gone, emit service-removed", name);
+	  g_signal_emit (self,
+			 st_mdns_signals[ST_MDNS_SIGNAL_SERVICE_REMOVED], 0,
+			 name);
+	}
+      else
+	LOGD ("service %s still present on %u other instance(s)", name,
+	      remaining);
     }
   else if (event == AVAHI_BROWSER_ALL_FOR_NOW)
     {

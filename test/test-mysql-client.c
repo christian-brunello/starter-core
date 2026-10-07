@@ -99,7 +99,6 @@ test_mock_query_failure_handling (TestFixture *fixture, gconstpointer user_data)
 
   /* LOGE uses CRITICAL; GLib Test treats those as fatal unless expected. */
   g_test_expect_message ("libstarter-core", G_LOG_LEVEL_CRITICAL, "*");
-  g_test_expect_message ("libstarter-core", G_LOG_LEVEL_CRITICAL, "*");
 
   gboolean success = st_mysql_client_store_input_label (fixture->client, input, &error);
   g_assert_false (success);

@@ -20,8 +20,6 @@
 #ifndef LIBSTARTER_CORE_INTERNALS_H_INCLUDED
 #define LIBSTARTER_CORE_INTERNALS_H_INCLUDED
 
-// G_MESSAGES_DEBUG=sp-mdns
-
 #include <glib.h>
 
 #include "glib-compat.h"
@@ -31,6 +29,12 @@
 #define LOGD(...) g_log (LIBSTARTER_CORE_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define LOGI(...) g_log (LIBSTARTER_CORE_LOG_DOMAIN, G_LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOGW(...) g_log (LIBSTARTER_CORE_LOG_DOMAIN, G_LOG_LEVEL_WARNING, __VA_ARGS__)
+/*
+ * Operational errors. GLib's G_LOG_LEVEL_ERROR always aborts the process,
+ * so daemons must use CRITICAL for non-fatal failures.
+ */
 #define LOGE(...) g_log (LIBSTARTER_CORE_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL, __VA_ARGS__)
+
+#define ST_LOG_DEBUG_ENABLED() st_log_debug_enabled (LIBSTARTER_CORE_LOG_DOMAIN)
 
 #endif /* LIBSTARTER_CORE_INTERNALS_H_INCLUDED */

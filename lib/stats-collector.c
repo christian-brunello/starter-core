@@ -88,7 +88,6 @@ st_stats_collector_set_property (GObject * object,
   STStatsCollector *self = ST_STATS_COLLECTOR (object);
   STStatsCollectorPrivate *priv = ST_STATS_COLLECTOR_GET_PRIVATE (self);
 
-  LOGD ("set property %d", prop_id);
 
   switch (prop_id)
     {
@@ -140,7 +139,6 @@ st_stats_collector_finalize (GObject * object)
 {
   STStatsCollectorPrivate *priv = ST_STATS_COLLECTOR_GET_PRIVATE (object);
 
-  LOGD ("finalize STStats %p", object);
 
   if (priv->stats)
     g_object_unref (priv->stats);

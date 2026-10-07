@@ -36,6 +36,7 @@ typedef struct
   gchar *address;
   guint16 port;
   gint proto;
+  gint iface;
 } STMDNSServicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (STMDNSService, st_mdns_service, G_TYPE_OBJECT)
@@ -71,7 +72,7 @@ st_mdns_service_init (STMDNSService * self)
 STMDNSService *
 st_mdns_service_new (const gchar * name, const gchar * type,
 		     const gchar * host, const gchar * address,
-		     const guint16 port, const gint proto)
+		     const guint16 port, const gint proto, const gint iface)
 {
   STMDNSService *r;
   STMDNSServicePrivate *priv;
@@ -85,6 +86,7 @@ st_mdns_service_new (const gchar * name, const gchar * type,
   priv->address = g_strdup (address);
   priv->port = port;
   priv->proto = proto;
+  priv->iface = iface;
 
   return r;
 }
@@ -110,10 +112,17 @@ st_mdns_service_compare (const STMDNSService * self,
 		{
 		  if (self_priv->port == other_priv->port)
 		    {
-		      r =
-			self_priv->proto <
-			other_priv->proto ? -1 : self_priv->proto >
-			other_priv->proto ? 1 : 0;
+		      if (self_priv->proto == other_priv->proto)
+			{
+			  r =
+			    self_priv->iface <
+			    other_priv->iface ? -1 : self_priv->iface >
+			    other_priv->iface ? 1 : 0;
+			}
+		      else
+			r =
+			  self_priv->proto <
+			  other_priv->proto ? -1 : 1;
 		    }
 		  else
 		    r = self_priv->port < other_priv->port ? -1 : 1;
@@ -266,4 +275,21 @@ st_mdns_service_set_proto (STMDNSService * self, guint16 proto)
   STMDNSServicePrivate *priv = ST_MDNS_SERVICE_GET_PRIVATE (self);
 
   priv->proto = proto;
+}
+
+gint
+st_mdns_service_get_iface (const STMDNSService * self)
+{
+  STMDNSServicePrivate *priv =
+    ST_MDNS_SERVICE_GET_PRIVATE ((STMDNSService *) self);
+
+  return priv->iface;
+}
+
+void
+st_mdns_service_set_iface (STMDNSService * self, gint iface)
+{
+  STMDNSServicePrivate *priv = ST_MDNS_SERVICE_GET_PRIVATE (self);
+
+  priv->iface = iface;
 }

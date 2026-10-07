@@ -54,8 +54,6 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
   STClient *self = user_data;
   STClientPrivate *priv = ST_CLIENT_GET_PRIVATE (self);
 
-  LOGD ("received input changed signal");
-
   GVariant *key_value_pair;
 
   g_variant_get (parameters, "(@{s(siddddt)})", &key_value_pair);
@@ -77,10 +75,6 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
       g_variant_unref (tuple_variant);
       g_variant_unref (key_value_pair);
 
-      LOGD
-	("Input: %s, descr: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
-	 PRIu64, name, descr, unit, min, max, step, val, flags);
-
       for (i = 0; i < priv->inputs->len; i++)
 	{
 	  STInput *in = priv->inputs->pdata[i];
@@ -88,8 +82,6 @@ static void handle_input_changed_signal (GDBusConnection * connection, const gch
 	  if (g_strcmp0 (name, st_input_get_name (in)) == 0)
 	    {
 	      GError *error = NULL;
-
-	      LOGD ("found match on input at offset %u", i);
 
 	      if (!st_input_set_description (in, descr, &error))
 		{
@@ -165,8 +157,6 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
   STClient *self = user_data;
   STClientPrivate *priv = ST_CLIENT_GET_PRIVATE (self);
 
-  LOGD ("received output changed signal");
-
   GVariant *key_value_pair;
 
   g_variant_get (parameters, "(@{s(siddddt)})", &key_value_pair);
@@ -188,10 +178,6 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
       g_variant_unref (tuple_variant);
       g_variant_unref (key_value_pair);
 
-      LOGD
-	("Output: %s, descr: %s, unit: %d, min: %lf, max: %lf, step: %lf, val: %lf, flags: %"
-	 PRIu64, name, descr, unit, min, max, step, val, flags);
-
       for (i = 0; i < priv->outputs->len; i++)
 	{
 	  STOutput *out = priv->outputs->pdata[i];
@@ -199,8 +185,6 @@ handle_output_changed_signal (GDBusConnection * connection, const gchar * sender
 	  if (g_strcmp0 (name, st_output_get_name (out)) == 0)
 	    {
 	      GError *error = NULL;
-
-	      LOGD ("found match on output at offset %u", i);
 
 	      if (!st_output_set_description (out, descr, &error))
 		{
@@ -286,8 +270,6 @@ handle_stats_changed_signal (GDBusConnection * connection, const gchar * sender_
   STStatsEntry icswitch;
   STStatsEntry cpu;
 
-  LOGD ("%s: received stats changed signal", __FUNCTION__);
-
   g_variant_get (parameters,
 		 "((sddddddddddddddddddddddddddd))",
 		 &name,
@@ -301,22 +283,24 @@ handle_stats_changed_signal (GDBusConnection * connection, const gchar * sender_
 		 &icswitch.min, &icswitch.max, &icswitch.last,
 		 &cpu.min, &cpu.max, &cpu.last);
 
-  LOGD ("STStats: {"
-	"name: %s "
-	"vmsize: %lf,%lf,%lf "
-	"vmrss: %lf,%lf,%lf "
-	"vmswap: %lf,%lf,%lf "
-	"io_read: %lf,%lf,%lf "
-	"io_write: %lf,%lf,%lf "
-	"priority: %lf,%lf,%lf "
-	"threads: %lf,%lf,%lf "
-	"icswitch: %lf,%lf,%lf "
-	"cpu: %lf,%lf,%lf}",
-	name,
-	vmsize.min, vmsize.max, vmsize.last,
-	vmrss.min, vmrss.max, vmrss.last,
-	vmswap.min, vmswap.max, vmswap.last,
-	io_read.min, io_read.max, io_read.last,
+  LOGD ("remote stats changed: %s", name);
+  if (ST_LOG_DEBUG_ENABLED ())
+    LOGD ("STStats: {"
+	  "name: %s "
+	  "vmsize: %lf,%lf,%lf "
+	  "vmrss: %lf,%lf,%lf "
+	  "vmswap: %lf,%lf,%lf "
+	  "io_read: %lf,%lf,%lf "
+	  "io_write: %lf,%lf,%lf "
+	  "priority: %lf,%lf,%lf "
+	  "threads: %lf,%lf,%lf "
+	  "icswitch: %lf,%lf,%lf "
+	  "cpu: %lf,%lf,%lf}",
+	  name,
+	  vmsize.min, vmsize.max, vmsize.last,
+	  vmrss.min, vmrss.max, vmrss.last,
+	  vmswap.min, vmswap.max, vmswap.last,
+	  io_read.min, io_read.max, io_read.last,
 	io_write.min, io_write.max, io_write.last,
 	priority.min, priority.max, priority.last,
 	threads.min, threads.max, threads.last,
@@ -341,8 +325,6 @@ call_get_name_method (STClient * self, GError ** error)
   STClientPrivate *priv;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
-
-  LOGD ("call get name on connection %p", priv->connection);
 
   if(priv->connection)
     {
@@ -393,8 +375,6 @@ call_get_version_method (STClient * self, GError ** error)
   STClientPrivate *priv;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
-
-  LOGD ("call get name on connection %p", priv->connection);
 
   if(priv->connection)
     {
@@ -643,8 +623,6 @@ call_get_inputs_method (STClient * self, GError ** error)
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
-  LOGD ("call get inputs on connection %p", priv->connection);
-
   if (priv->connection)
     {
       GVariant *result;
@@ -684,8 +662,6 @@ call_get_outputs_method (STClient * self, GError ** error)
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
-  LOGD ("call get outputs on connection %p", priv->connection);
-
   if (priv->connection)
     {
       GVariant *result;
@@ -724,8 +700,6 @@ call_get_stats_method (STClient * self, GError ** error)
   STClientPrivate *priv;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
-
-  LOGD ("call get stats on connection %p", priv->connection);
 
   if (priv->connection)
     {
@@ -767,8 +741,6 @@ call_set_output_method (STClient * self, const gchar * name, gdouble value,
   STClientPrivate *priv;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
-
-  LOGD ("call set output on connection %p", priv->connection);
 
   if(priv->connection)
     {
@@ -823,7 +795,6 @@ st_client_finalize (GObject * object)
 {
   STClientPrivate *priv = ST_CLIENT_GET_PRIVATE (object);
 
-  LOGD ("finalize STClient %p", object);
 
   if (priv->start_cancellable)
     {

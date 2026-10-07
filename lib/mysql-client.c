@@ -46,8 +46,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (STMYSQLClient, st_mysql_client, G_TYPE_OBJECT)
   STMYSQLClient *self = ST_MYSQL_CLIENT (gobject);
   STMYSQLClientPrivate *priv = ST_MYSQL_CLIENT_GET_PRIVATE (self);
 
-  LOGD ("finalize STMYSQLClient %p", self);
-
   mysql_close (priv->handle);
   g_free (priv->source);
 
@@ -59,15 +57,12 @@ st_mysql_client_class_init (STMYSQLClientClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  LOGD ("Initialize STMYSQLClientClass %p", klass);
-
   object_class->finalize = st_mysql_client_finalize;
 }
 
 static void
 st_mysql_client_init (STMYSQLClient * self)
 {
-  LOGD ("Initialize STMYSQLClient %p", self);
 }
 
 static gboolean
@@ -79,17 +74,14 @@ st_mysql_client_perform_query (STMYSQLClient * self, const char *q,
 
   if (mysql_query (priv->handle, q) != 0)
     {
-      LOGE ("error execute SQL Query: %s", q);
-      LOGE ("MYSql error: %s", mysql_error (priv->handle));
+      LOGE ("MySQL query failed: %s", mysql_error (priv->handle));
+      LOGD ("failed SQL: %s", q);
 
       g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE, "%s",
 		   mysql_error (priv->handle));
     }
   else
-    {
-      LOGD ("query executed successfully: %s", q);
-      r = TRUE;
-    }
+    r = TRUE;
 
   return r;
 }

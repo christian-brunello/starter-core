@@ -223,7 +223,6 @@ stats_changed_callback (STStats * self, gpointer user_data)
   STServerPrivate *priv = ST_SERVER_GET_PRIVATE (user_data);
   guint i;
 
-  LOGD ("emit stats changed signal");
 
   for (i = 0; i < priv->connections->len; i++)
     emit_stats_changed (priv->connections->pdata[i], self);

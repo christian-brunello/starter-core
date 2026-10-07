@@ -24,8 +24,6 @@
 
 #include "internals.h"
 
-extern VerboseLevel verbose_level;
-
 void
 verbose_printf (VerboseLevel vl, const char *fmt, ...)
 {
@@ -68,11 +66,7 @@ gboolean
 assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 	      GHashTable * variables, GError ** error)
 {
-  g_autoptr (GString) s;
   gpointer p;
-
-  s = g_string_new ("");
-  assign_describe (self, s);
 
   if ((p = g_hash_table_lookup (outputs, self->id)) != NULL)
     {
@@ -83,7 +77,13 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
       gdouble val;
       guint64 flags;
 
-      VERBOSE_3_PRINTF ("Target of %s is an output", s->str);
+      if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Target of %s is an output",
+			    assign_describe (self, s));
+	}
 
       if (!expr_eval
 	  (self->rval, inputs, outputs, variables, &expr_res, error))
@@ -124,7 +124,14 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 	  return FALSE;
 	}
 
-      VERBOSE_3_PRINTF ("Output %s assigned successfully", self->id);
+      LOGI ("rule applied: %s = %g", self->id, expr_res);
+      VERBOSE_1_PRINTF ("rule applied: %s = %g", self->id, expr_res);
+      if (ST_LOG_DEBUG_ENABLED ())
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  LOGD ("rule applied: %s", assign_describe (self, s));
+	}
 
       return TRUE;
     }
@@ -133,10 +140,24 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
     {
       /* Reference to a variable, assign expression */
 
-      VERBOSE_3_PRINTF ("Target of %s is a variable, assign expression",
-			s->str);
+      if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Target of %s is a variable, assign expression",
+			    assign_describe (self, s));
+	}
 
       st_var_set_value (p, self->rval);
+
+      LOGI ("rule applied: %s", self->id);
+      VERBOSE_1_PRINTF ("rule applied: %s", self->id);
+      if (ST_LOG_DEBUG_ENABLED ())
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  LOGD ("rule applied: %s", assign_describe (self, s));
+	}
 
       return TRUE;
     }
@@ -261,21 +282,26 @@ label_block_apply (LabelBlock * self, GHashTable * inputs,
 		   GHashTable * outputs, GHashTable * variables,
 		   GError ** error)
 {
-  g_autoptr (GString) s;
-  g_autoptr (GString) s2;
   guint i;
 
-  s = g_string_new ("");
-  s2 = g_string_new ("");
+  if (verbose_level >= VERBOSE_LEVEL_3)
+    {
+      g_autoptr (GString) s = g_string_new ("");
 
-  VERBOSE_3_PRINTF ("Apply %s", label_block_describe (self, s));
+      VERBOSE_3_PRINTF ("Apply %s", label_block_describe (self, s));
+    }
 
   for (i = 0; i < self->entries->len; i++)
     {
       LabelEntry *entry = self->entries->pdata[i];
       gdouble cond_res;
 
-      VERBOSE_3_PRINTF ("Process %s", label_entry_describe (entry, s));
+      if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Process %s", label_entry_describe (entry, s));
+	}
 
       if (!expr_eval
 	  (entry->cond, inputs, outputs, variables, &cond_res, error))
@@ -283,16 +309,28 @@ label_block_apply (LabelBlock * self, GHashTable * inputs,
 
       if (cond_res)
 	{
-	  VERBOSE_1_PRINTF
-	    ("Condition \"%s\" evals to TRUE, apply assignment \"%s\"",
-	     expr_describe (entry->cond, s), assign_describe (entry->ass,
-							      s2));
+	  if (verbose_level >= VERBOSE_LEVEL_3)
+	    {
+	      g_autoptr (GString) s = g_string_new ("");
+	      g_autoptr (GString) s2 = g_string_new ("");
+
+	      VERBOSE_3_PRINTF
+		("Condition \"%s\" evals to TRUE, apply assignment \"%s\"",
+		 expr_describe (entry->cond, s),
+		 assign_describe (entry->ass, s2));
+	    }
 
 	  return assign_apply (entry->ass, inputs, outputs, variables, error);
 	}
-      else
-	VERBOSE_1_PRINTF ("Condition \"%s\" evals to FALSE",
-			  expr_describe (entry->cond, s));
+
+      VERBOSE_2_PRINTF ("skip %s (condition false)", entry->ass->id);
+      if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Condition \"%s\" evals to FALSE",
+			    expr_describe (entry->cond, s));
+	}
     }
 
   VERBOSE_3_PRINTF ("Label block completed");
@@ -363,14 +401,14 @@ gboolean
 trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
 	       GHashTable * variables, GError ** error)
 {
-  g_autoptr (GString) s;
-  g_autoptr (GString) s2;
   gdouble cond_res;
 
-  s = g_string_new ("");
-  s2 = g_string_new ("");
+  if (verbose_level >= VERBOSE_LEVEL_3)
+    {
+      g_autoptr (GString) s = g_string_new ("");
 
-  VERBOSE_3_PRINTF ("Apply %s", trigger_describe (self, s));
+      VERBOSE_3_PRINTF ("Apply %s", trigger_describe (self, s));
+    }
 
   if (!expr_eval (self->cond, inputs, outputs, variables, &cond_res, error))
     return FALSE;
@@ -379,23 +417,38 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
     {
       guint i;
 
-      VERBOSE_3_PRINTF ("Condition evals to TRUE, apply assignments");
+      VERBOSE_2_PRINTF ("trigger condition true, apply %u assignment(s)",
+			self->ass->len);
 
       for (i = 0; i < self->ass->len; i++)
 	{
-	  VERBOSE_1_PRINTF
-	    ("Condition \"%s\" evals to TRUE, apply assignment \"%s\"",
-	     expr_describe (self->cond, s),
-	     assign_describe (self->ass->pdata[i], s2));
+	  Assign *ass = self->ass->pdata[i];
 
-	  if (!assign_apply
-	      (self->ass->pdata[i], inputs, outputs, variables, error))
+	  if (verbose_level >= VERBOSE_LEVEL_3)
+	    {
+	      g_autoptr (GString) s = g_string_new ("");
+	      g_autoptr (GString) s2 = g_string_new ("");
+
+	      VERBOSE_3_PRINTF
+		("Condition \"%s\" evals to TRUE, apply assignment \"%s\"",
+		 expr_describe (self->cond, s), assign_describe (ass, s2));
+	    }
+
+	  if (!assign_apply (ass, inputs, outputs, variables, error))
 	    return FALSE;
 	}
     }
   else
-    VERBOSE_1_PRINTF ("Condition \"%s\" evals to FALSE",
-		      expr_describe (self->cond, s));
+    {
+      VERBOSE_2_PRINTF ("trigger condition false");
+      if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Condition \"%s\" evals to FALSE",
+			    expr_describe (self->cond, s));
+	}
+    }
 
   return TRUE;
 }
@@ -517,25 +570,34 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 				      self->variables))
 	{
 	  if (id)
-	    VERBOSE_1_PRINTF ("Iterate label block because of \"%s\"", id);
+	    VERBOSE_2_PRINTF ("Iterate label block because of \"%s\"", id);
 	  else
-	    VERBOSE_1_PRINTF
+	    VERBOSE_2_PRINTF
 	      ("Iterate label block because of startup, connection or disconnection event");
 
 	  if (!label_block_apply
 	      (self->labels->pdata[i], inputs, outputs, self->variables,
 	       &xerror))
 	    {
-	      fprintf (stderr, "%s: ** ERROR ** apply %s: %s\n", PACKAGE,
-		       label_block_describe (self->labels->pdata[i], s),
-		       xerror ? xerror->message : "unknown error");
+	      LOGE ("apply label block failed: %s",
+		    xerror ? xerror->message : "unknown error");
+	      if (ST_LOG_DEBUG_ENABLED ())
+		{
+		  g_string_truncate (s, 0);
+		  LOGD ("apply failed: %s: %s",
+			label_block_describe (self->labels->pdata[i], s),
+			xerror ? xerror->message : "unknown error");
+		}
 	      g_error_free (xerror);
 	    }
 	}
-      else
-	VERBOSE_3_PRINTF
-	  ("skip label block %s because does not have references to %s",
-	   label_block_describe (self->labels->pdata[i], s), id);
+      else if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_string_truncate (s, 0);
+	  VERBOSE_3_PRINTF
+	    ("skip label block %s because does not have references to %s",
+	     label_block_describe (self->labels->pdata[i], s), id);
+	}
     }
 
   for (i = 0; i < self->triggers->len; i++)
@@ -547,25 +609,34 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 				  self->variables))
 	{
 	  if (id)
-	    VERBOSE_1_PRINTF ("Iterate trigger because of \"%s\"", id);
+	    VERBOSE_2_PRINTF ("Iterate trigger because of \"%s\"", id);
 	  else
-	    VERBOSE_1_PRINTF
+	    VERBOSE_2_PRINTF
 	      ("Iterate trigger because of startup, connection or disconnection event");
 
 	  if (!trigger_apply
 	      (self->triggers->pdata[i], inputs, outputs, self->variables,
 	       &xerror))
 	    {
-	      fprintf (stderr, "%s: ** ERROR ** apply %s: %s\n", PACKAGE,
-		       trigger_describe (self->triggers->pdata[i], s),
-		       xerror ? xerror->message : "unknown error");
+	      LOGE ("apply trigger failed: %s",
+		    xerror ? xerror->message : "unknown error");
+	      if (ST_LOG_DEBUG_ENABLED ())
+		{
+		  g_string_truncate (s, 0);
+		  LOGD ("apply failed: %s: %s",
+			trigger_describe (self->triggers->pdata[i], s),
+			xerror ? xerror->message : "unknown error");
+		}
 	      g_error_free (xerror);
 	    }
 	}
-      else
-	VERBOSE_3_PRINTF
-	  ("skip trigger %s because does not have references to %s",
-	   trigger_describe (self->triggers->pdata[i], s), id);
+      else if (verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_string_truncate (s, 0);
+	  VERBOSE_3_PRINTF
+	    ("skip trigger %s because does not have references to %s",
+	     trigger_describe (self->triggers->pdata[i], s), id);
+	}
     }
 
   return TRUE;

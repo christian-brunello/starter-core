@@ -53,11 +53,14 @@ register_ready_client (STCore * self, const gchar * name, STClient * client)
   const STStats *stats;
   guint i;
 
-  LOGD ("Client ready for service %s, add to map", name);
-
   g_hash_table_insert (self->clients, g_strdup (name), g_object_ref (client));
 
   inputs = st_client_get_inputs (client);
+  outputs = st_client_get_outputs (client);
+
+  LOGI ("peer ready: %s", name);
+  LOGD ("peer ready: %s inputs=%u outputs=%u", name, inputs->len,
+	outputs->len);
 
   for (i = 0; i < inputs->len; i++)
     {
@@ -97,8 +100,6 @@ register_ready_client (STCore * self, const gchar * name, STClient * client)
 	    }
 	}
     }
-
-  outputs = st_client_get_outputs (client);
 
   for (i = 0; i < outputs->len; i++)
     {
@@ -210,13 +211,13 @@ on_mdns_service_removed (STMDNS * mdns, const gchar * name,
 
   if (g_hash_table_contains (self->pending_clients, name))
     {
-      LOGD ("cancel pending client with name: %s", name);
+      LOGI ("peer removed (pending): %s", name);
       g_hash_table_remove (self->pending_clients, name);
     }
 
   if (g_hash_table_contains (self->clients, name))
     {
-      LOGD ("remove client with name: %s", name);
+      LOGI ("peer removed: %s", name);
 
       g_hash_table_remove (self->clients, name);
 
@@ -241,7 +242,7 @@ on_mdns_service_added (STMDNS * mdns, STMDNSService * service,
   type = st_mdns_service_dup_mdns_type (service);
   proto = st_mdns_service_get_proto (service);
 
-  LOGD ("service added: %s:%s:%d", name, type, proto);
+  LOGD ("service added: %s type=%s proto=%d", name, type, proto);
 
   if (g_regex_match_simple (self->srvmatch, name, G_REGEX_OPTIMIZE, 0)
       && !g_hash_table_contains (self->clients, name)
@@ -257,6 +258,7 @@ on_mdns_service_added (STMDNS * mdns, STMDNSService * service,
 
       g_hash_table_insert (self->pending_clients, g_strdup (name), pending);
 
+      LOGI ("peer connecting: %s", name);
       LOGD ("starting async client for service %s", name);
 
       st_client_start_async (pending->client,

@@ -36,6 +36,53 @@ static int version_flag = 0;
 
 extern int yyparse (Engine * engine);
 
+static const gchar *
+st_core_log_domain_from_fields (const GLogField * fields, gsize n_fields)
+{
+  gsize i;
+
+  for (i = 0; i < n_fields; i++)
+    if (g_strcmp0 (fields[i].key, "GLIB_DOMAIN") == 0)
+      return fields[i].value;
+
+  return NULL;
+}
+
+/*
+ * GLib's default formatter prefixes WARNING/CRITICAL with a blank line
+ * ("\n(prog:pid): ..."). Strip that for denser journal/console output.
+ * Keep GLib's INFO/DEBUG gating via G_MESSAGES_DEBUG.
+ */
+static GLogWriterOutput
+st_core_log_writer (GLogLevelFlags log_level,
+		    const GLogField * fields,
+		    gsize n_fields, gpointer user_data)
+{
+  g_autofree gchar *formatted = NULL;
+  const gchar *domain;
+  const gchar *p;
+
+  domain = st_core_log_domain_from_fields (fields, n_fields);
+  if (g_log_writer_default_would_drop (log_level, domain))
+    return G_LOG_WRITER_HANDLED;
+
+  if (g_log_writer_is_journald (fileno (stderr)))
+    return g_log_writer_journald (log_level, fields, n_fields, user_data);
+
+  formatted = g_log_writer_format_fields (log_level, fields, n_fields, FALSE);
+  if (formatted == NULL)
+    return G_LOG_WRITER_UNHANDLED;
+
+  p = formatted;
+  while (*p == '\n')
+    p++;
+
+  fputs (p, stderr);
+  fputc ('\n', stderr);
+
+  return G_LOG_WRITER_HANDLED;
+}
+
 static gboolean
 load_settings (STCore * self)
 {
@@ -79,7 +126,8 @@ parse_command_line (STCore * self, int *argc, char ***argv)
     {"rules-preprocessor", 'P', 0, G_OPTION_ARG_STRING,
      &self->rules_preprocessor, "Command to preprocess rules-file", NULL},
     {"verbosity", 'V', 0, G_OPTION_ARG_INT, &verbose_level,
-     "Verbosity level (default: 1)", NULL},
+     "stderr verbosity: 0=off 1=info 2=info+debug 3=+describe (default: 1)",
+     NULL},
     {"version", 'v', 0, G_OPTION_ARG_NONE, &version_flag,
      "Print version and exit", NULL},
     {0}
@@ -113,18 +161,30 @@ parse_command_line (STCore * self, int *argc, char ***argv)
 void
 st_core_var_changed_callback (STVar * var, gpointer user_data)
 {
-  g_autoptr (GString) s;
   STCore *self = user_data;
   GError *error = NULL;
+  const gchar *name = st_var_get_name (var);
 
-  s = g_string_new ("");
+  if (ST_LOG_DEBUG_ENABLED ())
+    {
+      g_autoptr (GString) s = g_string_new ("");
 
-  VERBOSE_2_PRINTF ("Variable changed: %s -> %s", st_var_get_name (var),
-		    expr_describe (st_var_get_value (var), s));
+      LOGD ("variable changed: %s = %s", name,
+	    expr_describe (st_var_get_value (var), s));
+    }
+  else
+    LOGD ("variable changed: %s", name);
+
+  if (verbose_level >= VERBOSE_LEVEL_2)
+    {
+      g_autoptr (GString) s = g_string_new ("");
+
+      VERBOSE_2_PRINTF ("Variable changed: %s -> %s", name,
+			expr_describe (st_var_get_value (var), s));
+    }
 
   if (!engine_apply
-      (self->engine, self->all_inputs, self->all_outputs,
-       st_var_get_name (var), &error))
+      (self->engine, self->all_inputs, self->all_outputs, name, &error))
     {
       LOGW ("error from engine_apply: %s",
 	    error ? error->message : "unknown error");
@@ -191,6 +251,8 @@ parse_rules_file (STCore * self)
 						foreach_connect_changed_signal,
 						self);
 
+			  LOGI ("rules loaded from preprocessor (%s)",
+				self->rules_file);
 			  r = TRUE;
 			}
 		    }
@@ -229,31 +291,30 @@ void
 st_core_input_changed_callback (STInput * in, gpointer user_data)
 {
   STCore *self = user_data;
+  const gchar *name = st_input_get_name (in);
+  gdouble val = st_input_get_val (in);
   guint64 flags;
   GError *error = NULL;
 
-  VERBOSE_2_PRINTF ("Input changed: %s -> %lf", st_input_get_name (in),
-		    st_input_get_val (in));
+  LOGD ("input changed: %s = %g flags=%" G_GUINT64_FORMAT, name, val,
+	st_input_get_flags (in));
+
+  VERBOSE_2_PRINTF ("Input changed: %s -> %lf", name, val);
 
   flags = st_input_get_flags (in);
 
   if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
     {
       if (!st_mysql_client_store_history
-	  (self->mysql, st_input_get_name (in), st_input_get_val (in), flags,
-	   &error))
+	  (self->mysql, name, val, flags, &error))
 	{
 	  LOGE ("error insert history: %s",
 		error ? error->message : "unknown error");
 	  g_error_free (error);
 	}
     }
-  else
-    LOGD ("do not store input on database (ST_IO_FLAG_NO_HISTORY)");
-
   if (!engine_apply
-      (self->engine, self->all_inputs, self->all_outputs,
-       st_input_get_name (in), &error))
+      (self->engine, self->all_inputs, self->all_outputs, name, &error))
     {
       LOGW ("error from engine_apply: %s",
 	    error ? error->message : "unknown error");
@@ -265,31 +326,30 @@ void
 st_core_output_changed_callback (STOutput * out, gpointer user_data)
 {
   STCore *self = user_data;
+  const gchar *name = st_output_get_name (out);
+  gdouble val = st_output_get_val (out);
   guint64 flags;
   GError *error = NULL;
 
-  VERBOSE_2_PRINTF ("Output changed: %s -> %lf", st_output_get_name (out),
-		    st_output_get_val (out));
+  LOGD ("output changed: %s = %g flags=%" G_GUINT64_FORMAT, name, val,
+	st_output_get_flags (out));
+
+  VERBOSE_2_PRINTF ("Output changed: %s -> %lf", name, val);
 
   flags = st_output_get_flags (out);
 
   if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
     {
       if (!st_mysql_client_store_history
-	  (self->mysql, st_output_get_name (out), st_output_get_val (out),
-	   st_output_get_flags (out), &error))
+	  (self->mysql, name, val, flags, &error))
 	{
 	  LOGE ("error insert history: %s",
 		error ? error->message : "unknown error");
 	  g_error_free (error);
 	}
     }
-  else
-    LOGD ("do not store output on database (ST_IO_FLAG_NO_HISTORY)");
-
   if (!engine_apply
-      (self->engine, self->all_inputs, self->all_outputs,
-       st_output_get_name (out), &error))
+      (self->engine, self->all_inputs, self->all_outputs, name, &error))
     {
       LOGW ("error from engine_apply: %s",
 	    error ? error->message : "unknown error");
@@ -303,7 +363,7 @@ st_core_stats_changed_callback (STStats * stats, gpointer user_data)
   STCore *self = user_data;
   GError *error = NULL;
 
-  LOGD ("received stats changed signal");
+  LOGD ("stats changed: %s", st_stats_get_name (stats));
 
   if (!st_mysql_client_store_stats (self->mysql, stats, &error))
     {
@@ -333,7 +393,7 @@ foreach_add_inputs (gpointer key, gpointer value, gpointer user_data)
       p->client = c;
       p->index = i;
 
-      VERBOSE_1_PRINTF("  %s", name);
+      VERBOSE_3_PRINTF ("  %s", name);
 
       g_hash_table_insert (user_data, name, p);
     }
@@ -344,7 +404,7 @@ st_core_setup_inputs_hash_table (STCore * self)
 {
   GHashTable *r;
 
-  VERBOSE_1_PRINTF("Rebuild inputs table");
+  VERBOSE_2_PRINTF ("Rebuild inputs table");
 
   r = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
@@ -370,7 +430,7 @@ foreach_add_outputs (gpointer key, gpointer value, gpointer user_data)
       p->client = c;
       p->index = i;
 
-      VERBOSE_1_PRINTF("  %s", name);
+      VERBOSE_3_PRINTF ("  %s", name);
 
       g_hash_table_insert (user_data, name, p);
     }
@@ -381,7 +441,7 @@ st_core_setup_outputs_hash_table (STCore * self)
 {
   GHashTable *r;
 
-  VERBOSE_1_PRINTF("Rebuild outputs table");
+  VERBOSE_2_PRINTF ("Rebuild outputs table");
 
   r = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
@@ -400,7 +460,8 @@ main (int argc, char *argv[])
   gchar *db_user;
   gchar *db_pass;
   guint passlen;
-  GString *s;
+
+  g_log_set_writer_func (st_core_log_writer, NULL, NULL);
 
   memset (&self, 0x00, sizeof self);
 
@@ -423,11 +484,14 @@ main (int argc, char *argv[])
   if (!parse_rules_file (&self))
     exit (EXIT_FAILURE);
 
-  s = g_string_new ("");
+  if (verbose_level >= VERBOSE_LEVEL_3 || ST_LOG_DEBUG_ENABLED ())
+    {
+      g_autoptr (GString) s = g_string_new ("");
 
-  VERBOSE_1_PRINTF ("ENGINE:\n%s", engine_describe (self.engine, s));
-
-  g_string_truncate (s, 0);
+      engine_describe (self.engine, s);
+      VERBOSE_3_PRINTF ("ENGINE:\n%s", s->str);
+      LOGD ("engine: %s", s->str);
+    }
 
   self.self_stats = st_stats_new ("ST:Core");
   self.self_coll =

@@ -72,6 +72,45 @@ guint st_g_string_replace (GString * string, const gchar * find,
 #define g_string_replace st_g_string_replace
 #endif
 
+/*
+ * Whether GLib DEBUG for @domain would be emitted.
+ * Used to avoid building expensive describe() strings when unused.
+ */
+static inline gboolean
+st_log_debug_enabled (const gchar * domain)
+{
+  const gchar *env;
+  const gchar *p;
+  gsize domain_len;
+
+  env = g_getenv ("G_MESSAGES_DEBUG");
+  if (env == NULL || *env == '\0')
+    return FALSE;
+  if (g_strcmp0 (env, "all") == 0)
+    return TRUE;
+
+  domain_len = strlen (domain);
+  p = env;
+  while (*p)
+    {
+      while (*p == ' ' || *p == '\t' || *p == ',')
+	p++;
+      if (*p == '\0')
+	break;
+      if (strncmp (p, domain, domain_len) == 0)
+	{
+	  const gchar *end = p + domain_len;
+
+	  if (*end == '\0' || *end == ' ' || *end == '\t' || *end == ',')
+	    return TRUE;
+	}
+      while (*p && *p != ' ' && *p != '\t' && *p != ',')
+	p++;
+    }
+
+  return FALSE;
+}
+
 G_END_DECLS
 
 #endif /* STARTER_GLIB_COMPAT_H_INCLUDED */

@@ -43,8 +43,22 @@
 #define LOGD(...) g_log (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define LOGI(...) g_log (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_INFO, __VA_ARGS__)
 #define LOGW(...) g_log (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_WARNING, __VA_ARGS__)
+/*
+ * Operational errors. GLib's G_LOG_LEVEL_ERROR always aborts the process,
+ * so daemons must use CRITICAL for non-fatal failures.
+ */
 #define LOGE(...) g_log (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL, __VA_ARGS__)
 
+#define ST_LOG_DEBUG_ENABLED() st_log_debug_enabled (ST_CORE_LOG_DOMAIN)
+
+/*
+ * stderr verbosity (-V), independent from g_log:
+ *   0  off
+ *   1  info (short operational events)
+ *   2  info + light debug
+ *   3  info + debug + describe() dumps
+ * Warnings/errors use LOGW/LOGE (g_log), not this channel.
+ */
 typedef enum VerboseLevel
 {
   VERBOSE_LEVEL_NULL,
@@ -52,6 +66,8 @@ typedef enum VerboseLevel
   VERBOSE_LEVEL_2,
   VERBOSE_LEVEL_3
 } VerboseLevel;
+
+extern VerboseLevel verbose_level;
 
 void verbose_printf (VerboseLevel vl, const char *fmt, ...);
 #define VERBOSE_1_PRINTF(fmt...) verbose_printf(VERBOSE_LEVEL_1, fmt)

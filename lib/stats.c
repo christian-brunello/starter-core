@@ -87,8 +87,6 @@ st_stats_finalize (GObject * object)
 {
   STStats *self = ST_STATS (object);
 
-  LOGD ("finalize STStats %p", object);
-
   g_free (self->name);
 
   G_OBJECT_CLASS (st_stats_parent_class)->finalize (object);

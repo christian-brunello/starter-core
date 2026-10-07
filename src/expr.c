@@ -203,11 +203,6 @@ ref_expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
       ClientInputMap *cmap = p;
       const GPtrArray *cinputs = st_client_get_inputs (cmap->client);
 
-      LOGD ("found input at index %u, name: %s, value: %lf",
-	    cmap->index,
-	    st_input_get_name (cinputs->pdata[cmap->index]),
-	    st_input_get_val (cinputs->pdata[cmap->index]));
-
       *res = st_input_get_val (cinputs->pdata[cmap->index]);
 
       return TRUE;
@@ -542,16 +537,18 @@ expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
   if (self->callbacks.eval)
     {
       gboolean stts;
-      g_autoptr (GString) s;
 
       stts =
 	(*self->callbacks.eval) (self, inputs, outputs, variables, res,
 				 error);
-      s = g_string_new ("");
 
-      if (stts)
-	VERBOSE_3_PRINTF ("Expression \"%s\" evaluated to %lf",
-			  expr_describe (self, s), *res);
+      if (stts && verbose_level >= VERBOSE_LEVEL_3)
+	{
+	  g_autoptr (GString) s = g_string_new ("");
+
+	  VERBOSE_3_PRINTF ("Expression \"%s\" evaluated to %lf",
+			    expr_describe (self, s), *res);
+	}
 
       return stts;
     }

@@ -32,7 +32,8 @@ G_DECLARE_FINAL_TYPE (STMDNSService, st_mdns_service, ST, MDNS_SERVICE,
 					 const gchar * host,
 					 const gchar * address,
 					 const guint16 port,
-					 const gint proto);
+					 const gint proto,
+					 const gint iface);
 
      const gchar *st_mdns_service_get_name (const STMDNSService * self);
      gchar *st_mdns_service_dup_name (const STMDNSService * self);
@@ -52,7 +53,8 @@ G_DECLARE_FINAL_TYPE (STMDNSService, st_mdns_service, ST, MDNS_SERVICE,
      void st_mdns_service_set_port (STMDNSService * self, guint16 port);
      gint st_mdns_service_get_proto (const STMDNSService * self);
      void st_mdns_service_set_proto (STMDNSService * self, guint16 proto);
-;
+     gint st_mdns_service_get_iface (const STMDNSService * self);
+     void st_mdns_service_set_iface (STMDNSService * self, gint iface);
      gint st_mdns_service_compare (const STMDNSService * self,
 				   const STMDNSService * other);
 

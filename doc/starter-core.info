@@ -2162,7 +2162,7 @@ discovered service or a service ready to be published.
 
  -- Function: STMDNSService * st_mdns_service_new (const gchar *NAME,
           const gchar *TYPE, const gchar *HOST, const gchar *ADDRESS,
-          const guint16 PORT, const gint PROTO)
+          const guint16 PORT, const gint PROTO, const gint IFACE)
      Creates a new 'STMDNSService' descriptor.
         * NAME: The service instance name (e.g., "ST:MyFirstService").
         * TYPE: The mDNS service type (e.g., "_dbus._tcp").
@@ -3103,22 +3103,22 @@ Node: STOutput Metadata Accessors80092
 Node: Value and State Control81177
 Node: Network Discovery: mDNS and Service Location82994
 Node: STMDNSService: Service Representation83553
-Node: Property Management84528
-Node: STMDNS: The Discovery Engine85690
-Node: Signals86529
-Node: System Statistics: Performance Monitoring86898
-Node: STStats: The Telemetry Container87541
-Node: Metric Accessors88304
-Node: STStatsCollector: The Abstract Engine88947
-Node: STProcessStatsCollector: Process Monitoring89596
-Node: Services and Communication: Server and Client90277
-Node: STServer: Publishing a Service90855
-Node: Service Metadata92597
-Node: STClient: Consuming a Service93271
-Node: Client Connection State94484
-Node: Starting a Client95756
-Node: Remote Resource Access97353
-Node: GNU Free Documentation License98650
+Node: Property Management84546
+Node: STMDNS: The Discovery Engine85708
+Node: Signals86547
+Node: System Statistics: Performance Monitoring86916
+Node: STStats: The Telemetry Container87559
+Node: Metric Accessors88322
+Node: STStatsCollector: The Abstract Engine88965
+Node: STProcessStatsCollector: Process Monitoring89614
+Node: Services and Communication: Server and Client90295
+Node: STServer: Publishing a Service90873
+Node: Service Metadata92615
+Node: STClient: Consuming a Service93289
+Node: Client Connection State94502
+Node: Starting a Client95774
+Node: Remote Resource Access97371
+Node: GNU Free Documentation License98668
 
 End Tag Table
 
