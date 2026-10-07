@@ -19,7 +19,7 @@
 AM_CFLAGS = $(ST_CORE_CFLAGS) -I$(top_srcdir)/include
 AM_LDFLAGS = $(ST_CORE_LIBS) -L$(top_builddir)/lib -lstarter-core -lm
 
-TESTS = test-input test-output test-stats test-process-stats-collector test-mdns test-mysql-client test-server test-client test-client-async test-client-server test-client-server-async test-client-server-armageddon test-client-server-armageddon-async
+TESTS = test-input test-output test-stats test-process-stats-collector test-mdns test-mysql-client test-server test-client test-client-async test-client-server test-client-server-async test-client-server-armageddon test-client-server-armageddon-async test-engine
 check_PROGRAMS = $(TESTS)
 
 test_input_SOURCES = test-input.c
@@ -75,6 +75,19 @@ test_client_server_armageddon_LDADD = $(AM_LDFLAGS)
 test_client_server_armageddon_async_SOURCES = test-client-server-armageddon-async.c
 test_client_server_armageddon_async_CFLAGS = $(AM_CFLAGS)
 test_client_server_armageddon_async_LDADD = $(AM_LDFLAGS)
+
+# Engine lives in src/ (not libstarter-core); link the already-built objects.
+test_engine_SOURCES = test-engine.c
+test_engine_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/src -I$(top_srcdir)/lib
+test_engine_LDADD = \
+	$(top_builddir)/src/starter_core-engine.o \
+	$(top_builddir)/src/starter_core-expr.o \
+	$(top_builddir)/src/starter_core-var.o \
+	$(AM_LDFLAGS)
+test_engine_DEPENDENCIES = \
+	$(top_builddir)/src/starter_core-engine.o \
+	$(top_builddir)/src/starter_core-expr.o \
+	$(top_builddir)/src/starter_core-var.o
 
 # 1. Regola di compilazione automatica per il .so del mock
 # Viene compilato in automatico prima di lanciare i test

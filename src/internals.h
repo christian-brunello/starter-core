@@ -137,6 +137,7 @@ Expr *expr_new_func_changed (GPtrArray * args);
 gdouble expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
 		   GHashTable * variables, gdouble * res, GError ** error);
 gchar *expr_describe (Expr * self, GString * s);
+gboolean expr_equal (const Expr * a, const Expr * b);
 gboolean expr_have_ref_to (Expr * self, const gchar * id,
 			   GHashTable * variables);
 
@@ -146,7 +147,8 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      STVar *st_var_new (const gchar * name, Expr * value);
      const gchar *st_var_get_name (const STVar * self);
      Expr *st_var_get_value (const STVar * self);
-     void st_var_set_value (STVar * self, Expr * value);
+     /* Returns TRUE if the stored expression changed (and "changed" was emitted). */
+     gboolean st_var_set_value (STVar * self, Expr * value);
 
      typedef struct
      {

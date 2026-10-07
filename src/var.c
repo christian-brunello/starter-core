@@ -97,15 +97,15 @@ st_var_get_value (const STVar * self)
   return self->value;
 }
 
-void
+gboolean
 st_var_set_value (STVar * self, Expr * value)
 {
-  gboolean changed = self->value != value;
+  if (expr_equal (self->value, value))
+    return FALSE;
 
   expr_unref (self->value);
-
   self->value = expr_ref (value);
+  g_signal_emit (self, st_var_signals[ST_VAR_SIGNAL_CHANGED], 0);
 
-  if (changed)
-    g_signal_emit (self, st_var_signals[ST_VAR_SIGNAL_CHANGED], 0);
+  return TRUE;
 }

@@ -261,7 +261,10 @@ Your Core is now standing by, ready for orders. What happens next depends entire
 The rules file is the true heart of your system. This is where your abstract ideas turn into reality: 
 "@emph{If it rains, close the shutters}", or "@emph{If it’s a sunny day, run the irrigation at sunset}".
 
-By default, this file is located at @file{@var{installdir}/etc/starter/rules.conf}. To help you master the @acronym{STARTER} syntax, we’ll use the provided example services. Let’s open the file and write our very first logic block:
+The live rules file is typically @file{@var{installdir}/etc/starter/rules.conf}
+(create it on the target host; package installs only
+@file{rules.conf.example} so upgrades never overwrite your production rules).
+To help you master the @acronym{STARTER} syntax, we’ll use the provided example services. Let’s open the file and write our very first logic block:
 
 @example
 beep:status @{
@@ -965,7 +968,7 @@ int main(int argc, char *argv[]) @{
 @node The Rule: Closing the Loop
 @subsection The Rule: Closing the Loop
 
-With the service broadcasting and listening, we just need the "brain" to make a decision. Open your @file{rules.conf} and drop this in:
+With the service broadcasting and listening, we just need the "brain" to make a decision. Open your rules file (see @file{rules.conf.example}) and drop this in:
 
 @example
 myFirstOutput @{

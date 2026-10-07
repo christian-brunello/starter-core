@@ -148,7 +148,12 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 			    assign_describe (self, s));
 	}
 
-      st_var_set_value (p, self->rval);
+      if (!st_var_set_value (p, self->rval))
+	{
+	  VERBOSE_2_PRINTF
+	    ("Avoid variable set because expression is unchanged");
+	  return TRUE;
+	}
 
       LOGI ("rule applied: %s", self->id);
       VERBOSE_1_PRINTF ("rule applied: %s", self->id);
@@ -164,8 +169,8 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 
   g_set_error (error,
 	       ST_ERROR,
-	       ST_ERROR_INVALID_VALUE,
-	       "cannot lookup identrifier %s", self->id);
+	       ST_ERROR_UNDEFINED_IDENTIFIER,
+	       "cannot lookup identifier %s", self->id);
 
   return FALSE;
 }
@@ -416,13 +421,20 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
   if (cond_res)
     {
       guint i;
+      gboolean ok = TRUE;
+      GError *first_error = NULL;
 
       VERBOSE_2_PRINTF ("trigger condition true, apply %u assignment(s)",
 			self->ass->len);
 
+      /*
+       * Unlike label blocks (single assignment), a TRIGGER may list several
+       * assignments: keep going if one fails so the others still run.
+       */
       for (i = 0; i < self->ass->len; i++)
 	{
 	  Assign *ass = self->ass->pdata[i];
+	  GError *xerror = NULL;
 
 	  if (verbose_level >= VERBOSE_LEVEL_3)
 	    {
@@ -434,8 +446,23 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
 		 expr_describe (self->cond, s), assign_describe (ass, s2));
 	    }
 
-	  if (!assign_apply (ass, inputs, outputs, variables, error))
-	    return FALSE;
+	  if (!assign_apply (ass, inputs, outputs, variables, &xerror))
+	    {
+	      ok = FALSE;
+	      LOGW ("trigger assign failed (%s): %s",
+		    ass->id,
+		    xerror ? xerror->message : "unknown error");
+	      if (first_error == NULL)
+		first_error = xerror;
+	      else
+		g_error_free (xerror);
+	    }
+	}
+
+      if (!ok)
+	{
+	  g_propagate_error (error, first_error);
+	  return FALSE;
 	}
     }
   else
@@ -579,8 +606,11 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 	      (self->labels->pdata[i], inputs, outputs, self->variables,
 	       &xerror))
 	    {
-	      LOGE ("apply label block failed: %s",
-		    xerror ? xerror->message : "unknown error");
+	      if (xerror && xerror->code == ST_ERROR_UNDEFINED_IDENTIFIER)
+		LOGW ("apply label block failed: %s", xerror->message);
+	      else
+		LOGE ("apply label block failed: %s",
+		      xerror ? xerror->message : "unknown error");
 	      if (ST_LOG_DEBUG_ENABLED ())
 		{
 		  g_string_truncate (s, 0);
@@ -618,8 +648,11 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 	      (self->triggers->pdata[i], inputs, outputs, self->variables,
 	       &xerror))
 	    {
-	      LOGE ("apply trigger failed: %s",
-		    xerror ? xerror->message : "unknown error");
+	      if (xerror && xerror->code == ST_ERROR_UNDEFINED_IDENTIFIER)
+		LOGW ("apply trigger failed: %s", xerror->message);
+	      else
+		LOGE ("apply trigger failed: %s",
+		      xerror ? xerror->message : "unknown error");
 	      if (ST_LOG_DEBUG_ENABLED ())
 		{
 		  g_string_truncate (s, 0);

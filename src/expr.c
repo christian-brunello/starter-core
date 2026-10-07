@@ -230,7 +230,7 @@ ref_expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
 
   g_set_error (error,
 	       ST_ERROR,
-	       ST_ERROR_INVALID_VALUE,
+	       ST_ERROR_UNDEFINED_IDENTIFIER,
 	       "%s: undefined identifier: %s", __FUNCTION__, self->data.ref);
 
   return FALSE;
@@ -577,6 +577,49 @@ expr_describe (Expr * self, GString * s)
 		     self, self->type, self->left, self->right, self->nref);
 
   return s->str;
+}
+
+gboolean
+expr_equal (const Expr * a, const Expr * b)
+{
+  guint i;
+
+  if (a == b)
+    return TRUE;
+  if (a == NULL || b == NULL)
+    return FALSE;
+  if (a->type != b->type)
+    return FALSE;
+
+  switch (a->type)
+    {
+    case EXPR_TYPE_LITERAL:
+      return a->data.literal == b->data.literal;
+
+    case EXPR_TYPE_REF:
+      return g_strcmp0 (a->data.ref, b->data.ref) == 0;
+
+    case EXPR_TYPE_OP:
+      return g_strcmp0 (a->data.op, b->data.op) == 0
+	&& expr_equal (a->left, b->left) && expr_equal (a->right, b->right);
+
+    case EXPR_TYPE_FUNC:
+      if (g_strcmp0 (a->data.func.id, b->data.func.id) != 0)
+	return FALSE;
+      if (a->data.func.args == NULL || b->data.func.args == NULL)
+	return a->data.func.args == b->data.func.args;
+      if (a->data.func.args->len != b->data.func.args->len)
+	return FALSE;
+      for (i = 0; i < a->data.func.args->len; i++)
+	{
+	  if (!expr_equal (a->data.func.args->pdata[i],
+			   b->data.func.args->pdata[i]))
+	    return FALSE;
+	}
+      return TRUE;
+    }
+
+  return FALSE;
 }
 
 gboolean
