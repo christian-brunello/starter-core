@@ -72,6 +72,19 @@ if test "$MAKEINFO" = ":" ; then
     AC_MSG_ERROR([makeinfo not found. Please install it and try again.])
 fi
 
+# Optional remote debug server (GDBus TCP). Runtime bind via
+# --debug-server-bind=HOST:PORT (default 0.0.0.0:17373).
+AC_ARG_ENABLE([debug-server],
+  [AS_HELP_STRING([--enable-debug-server],
+    [build starter-core with remote debug server interface])],
+  [], [enable_debug_server=no])
+
+AS_IF([test "x$enable_debug_server" = "xyes"],
+  [AC_DEFINE([ENABLE_DEBUG_SERVER], [1],
+    [Define to 1 to build the remote debug server])])
+AM_CONDITIONAL([ENABLE_DEBUG_SERVER],
+  [test "x$enable_debug_server" = "xyes"])
+
 # =========================================================
 
 # Definisce i file Makefile da creare
@@ -86,4 +99,8 @@ AC_CONFIG_FILES([
 ])
 
 AC_OUTPUT
+
+AC_MSG_NOTICE([
+  debug-server: ${enable_debug_server}
+])
 

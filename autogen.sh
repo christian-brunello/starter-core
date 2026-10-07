@@ -11,12 +11,15 @@ else
     aclocal
 fi
 
-# 2. Genera il file configure
+# 2. Genera config.h.in da AC_DEFINE / AH_* in configure.ac
+autoheader
+
+# 3. Genera il file configure
 autoconf
 
 libtoolize
 
-# 3. Genera i file Makefile.in da Makefile.am
+# 4. Genera i file Makefile.in da Makefile.am
 automake --add-missing --copy
 
 echo "Configurazione Autotools completata. Ora esegui: ./configure"

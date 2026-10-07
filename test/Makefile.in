@@ -112,8 +112,12 @@ TESTS = test-input$(EXEEXT) test-output$(EXEEXT) test-stats$(EXEEXT) \
 	test-client-server$(EXEEXT) test-client-server-async$(EXEEXT) \
 	test-client-server-armageddon$(EXEEXT) \
 	test-client-server-armageddon-async$(EXEEXT) \
-	test-engine$(EXEEXT)
-check_PROGRAMS = $(am__EXEEXT_1)
+	test-engine$(EXEEXT) $(am__EXEEXT_1)
+check_PROGRAMS = $(am__EXEEXT_2) $(am__EXEEXT_1)
+
+# Debug server is optional (--enable-debug-server); same linking pattern as engine.
+@ENABLE_DEBUG_SERVER_TRUE@am__append_1 = test-debug-server
+@ENABLE_DEBUG_SERVER_TRUE@am__append_2 = test-debug-server
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -127,7 +131,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__EXEEXT_1 = test-input$(EXEEXT) test-output$(EXEEXT) \
+@ENABLE_DEBUG_SERVER_TRUE@am__EXEEXT_1 = test-debug-server$(EXEEXT)
+am__EXEEXT_2 = test-input$(EXEEXT) test-output$(EXEEXT) \
 	test-stats$(EXEEXT) test-process-stats-collector$(EXEEXT) \
 	test-mdns$(EXEEXT) test-mysql-client$(EXEEXT) \
 	test-server$(EXEEXT) test-client$(EXEEXT) \
@@ -135,7 +140,7 @@ am__EXEEXT_1 = test-input$(EXEEXT) test-output$(EXEEXT) \
 	test-client-server-async$(EXEEXT) \
 	test-client-server-armageddon$(EXEEXT) \
 	test-client-server-armageddon-async$(EXEEXT) \
-	test-engine$(EXEEXT)
+	test-engine$(EXEEXT) $(am__EXEEXT_1)
 am_test_client_OBJECTS = test_client-test-client.$(OBJEXT)
 test_client_OBJECTS = $(am_test_client_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -190,6 +195,13 @@ test_client_server_async_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_client_server_async_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am__test_debug_server_SOURCES_DIST = test-debug-server.c
+@ENABLE_DEBUG_SERVER_TRUE@am_test_debug_server_OBJECTS = test_debug_server-test-debug-server.$(OBJEXT)
+test_debug_server_OBJECTS = $(am_test_debug_server_OBJECTS)
+test_debug_server_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_debug_server_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
 am_test_engine_OBJECTS = test_engine-test-engine.$(OBJEXT)
 test_engine_OBJECTS = $(am_test_engine_OBJECTS)
 test_engine_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -261,6 +273,7 @@ am__depfiles_remade = ./$(DEPDIR)/test_client-test-client.Po \
 	./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po \
 	./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po \
 	./$(DEPDIR)/test_client_server_async-test-client-server-async.Po \
+	./$(DEPDIR)/test_debug_server-test-debug-server.Po \
 	./$(DEPDIR)/test_engine-test-engine.Po \
 	./$(DEPDIR)/test_input-test-input.Po \
 	./$(DEPDIR)/test_mdns-test-mdns.Po \
@@ -292,7 +305,8 @@ SOURCES = $(test_client_SOURCES) $(test_client_async_SOURCES) \
 	$(test_client_server_SOURCES) \
 	$(test_client_server_armageddon_SOURCES) \
 	$(test_client_server_armageddon_async_SOURCES) \
-	$(test_client_server_async_SOURCES) $(test_engine_SOURCES) \
+	$(test_client_server_async_SOURCES) \
+	$(test_debug_server_SOURCES) $(test_engine_SOURCES) \
 	$(test_input_SOURCES) $(test_mdns_SOURCES) \
 	$(test_mysql_client_SOURCES) $(test_output_SOURCES) \
 	$(test_process_stats_collector_SOURCES) $(test_server_SOURCES) \
@@ -301,7 +315,8 @@ DIST_SOURCES = $(test_client_SOURCES) $(test_client_async_SOURCES) \
 	$(test_client_server_SOURCES) \
 	$(test_client_server_armageddon_SOURCES) \
 	$(test_client_server_armageddon_async_SOURCES) \
-	$(test_client_server_async_SOURCES) $(test_engine_SOURCES) \
+	$(test_client_server_async_SOURCES) \
+	$(am__test_debug_server_SOURCES_DIST) $(test_engine_SOURCES) \
 	$(test_input_SOURCES) $(test_mdns_SOURCES) \
 	$(test_mysql_client_SOURCES) $(test_output_SOURCES) \
 	$(test_process_stats_collector_SOURCES) $(test_server_SOURCES) \
@@ -729,6 +744,21 @@ test_engine_DEPENDENCIES = \
 	$(top_builddir)/src/starter_core-expr.o \
 	$(top_builddir)/src/starter_core-var.o
 
+@ENABLE_DEBUG_SERVER_TRUE@test_debug_server_SOURCES = test-debug-server.c
+@ENABLE_DEBUG_SERVER_TRUE@test_debug_server_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/src -I$(top_srcdir)/lib
+@ENABLE_DEBUG_SERVER_TRUE@test_debug_server_LDADD = \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-debug-server.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-engine.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-expr.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-var.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(AM_LDFLAGS)
+
+@ENABLE_DEBUG_SERVER_TRUE@test_debug_server_DEPENDENCIES = \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-debug-server.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-engine.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-expr.o \
+@ENABLE_DEBUG_SERVER_TRUE@	$(top_builddir)/src/starter_core-var.o
+
 
 # 3. L'AUTOMAZIONE CRUCIALE: Inietta il preload automaticamente in 'make check'
 # Usiamo abs_builddir per avere il percorso assoluto inattaccabile da ld.so
@@ -806,6 +836,10 @@ test-client-server-async$(EXEEXT): $(test_client_server_async_OBJECTS) $(test_cl
 	@rm -f test-client-server-async$(EXEEXT)
 	$(AM_V_CCLD)$(test_client_server_async_LINK) $(test_client_server_async_OBJECTS) $(test_client_server_async_LDADD) $(LIBS)
 
+test-debug-server$(EXEEXT): $(test_debug_server_OBJECTS) $(test_debug_server_DEPENDENCIES) $(EXTRA_test_debug_server_DEPENDENCIES) 
+	@rm -f test-debug-server$(EXEEXT)
+	$(AM_V_CCLD)$(test_debug_server_LINK) $(test_debug_server_OBJECTS) $(test_debug_server_LDADD) $(LIBS)
+
 test-engine$(EXEEXT): $(test_engine_OBJECTS) $(test_engine_DEPENDENCIES) $(EXTRA_test_engine_DEPENDENCIES) 
 	@rm -f test-engine$(EXEEXT)
 	$(AM_V_CCLD)$(test_engine_LINK) $(test_engine_OBJECTS) $(test_engine_LDADD) $(LIBS)
@@ -850,6 +884,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_client_server_async-test-client-server-async.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_debug_server-test-debug-server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_engine-test-engine.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_input-test-input.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mdns-test-mdns.Po@am__quote@ # am--include-marker
@@ -969,6 +1004,20 @@ test_client_server_async-test-client-server-async.obj: test-client-server-async.
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-client-server-async.c' object='test_client_server_async-test-client-server-async.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_client_server_async_CFLAGS) $(CFLAGS) -c -o test_client_server_async-test-client-server-async.obj `if test -f 'test-client-server-async.c'; then $(CYGPATH_W) 'test-client-server-async.c'; else $(CYGPATH_W) '$(srcdir)/test-client-server-async.c'; fi`
+
+test_debug_server-test-debug-server.o: test-debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_debug_server_CFLAGS) $(CFLAGS) -MT test_debug_server-test-debug-server.o -MD -MP -MF $(DEPDIR)/test_debug_server-test-debug-server.Tpo -c -o test_debug_server-test-debug-server.o `test -f 'test-debug-server.c' || echo '$(srcdir)/'`test-debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_debug_server-test-debug-server.Tpo $(DEPDIR)/test_debug_server-test-debug-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-debug-server.c' object='test_debug_server-test-debug-server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_debug_server_CFLAGS) $(CFLAGS) -c -o test_debug_server-test-debug-server.o `test -f 'test-debug-server.c' || echo '$(srcdir)/'`test-debug-server.c
+
+test_debug_server-test-debug-server.obj: test-debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_debug_server_CFLAGS) $(CFLAGS) -MT test_debug_server-test-debug-server.obj -MD -MP -MF $(DEPDIR)/test_debug_server-test-debug-server.Tpo -c -o test_debug_server-test-debug-server.obj `if test -f 'test-debug-server.c'; then $(CYGPATH_W) 'test-debug-server.c'; else $(CYGPATH_W) '$(srcdir)/test-debug-server.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_debug_server-test-debug-server.Tpo $(DEPDIR)/test_debug_server-test-debug-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test-debug-server.c' object='test_debug_server-test-debug-server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_debug_server_CFLAGS) $(CFLAGS) -c -o test_debug_server-test-debug-server.obj `if test -f 'test-debug-server.c'; then $(CYGPATH_W) 'test-debug-server.c'; else $(CYGPATH_W) '$(srcdir)/test-debug-server.c'; fi`
 
 test_engine-test-engine.o: test-engine.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_engine_CFLAGS) $(CFLAGS) -MT test_engine-test-engine.o -MD -MP -MF $(DEPDIR)/test_engine-test-engine.Tpo -c -o test_engine-test-engine.o `test -f 'test-engine.c' || echo '$(srcdir)/'`test-engine.c
@@ -1379,6 +1428,13 @@ test-engine.log: test-engine$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-debug-server.log: test-debug-server$(EXEEXT)
+	@p='test-debug-server$(EXEEXT)'; \
+	b='test-debug-server'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -1478,6 +1534,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
 	-rm -f ./$(DEPDIR)/test_client_server_async-test-client-server-async.Po
+	-rm -f ./$(DEPDIR)/test_debug_server-test-debug-server.Po
 	-rm -f ./$(DEPDIR)/test_engine-test-engine.Po
 	-rm -f ./$(DEPDIR)/test_input-test-input.Po
 	-rm -f ./$(DEPDIR)/test_mdns-test-mdns.Po
@@ -1537,6 +1594,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon-test-client-server-armageddon.Po
 	-rm -f ./$(DEPDIR)/test_client_server_armageddon_async-test-client-server-armageddon-async.Po
 	-rm -f ./$(DEPDIR)/test_client_server_async-test-client-server-async.Po
+	-rm -f ./$(DEPDIR)/test_debug_server-test-debug-server.Po
 	-rm -f ./$(DEPDIR)/test_engine-test-engine.Po
 	-rm -f ./$(DEPDIR)/test_input-test-input.Po
 	-rm -f ./$(DEPDIR)/test_mdns-test-mdns.Po

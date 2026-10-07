@@ -23,10 +23,16 @@
 
 #include "internals.h"
 
+#ifdef ENABLE_DEBUG_SERVER
+#include "debug-server.h"
+#endif
+
 typedef struct
 {
   STCore *core;
   gchar *name;
+  gchar *address;
+  guint16 port;
   STClient *client;
   GCancellable *cancellable;
 } PendingClient;
@@ -42,11 +48,13 @@ pending_client_free (gpointer data)
   g_clear_object (&pending->cancellable);
   g_clear_object (&pending->client);
   g_free (pending->name);
+  g_free (pending->address);
   g_free (pending);
 }
 
 static void
-register_ready_client (STCore * self, const gchar * name, STClient * client)
+register_ready_client (STCore * self, const gchar * name, STClient * client,
+		       const gchar * address, guint16 port)
 {
   const GPtrArray *inputs;
   const GPtrArray *outputs;
@@ -59,6 +67,15 @@ register_ready_client (STCore * self, const gchar * name, STClient * client)
   outputs = st_client_get_outputs (client);
 
   LOGI ("peer ready: %s", name);
+
+#ifdef ENABLE_DEBUG_SERVER
+  if (self->debug)
+    st_core_debug_emit_peer_changed (self->debug, name, address, port,
+				     (guint) ST_CLIENT_STATE_READY, "ready");
+#else
+  (void) address;
+  (void) port;
+#endif
   LOGD ("peer ready: %s inputs=%u outputs=%u", name, inputs->len,
 	outputs->len);
 
@@ -156,6 +173,12 @@ register_ready_client (STCore * self, const gchar * name, STClient * client)
   {
     GError *error = NULL;
 
+#ifdef ENABLE_DEBUG_SERVER
+    if (self->debug
+	&& st_core_debug_intercept_apply (self->debug, NULL))
+      return;
+#endif
+
     if (!engine_apply
 	(self->engine, self->all_inputs, self->all_outputs, NULL, &error))
       {
@@ -190,16 +213,25 @@ on_client_start_finished (GObject * source, GAsyncResult * result,
       LOGE ("error starting client for service %s: %s", pending->name,
 	    error ? error->message : "unknown error");
       g_clear_error (&error);
+#ifdef ENABLE_DEBUG_SERVER
+      if (self->debug)
+	st_core_debug_emit_peer_changed (self->debug, pending->name,
+					 pending->address, pending->port,
+					 (guint) ST_CLIENT_STATE_FAILED,
+					 "failed");
+#endif
       g_hash_table_remove (self->pending_clients, pending->name);
       return;
     }
 
   /* Steal so pending_client_free does not cancel/unref the live client. */
   g_hash_table_steal (self->pending_clients, pending->name);
-  register_ready_client (self, pending->name, pending->client);
+  register_ready_client (self, pending->name, pending->client,
+			 pending->address, pending->port);
   g_clear_object (&pending->cancellable);
   g_clear_object (&pending->client);
   g_free (pending->name);
+  g_free (pending->address);
   g_free (pending);
 }
 
@@ -211,13 +243,29 @@ on_mdns_service_removed (STMDNS * mdns, const gchar * name,
 
   if (g_hash_table_contains (self->pending_clients, name))
     {
+      PendingClient *pending = g_hash_table_lookup (self->pending_clients, name);
+
       LOGI ("peer removed (pending): %s", name);
+#ifdef ENABLE_DEBUG_SERVER
+      if (self->debug && pending)
+	st_core_debug_emit_peer_changed (self->debug, name,
+					 pending->address, pending->port,
+					 (guint) ST_CLIENT_STATE_FAILED,
+					 "removed");
+#endif
       g_hash_table_remove (self->pending_clients, name);
     }
 
   if (g_hash_table_contains (self->clients, name))
     {
       LOGI ("peer removed: %s", name);
+
+#ifdef ENABLE_DEBUG_SERVER
+      if (self->debug)
+	st_core_debug_emit_peer_changed (self->debug, name, "", 0,
+					 (guint) ST_CLIENT_STATE_FAILED,
+					 "removed");
+#endif
 
       g_hash_table_remove (self->clients, name);
 
@@ -253,6 +301,9 @@ on_mdns_service_added (STMDNS * mdns, STMDNSService * service,
       pending = g_malloc0 (sizeof (PendingClient));
       pending->core = self;
       pending->name = g_strdup (name);
+      pending->address =
+	g_strdup (st_mdns_service_get_address (service));
+      pending->port = st_mdns_service_get_port (service);
       pending->client = st_client_new ();
       pending->cancellable = g_cancellable_new ();
 
@@ -261,9 +312,17 @@ on_mdns_service_added (STMDNS * mdns, STMDNSService * service,
       LOGI ("peer connecting: %s", name);
       LOGD ("starting async client for service %s", name);
 
+#ifdef ENABLE_DEBUG_SERVER
+      if (self->debug)
+	st_core_debug_emit_peer_changed (self->debug, name,
+					 pending->address, pending->port,
+					 (guint) ST_CLIENT_STATE_PENDING,
+					 "connecting");
+#endif
+
       st_client_start_async (pending->client,
-			     st_mdns_service_get_address (service),
-			     st_mdns_service_get_port (service),
+			     pending->address,
+			     pending->port,
 			     pending->cancellable,
 			     on_client_start_finished, pending);
     }

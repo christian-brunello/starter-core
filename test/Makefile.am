@@ -89,6 +89,26 @@ test_engine_DEPENDENCIES = \
 	$(top_builddir)/src/starter_core-expr.o \
 	$(top_builddir)/src/starter_core-var.o
 
+# Debug server is optional (--enable-debug-server); same linking pattern as engine.
+if ENABLE_DEBUG_SERVER
+TESTS += test-debug-server
+check_PROGRAMS += test-debug-server
+
+test_debug_server_SOURCES = test-debug-server.c
+test_debug_server_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/src -I$(top_srcdir)/lib
+test_debug_server_LDADD = \
+	$(top_builddir)/src/starter_core-debug-server.o \
+	$(top_builddir)/src/starter_core-engine.o \
+	$(top_builddir)/src/starter_core-expr.o \
+	$(top_builddir)/src/starter_core-var.o \
+	$(AM_LDFLAGS)
+test_debug_server_DEPENDENCIES = \
+	$(top_builddir)/src/starter_core-debug-server.o \
+	$(top_builddir)/src/starter_core-engine.o \
+	$(top_builddir)/src/starter_core-expr.o \
+	$(top_builddir)/src/starter_core-var.o
+endif
+
 # 1. Regola di compilazione automatica per il .so del mock
 # Viene compilato in automatico prima di lanciare i test
 .libs/libmysqlmock.so: mysql-mock.c

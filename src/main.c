@@ -30,6 +30,10 @@
 
 #include "internals.h"
 
+#ifdef ENABLE_DEBUG_SERVER
+#include "debug-server.h"
+#endif
+
 VerboseLevel verbose_level = VERBOSE_LEVEL_1;
 
 static int version_flag = 0;
@@ -130,6 +134,11 @@ parse_command_line (STCore * self, int *argc, char ***argv)
      NULL},
     {"version", 'v', 0, G_OPTION_ARG_NONE, &version_flag,
      "Print version and exit", NULL},
+#ifdef ENABLE_DEBUG_SERVER
+    {"debug-server-bind", 0, 0, G_OPTION_ARG_STRING, &self->debug_server_bind,
+     "Debug server listen address (default: " ST_CORE_DEBUG_DEFAULT_BIND ")",
+     "HOST:PORT"},
+#endif
     {0}
   };
 
@@ -182,6 +191,19 @@ st_core_var_changed_callback (STVar * var, gpointer user_data)
       VERBOSE_2_PRINTF ("Variable changed: %s -> %s", name,
 			expr_describe (st_var_get_value (var), s));
     }
+
+#ifdef ENABLE_DEBUG_SERVER
+  if (self->debug)
+    {
+      gdouble v = 0;
+
+      st_core_debug_emit_var_changed (self->debug, var);
+      expr_eval (st_var_get_value (var), self->all_inputs, self->all_outputs,
+		 self->engine->variables, &v, NULL);
+      if (st_core_debug_intercept_change (self->debug, name, v))
+	return;
+    }
+#endif
 
   if (!engine_apply
       (self->engine, self->all_inputs, self->all_outputs, name, &error))
@@ -301,6 +323,28 @@ st_core_input_changed_callback (STInput * in, gpointer user_data)
 
   VERBOSE_2_PRINTF ("Input changed: %s -> %lf", name, val);
 
+#ifdef ENABLE_DEBUG_SERVER
+  if (self->debug)
+    {
+      st_core_debug_emit_input_changed (self->debug, in);
+      if (st_core_debug_intercept_change (self->debug, name, val))
+	{
+	  flags = st_input_get_flags (in);
+	  if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
+	    {
+	      if (!st_mysql_client_store_history
+		  (self->mysql, name, val, flags, &error))
+		{
+		  LOGE ("error insert history: %s",
+			error ? error->message : "unknown error");
+		  g_error_free (error);
+		}
+	    }
+	  return;
+	}
+    }
+#endif
+
   flags = st_input_get_flags (in);
 
   if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
@@ -336,6 +380,28 @@ st_core_output_changed_callback (STOutput * out, gpointer user_data)
 
   VERBOSE_2_PRINTF ("Output changed: %s -> %lf", name, val);
 
+#ifdef ENABLE_DEBUG_SERVER
+  if (self->debug)
+    {
+      st_core_debug_emit_output_changed (self->debug, out);
+      if (st_core_debug_intercept_change (self->debug, name, val))
+	{
+	  flags = st_output_get_flags (out);
+	  if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
+	    {
+	      if (!st_mysql_client_store_history
+		  (self->mysql, name, val, flags, &error))
+		{
+		  LOGE ("error insert history: %s",
+			error ? error->message : "unknown error");
+		  g_error_free (error);
+		}
+	    }
+	  return;
+	}
+    }
+#endif
+
   flags = st_output_get_flags (out);
 
   if ((flags & ST_IO_FLAG_NO_HISTORY) == 0)
@@ -364,6 +430,11 @@ st_core_stats_changed_callback (STStats * stats, gpointer user_data)
   GError *error = NULL;
 
   LOGD ("stats changed: %s", st_stats_get_name (stats));
+
+#ifdef ENABLE_DEBUG_SERVER
+  if (self->debug)
+    st_core_debug_emit_stats_changed (self->debug, stats);
+#endif
 
   if (!st_mysql_client_store_stats (self->mysql, stats, &error))
     {
@@ -523,12 +594,36 @@ main (int argc, char *argv[])
 
   gloop = g_main_loop_new (NULL, FALSE);
 
+#ifdef ENABLE_DEBUG_SERVER
+  {
+    GError *debug_error = NULL;
+
+    self.debug = st_core_debug_new (&self);
+    if (!st_core_debug_start (self.debug, self.debug_server_bind,
+			      &debug_error))
+      {
+	LOGE ("failed to start debug server: %s",
+	      debug_error ? debug_error->message : "unknown");
+	g_clear_error (&debug_error);
+	exit (EXIT_FAILURE);
+      }
+  }
+#endif
+
   if (!st_core_mdns_init (&self))
     exit (EXIT_FAILURE);
 
   g_main_loop_run (gloop);
 
   st_core_mdns_finish (&self);
+
+#ifdef ENABLE_DEBUG_SERVER
+  if (self.debug)
+    {
+      st_core_debug_stop (self.debug);
+      g_clear_object (&self.debug);
+    }
+#endif
 
   if (self.pending_clients)
     g_hash_table_unref (self.pending_clients);

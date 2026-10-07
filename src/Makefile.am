@@ -18,7 +18,11 @@
 
 bin_PROGRAMS = starter-core
 
-starter_core_SOURCES = internals.h rules.y lex.l main.c mdns.c expr.c var.c engine.c 
+starter_core_SOURCES = internals.h rules.y lex.l main.c mdns.c expr.c var.c engine.c
+
+if ENABLE_DEBUG_SERVER
+starter_core_SOURCES += debug-server.h debug-server.c
+endif
 
 starter_core_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) \
 			-I$(top_srcdir)/include \

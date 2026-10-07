@@ -107,6 +107,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = starter-core$(EXEEXT)
+@ENABLE_DEBUG_SERVER_TRUE@am__append_1 = debug-server.h debug-server.c
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -122,10 +123,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
+am__starter_core_SOURCES_DIST = internals.h rules.y lex.l main.c \
+	mdns.c expr.c var.c engine.c debug-server.h debug-server.c
+@ENABLE_DEBUG_SERVER_TRUE@am__objects_1 =  \
+@ENABLE_DEBUG_SERVER_TRUE@	starter_core-debug-server.$(OBJEXT)
 am_starter_core_OBJECTS = starter_core-rules.$(OBJEXT) \
 	starter_core-lex.$(OBJEXT) starter_core-main.$(OBJEXT) \
 	starter_core-mdns.$(OBJEXT) starter_core-expr.$(OBJEXT) \
-	starter_core-var.$(OBJEXT) starter_core-engine.$(OBJEXT)
+	starter_core-var.$(OBJEXT) starter_core-engine.$(OBJEXT) \
+	$(am__objects_1)
 starter_core_OBJECTS = $(am_starter_core_OBJECTS)
 am__DEPENDENCIES_1 =
 starter_core_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -151,7 +157,8 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/starter_core-engine.Po \
+am__depfiles_remade = ./$(DEPDIR)/starter_core-debug-server.Po \
+	./$(DEPDIR)/starter_core-engine.Po \
 	./$(DEPDIR)/starter_core-expr.Po \
 	./$(DEPDIR)/starter_core-lex.Po \
 	./$(DEPDIR)/starter_core-main.Po \
@@ -195,7 +202,7 @@ am__v_YACC_ = $(am__v_YACC_@AM_DEFAULT_V@)
 am__v_YACC_0 = @echo "  YACC    " $@;
 am__v_YACC_1 = 
 SOURCES = $(starter_core_SOURCES)
-DIST_SOURCES = $(starter_core_SOURCES)
+DIST_SOURCES = $(am__starter_core_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -358,7 +365,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-starter_core_SOURCES = internals.h rules.y lex.l main.c mdns.c expr.c var.c engine.c 
+starter_core_SOURCES = internals.h rules.y lex.l main.c mdns.c expr.c \
+	var.c engine.c $(am__append_1)
 starter_core_CPPFLAGS = $(AM_CPPFLAGS) $(ST_CORE_CFLAGS) \
 			-I$(top_srcdir)/include \
 			-I$(top_srcdir)/lib
@@ -480,6 +488,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/starter_core-debug-server.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/starter_core-engine.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/starter_core-expr.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/starter_core-lex.Po@am__quote@ # am--include-marker
@@ -612,6 +621,20 @@ starter_core-engine.obj: engine.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='engine.c' object='starter_core-engine.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(starter_core_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o starter_core-engine.obj `if test -f 'engine.c'; then $(CYGPATH_W) 'engine.c'; else $(CYGPATH_W) '$(srcdir)/engine.c'; fi`
+
+starter_core-debug-server.o: debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(starter_core_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT starter_core-debug-server.o -MD -MP -MF $(DEPDIR)/starter_core-debug-server.Tpo -c -o starter_core-debug-server.o `test -f 'debug-server.c' || echo '$(srcdir)/'`debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/starter_core-debug-server.Tpo $(DEPDIR)/starter_core-debug-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='debug-server.c' object='starter_core-debug-server.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(starter_core_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o starter_core-debug-server.o `test -f 'debug-server.c' || echo '$(srcdir)/'`debug-server.c
+
+starter_core-debug-server.obj: debug-server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(starter_core_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT starter_core-debug-server.obj -MD -MP -MF $(DEPDIR)/starter_core-debug-server.Tpo -c -o starter_core-debug-server.obj `if test -f 'debug-server.c'; then $(CYGPATH_W) 'debug-server.c'; else $(CYGPATH_W) '$(srcdir)/debug-server.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/starter_core-debug-server.Tpo $(DEPDIR)/starter_core-debug-server.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='debug-server.c' object='starter_core-debug-server.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(starter_core_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o starter_core-debug-server.obj `if test -f 'debug-server.c'; then $(CYGPATH_W) 'debug-server.c'; else $(CYGPATH_W) '$(srcdir)/debug-server.c'; fi`
 
 .l.c:
 	$(AM_V_LEX)$(am__skiplex) $(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)
@@ -754,7 +777,8 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/starter_core-engine.Po
+		-rm -f ./$(DEPDIR)/starter_core-debug-server.Po
+	-rm -f ./$(DEPDIR)/starter_core-engine.Po
 	-rm -f ./$(DEPDIR)/starter_core-expr.Po
 	-rm -f ./$(DEPDIR)/starter_core-lex.Po
 	-rm -f ./$(DEPDIR)/starter_core-main.Po
@@ -806,7 +830,8 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/starter_core-engine.Po
+		-rm -f ./$(DEPDIR)/starter_core-debug-server.Po
+	-rm -f ./$(DEPDIR)/starter_core-engine.Po
 	-rm -f ./$(DEPDIR)/starter_core-expr.Po
 	-rm -f ./$(DEPDIR)/starter_core-lex.Po
 	-rm -f ./$(DEPDIR)/starter_core-main.Po

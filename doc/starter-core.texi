@@ -226,6 +226,13 @@ make
 sudo make install
 @end example
 
+To build the optional remote debug server (see @ref{The Debug Server}), pass
+@option{--enable-debug-server} to @command{configure}:
+
+@example
+./configure --enable-debug-server
+@end example
+
 The Core will be installed (typically under @file{/usr/local}) and automatically configured as a @command{systemd} service. Note that the service is not enabled for auto-boot by default—we’ll leave that decision to you once everything is configured.
 
 @node Configuration
@@ -628,7 +635,8 @@ The supported options are:
 @item @code{-R} @tab @code{--rules} @tab Specify a custom path to a rules file (overrides the default @file{rules.conf}).
 @item @code{-P} @tab @code{--rules-preprocessor} @tab Define a specific command to preprocess the rules file on the fly.
 @item @code{-V} @tab @code{--verbosity} @tab Adjust the detail of the output logs (essential for troubleshooting). 
-@item @code{-v} @tab @code{--version} @tab Print the current version of the Core and exit. 
+@item @code{-v} @tab @code{--version} @tab Print the current version of the Core and exit.
+@item @tab @code{--debug-server-bind} @tab Listen address for the remote debug server (@code{HOST:PORT}). Available only when built with @option{--enable-debug-server}. Default: @code{0.0.0.0:17373}. See @ref{The Debug Server}.
 @end multitable
 
 @node Advanced Orchestration
@@ -713,6 +721,144 @@ If a rule triggers a change in an Output, the Core calls the @code{SetOutput} me
 @item Alignment
 The service receives the command and adjusts the physical or abstract hardware to match the requested value.
 @end table
+
+@node The Debug Server
+@section The Debug Server
+
+When you need to observe or steer a live Core without installing a second
+@code{STClient} against every peer, build with
+@option{--enable-debug-server} and start the process with
+@option{--debug-server-bind=@var{HOST}:@var{PORT}} (default
+@code{0.0.0.0:17373}). The Core then opens a dedicated @emph{GDBus over TCP}
+endpoint that external tools—such as a future debugger CLI—can attach to.
+
+This channel is intentionally separate from the service bus: the debugger
+talks only to the Core. Peer I/O still flows through the Core’s existing
+clients; the debug interface never opens a competing connection to a service.
+
+@node Connecting to the Debug Endpoint
+@subsection Connecting to the Debug Endpoint
+
+Clients connect with a GDBus address of the form
+@code{tcp:host=@var{HOST},port=@var{PORT}}. Anonymous authentication is
+allowed. Once connected, register on:
+
+@table @code
+@item Object path
+@code{/org/starter/core/debug}
+@item Interface
+@code{org.starter.Core.Debug}
+@end table
+
+The exact client address string is also reported by @code{GetStatus} under
+the @code{client-address} key (useful when the bind used port @code{0} and
+the kernel picked an ephemeral port).
+
+@node Debug Methods
+@subsection Debug Methods
+
+@table @code
+@item GetStatus () @result{} (a@{sv@})
+Snapshot of process state. Dictionary keys include @code{package},
+@code{version}, @code{rules-file}, @code{service-match}, @code{bind-host},
+@code{bind-port} (@code{q}), @code{client-address}, @code{peers} /
+@code{pending-peers} / @code{inputs} / @code{outputs} (@code{u}),
+@code{no-discovery} (@code{b}), @code{paused} (@code{b}),
+@code{stop-reason} / @code{stop-id} (@code{s}), and counts of
+@code{breakpoints} / @code{watchpoints} (@code{u}).
+
+@item ListPeers () @result{} (a(ssuu))
+Current peer table. Each tuple is
+@code{(@var{name}, @var{address}, @var{port}, @var{state})}, where
+@var{state} matches @code{STClientState}
+(@code{IDLE}=0, @code{PENDING}=1, @code{READY}=2, @code{FAILED}=3).
+
+@item ListInputs () @result{} (a@{s(siddddt)@})
+@itemx ListOutputs () @result{} (a@{s(siddddt)@})
+Full snapshot of the Core’s local I/O tables (@code{all_inputs} /
+@code{all_outputs}). Each dict entry uses the same shape as
+@code{InputChanged} / @code{OutputChanged}: key is the identifier; value is
+@code{(@var{description}, @var{unit}, @var{min}, @var{max}, @var{step},
+@var{value}, @var{flags})}. Debuggers should call these on attach and for
+@code{info io} so stable values (never recently changed) are still visible.
+
+@item SetInput (s @var{id}, d @var{value}, t @var{flags}) @result{} (i @var{ok})
+Writes into the Core’s local input cache for @var{id}, as if the peer had
+reported a new value. This triggers the normal
+@code{val-changed} path (and therefore rules), unless a breakpoint or
+watchpoint pauses evaluation first. Returns @code{1} on success, @code{0}
+on failure.
+
+@item SetOutput (s @var{id}, d @var{value}, t @var{flags}) @result{} (i @var{ok})
+Calls @code{st_client_set_output} on the owning peer, bypassing
+@code{MANUAL_OVERRIDE} gating so a debugger can force actuators during a
+session. Returns @code{1} on success, @code{0} on failure.
+
+@item AddBreakpoint (s @var{id}) @result{} (u @var{handle})
+@itemx RemoveBreakpoint (u @var{handle}) @result{} (b @var{ok})
+@itemx ListBreakpoints () @result{} (a(us))
+Breakpoints are keyed by I/O or variable identifier. A hit occurs when
+rules are about to run because of that @var{id} (value change @emph{or}
+apply). The Core then pauses before @code{engine_apply}. List entries are
+@code{(@var{handle}, @var{id})}.
+
+@item AddWatchpoint (s @var{id}) @result{} (u @var{handle})
+@itemx RemoveWatchpoint (u @var{handle}) @result{} (b @var{ok})
+@itemx ListWatchpoints () @result{} (a(us))
+Watchpoints fire only when the value of @var{id} changes (input, output, or
+variable). Same pause semantics as breakpoints.
+
+@item Continue ()
+Clears the paused state so rule evaluation may proceed again.
+
+@item GetPaused () @result{} (b @var{paused})
+@code{TRUE} while the Core is cooperatively stopped after a breakpoint or
+watchpoint hit.
+@end table
+
+@node Debug Signals
+@subsection Debug Signals
+
+While connected, the Core broadcasts live events on the same interface:
+
+@table @code
+@item PeerChanged (s @var{name}, s @var{address}, u @var{port}, u @var{state}, s @var{event})
+Peer lifecycle. @var{event} is one of @code{connecting}, @code{ready},
+@code{failed}, or @code{removed}. On @code{removed}/@code{failed} the peer
+is dropped from the @code{ListPeers} table.
+
+@item InputChanged (@{s(siddddt)@} @var{object})
+@itemx OutputChanged (@{s(siddddt)@} @var{object})
+Same dict entry shape used by @code{org.starter.Service} snapshots: key is
+the identifier; value is
+@code{(@var{description}, @var{unit}, @var{min}, @var{max}, @var{step},
+@var{value}, @var{flags})}.
+
+@item StatsChanged (s @var{name})
+A peer’s statistics object was updated (@var{name} identifies the stats
+bundle).
+
+@item VarChanged (s @var{name}, s @var{describe})
+A Core variable changed; @var{describe} is the expression engine’s textual
+dump of the new value.
+
+@item Stopped (s @var{reason}, s @var{id}, d @var{value}, u @var{handle})
+Emitted when evaluation pauses. @var{reason} is @code{breakpoint} or
+@code{watchpoint}; @var{id} and @var{handle} identify the point that fired.
+@end table
+
+@node Pause Semantics
+@subsection Pause Semantics
+
+Pause is @emph{cooperative}: history recording and sniff signals keep
+running, but the Core skips @code{engine_apply} until @code{Continue}.
+While already paused, further matching intercepts stay paused (they do not
+queue additional stops). A full re-evaluation with a @code{NULL} trigger id
+(for example after a peer becomes ready) honors an existing pause but does
+not newly match breakpoints by id.
+
+Use breakpoints when you care that rules are about to run for an
+identifier; use watchpoints when you only care that its value moved.
 
 @node The starter-core Library: Building Your Own Ecosystem
 @chapter The starter-core Library: Building Your Own Ecosystem

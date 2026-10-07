@@ -238,6 +238,11 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
        gchar *rules_file;
        gchar *rules_preprocessor;
        Engine *engine;
+#ifdef ENABLE_DEBUG_SERVER
+       /* Runtime --debug-server-bind=HOST:PORT (default applied at start). */
+       gchar *debug_server_bind;
+       struct _STCoreDebug *debug;
+#endif
      };
 
 #define DISCOVERY_ENABLED(self) ((self)->no_discovery == FALSE)

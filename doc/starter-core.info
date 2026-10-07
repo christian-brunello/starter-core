@@ -429,6 +429,11 @@ right at home.  Run the following commands from your terminal:
      make
      sudo make install
 
+To build the optional remote debug server (see *note The Debug
+Server::), pass '--enable-debug-server' to 'configure':
+
+     ./configure --enable-debug-server
+
 The Core will be installed (typically under '/usr/local') and
 automatically configured as a 'systemd' service.  Note that the service
 is not enabled for auto-boot by default—we’ll leave that decision to you
@@ -1038,6 +1043,11 @@ Option  Long option            Description
                                (essential for troubleshooting).
 '-v'    '--version'            Print the current version of the Core and
                                exit.
+        '--debug-server-bind'  Listen address for the remote debug
+                               server ('HOST:PORT').  Available only
+                               when built with '--enable-debug-server'.
+                               Default: '0.0.0.0:17373'.  See
+                               *note The Debug Server::.
 
 * Menu:
 
@@ -1095,9 +1105,10 @@ automation network.
 * Menu:
 
 * A Truly Distributed Ecosystem::
+* The Debug Server::
 
 
-File: starter-core.info,  Node: A Truly Distributed Ecosystem,  Up: System Architecture: Under the Hood
+File: starter-core.info,  Node: A Truly Distributed Ecosystem,  Next: The Debug Server,  Up: System Architecture: Under the Hood
 
 3.1 A Truly Distributed Ecosystem
 =================================
@@ -1194,6 +1205,157 @@ _Action_
 _Alignment_
      The service receives the command and adjusts the physical or
      abstract hardware to match the requested value.
+
+
+File: starter-core.info,  Node: The Debug Server,  Prev: A Truly Distributed Ecosystem,  Up: System Architecture: Under the Hood
+
+3.2 The Debug Server
+====================
+
+When you need to observe or steer a live Core without installing a
+second 'STClient' against every peer, build with '--enable-debug-server'
+and start the process with '--debug-server-bind=HOST:PORT' (default
+'0.0.0.0:17373').  The Core then opens a dedicated _GDBus over TCP_
+endpoint that external tools—such as a future debugger CLI—can attach
+to.
+
+This channel is intentionally separate from the service bus: the
+debugger talks only to the Core.  Peer I/O still flows through the
+Core’s existing clients; the debug interface never opens a competing
+connection to a service.
+
+* Menu:
+
+* Connecting to the Debug Endpoint::
+* Debug Methods::
+* Debug Signals::
+* Pause Semantics::
+
+
+File: starter-core.info,  Node: Connecting to the Debug Endpoint,  Next: Debug Methods,  Up: The Debug Server
+
+3.2.1 Connecting to the Debug Endpoint
+--------------------------------------
+
+Clients connect with a GDBus address of the form
+'tcp:host=HOST,port=PORT'.  Anonymous authentication is allowed.  Once
+connected, register on:
+
+'Object path'
+     '/org/starter/core/debug'
+'Interface'
+     'org.starter.Core.Debug'
+
+The exact client address string is also reported by 'GetStatus' under
+the 'client-address' key (useful when the bind used port '0' and the
+kernel picked an ephemeral port).
+
+
+File: starter-core.info,  Node: Debug Methods,  Next: Debug Signals,  Prev: Connecting to the Debug Endpoint,  Up: The Debug Server
+
+3.2.2 Debug Methods
+-------------------
+
+'GetStatus () => (a{sv})'
+     Snapshot of process state.  Dictionary keys include 'package',
+     'version', 'rules-file', 'service-match', 'bind-host', 'bind-port'
+     ('q'), 'client-address', 'peers' / 'pending-peers' / 'inputs' /
+     'outputs' ('u'), 'no-discovery' ('b'), 'paused' ('b'),
+     'stop-reason' / 'stop-id' ('s'), and counts of 'breakpoints' /
+     'watchpoints' ('u').
+
+'ListPeers () => (a(ssuu))'
+     Current peer table.  Each tuple is '(NAME, ADDRESS, PORT, STATE)',
+     where STATE matches 'STClientState' ('IDLE'=0, 'PENDING'=1,
+     'READY'=2, 'FAILED'=3).
+
+'ListInputs () => (a{s(siddddt)})'
+'ListOutputs () => (a{s(siddddt)})'
+     Full snapshot of the Core’s local I/O tables ('all_inputs' /
+     'all_outputs').  Each dict entry uses the same shape as
+     'InputChanged' / 'OutputChanged': key is the identifier; value is
+     '(DESCRIPTION, UNIT, MIN, MAX, STEP, VALUE, FLAGS)'.  Debuggers
+     should call these on attach and for 'info io' so stable values
+     (never recently changed) are still visible.
+
+'SetInput (s ID, d VALUE, t FLAGS) => (i OK)'
+     Writes into the Core’s local input cache for ID, as if the peer had
+     reported a new value.  This triggers the normal 'val-changed' path
+     (and therefore rules), unless a breakpoint or watchpoint pauses
+     evaluation first.  Returns '1' on success, '0' on failure.
+
+'SetOutput (s ID, d VALUE, t FLAGS) => (i OK)'
+     Calls 'st_client_set_output' on the owning peer, bypassing
+     'MANUAL_OVERRIDE' gating so a debugger can force actuators during a
+     session.  Returns '1' on success, '0' on failure.
+
+'AddBreakpoint (s ID) => (u HANDLE)'
+'RemoveBreakpoint (u HANDLE) => (b OK)'
+'ListBreakpoints () => (a(us))'
+     Breakpoints are keyed by I/O or variable identifier.  A hit occurs
+     when rules are about to run because of that ID (value change _or_
+     apply).  The Core then pauses before 'engine_apply'.  List entries
+     are '(HANDLE, ID)'.
+
+'AddWatchpoint (s ID) => (u HANDLE)'
+'RemoveWatchpoint (u HANDLE) => (b OK)'
+'ListWatchpoints () => (a(us))'
+     Watchpoints fire only when the value of ID changes (input, output,
+     or variable).  Same pause semantics as breakpoints.
+
+'Continue ()'
+     Clears the paused state so rule evaluation may proceed again.
+
+'GetPaused () => (b PAUSED)'
+     'TRUE' while the Core is cooperatively stopped after a breakpoint
+     or watchpoint hit.
+
+
+File: starter-core.info,  Node: Debug Signals,  Next: Pause Semantics,  Prev: Debug Methods,  Up: The Debug Server
+
+3.2.3 Debug Signals
+-------------------
+
+While connected, the Core broadcasts live events on the same interface:
+
+'PeerChanged (s NAME, s ADDRESS, u PORT, u STATE, s EVENT)'
+     Peer lifecycle.  EVENT is one of 'connecting', 'ready', 'failed',
+     or 'removed'.  On 'removed'/'failed' the peer is dropped from the
+     'ListPeers' table.
+
+'InputChanged ({s(siddddt)} OBJECT)'
+'OutputChanged ({s(siddddt)} OBJECT)'
+     Same dict entry shape used by 'org.starter.Service' snapshots: key
+     is the identifier; value is '(DESCRIPTION, UNIT, MIN, MAX, STEP,
+     VALUE, FLAGS)'.
+
+'StatsChanged (s NAME)'
+     A peer’s statistics object was updated (NAME identifies the stats
+     bundle).
+
+'VarChanged (s NAME, s DESCRIBE)'
+     A Core variable changed; DESCRIBE is the expression engine’s
+     textual dump of the new value.
+
+'Stopped (s REASON, s ID, d VALUE, u HANDLE)'
+     Emitted when evaluation pauses.  REASON is 'breakpoint' or
+     'watchpoint'; ID and HANDLE identify the point that fired.
+
+
+File: starter-core.info,  Node: Pause Semantics,  Prev: Debug Signals,  Up: The Debug Server
+
+3.2.4 Pause Semantics
+---------------------
+
+Pause is _cooperative_: history recording and sniff signals keep
+running, but the Core skips 'engine_apply' until 'Continue'.  While
+already paused, further matching intercepts stay paused (they do not
+queue additional stops).  A full re-evaluation with a 'NULL' trigger id
+(for example after a peer becomes ready) honors an existing pause but
+does not newly match breakpoints by id.
+
+Use breakpoints when you care that rules are about to run for an
+identifier; use watchpoints when you only care that its value moved.
 
 
 File: starter-core.info,  Node: The starter-core Library: Building Your Own Ecosystem,  Next: Conclusions: The World is Your Input,  Prev: System Architecture: Under the Hood,  Up: Top
@@ -3036,92 +3198,97 @@ Node: System Preparation15110
 Node: Dependencies15899
 Node: Database Initialization16617
 Node: Download and Installation17173
-Node: Configuration17903
-Node: Where to go from here?18586
-Node: The Rules File: Where the Magic Happens19282
-Node: Identifiers: The Power of Abstraction20802
-Node: The Anatomy of a Logic Block21819
-Node: Connecting the Dots: Events in Action22572
-Node: Dynamic Control: The TRIGGER Construct24256
-Node: Choosing Your Tool25298
-Node: Examples25953
-Node: Variables: The Connective Tissue26579
-Node: The Power of Propagation27304
-Node: How the System "Thinks"27847
-Node: Why Use Variables?28602
-Node: Expressions: The Engine of STARTER29329
-Node: Constant Values and Types30016
-Node: Boolean Logic: Everything is a Number30581
-Node: Comparison and Logical Operators31520
-Node: Mathematical Operators32505
-Node: Built-in Functions33094
-Node: The Mechanics of Evaluation: Snapshots vs. Live Streams33871
-Node: The EVAL Function: Killing the Link35253
-Node: Why This Matters: Architectural Elegance36246
-Node: The Boot-Time Paradox37082
-Node: Preprocessing: The Secret Weapon37761
-Node: Power Unleashed: The M4 Default38700
-Node: Swapping the Engine39413
-Node: Command Line Options: Taking the Reins40289
-Node: Advanced Orchestration42035
-Node: The Override Hierarchy43113
-Node: System Architecture: Under the Hood43631
-Node: A Truly Distributed Ecosystem44174
-Node: ZeroConf: Plug & Play Reality45076
-Node: Communication via D-Bus RPC45683
-Node: The Operational Loop47246
-Node: The starter-core Library: Building Your Own Ecosystem48039
-Node: The Skeleton: first-service.c48820
-Node: Compiling and Running50202
-Node: Breaking Down the Code51011
-Node: Adding Substance: Inputs and Outputs52103
-Node: The Anatomy of an I/O Object53283
-Node: The Power of Flags: Customizing I/O Behavior54255
-Node: Signals: The Reactive Core55905
-Node: Input vs. Output: What's the difference?56906
-Node: The Grand Finale: Bridging Code and Logic57511
-Node: The Living Service: first-service-v3.c58254
-Node: The Rule: Closing the Loop60559
-Node: The Result: A Symphony of Data61074
-Node: Conclusions: The World is Your Input62060
-Node: Thinking in STARTER62612
-Node: The Power of Generalization63450
-Node: Where Will You Take It?64034
-Node: Database Schema & Initialization64800
-Node: API Reference68042
-Node: Error Handling68529
-Node: STError69002
-Node: Error Quarks and Macros70439
-Node: API Definitions: Constants and Enumerations71141
-Node: I/O Flags71678
-Node: STUnit Enumeration72745
-Node: Special Constants73898
-Node: STInput: The Sensor Abstraction74281
-Node: STInput Lifecycle Management74896
-Node: STInput Metadata Accessors75852
-Node: Range and Value Control76928
-Node: STOutput: The Actuator Abstraction78607
-Node: STOutput Lifecycle Management79242
-Node: STOutput Metadata Accessors80239
-Node: Value and State Control81324
-Node: Network Discovery: mDNS and Service Location83141
-Node: STMDNSService: Service Representation83700
-Node: Property Management84693
-Node: STMDNS: The Discovery Engine85855
-Node: Signals86694
-Node: System Statistics: Performance Monitoring87063
-Node: STStats: The Telemetry Container87706
-Node: Metric Accessors88469
-Node: STStatsCollector: The Abstract Engine89112
-Node: STProcessStatsCollector: Process Monitoring89761
-Node: Services and Communication: Server and Client90442
-Node: STServer: Publishing a Service91020
-Node: Service Metadata92762
-Node: STClient: Consuming a Service93436
-Node: Client Connection State94649
-Node: Starting a Client95921
-Node: Remote Resource Access97518
-Node: GNU Free Documentation License98815
+Node: Configuration18063
+Node: Where to go from here?18746
+Node: The Rules File: Where the Magic Happens19442
+Node: Identifiers: The Power of Abstraction20962
+Node: The Anatomy of a Logic Block21979
+Node: Connecting the Dots: Events in Action22732
+Node: Dynamic Control: The TRIGGER Construct24416
+Node: Choosing Your Tool25458
+Node: Examples26113
+Node: Variables: The Connective Tissue26739
+Node: The Power of Propagation27464
+Node: How the System "Thinks"28007
+Node: Why Use Variables?28762
+Node: Expressions: The Engine of STARTER29489
+Node: Constant Values and Types30176
+Node: Boolean Logic: Everything is a Number30741
+Node: Comparison and Logical Operators31680
+Node: Mathematical Operators32665
+Node: Built-in Functions33254
+Node: The Mechanics of Evaluation: Snapshots vs. Live Streams34031
+Node: The EVAL Function: Killing the Link35413
+Node: Why This Matters: Architectural Elegance36406
+Node: The Boot-Time Paradox37242
+Node: Preprocessing: The Secret Weapon37921
+Node: Power Unleashed: The M4 Default38860
+Node: Swapping the Engine39573
+Node: Command Line Options: Taking the Reins40449
+Node: Advanced Orchestration42522
+Node: The Override Hierarchy43600
+Node: System Architecture: Under the Hood44118
+Node: A Truly Distributed Ecosystem44682
+Node: ZeroConf: Plug & Play Reality45609
+Node: Communication via D-Bus RPC46216
+Node: The Operational Loop47779
+Node: The Debug Server48572
+Node: Connecting to the Debug Endpoint49434
+Node: Debug Methods50033
+Node: Debug Signals52615
+Node: Pause Semantics53739
+Node: The starter-core Library: Building Your Own Ecosystem54400
+Node: The Skeleton: first-service.c55181
+Node: Compiling and Running56563
+Node: Breaking Down the Code57372
+Node: Adding Substance: Inputs and Outputs58464
+Node: The Anatomy of an I/O Object59644
+Node: The Power of Flags: Customizing I/O Behavior60616
+Node: Signals: The Reactive Core62266
+Node: Input vs. Output: What's the difference?63267
+Node: The Grand Finale: Bridging Code and Logic63872
+Node: The Living Service: first-service-v3.c64615
+Node: The Rule: Closing the Loop66920
+Node: The Result: A Symphony of Data67435
+Node: Conclusions: The World is Your Input68421
+Node: Thinking in STARTER68973
+Node: The Power of Generalization69811
+Node: Where Will You Take It?70395
+Node: Database Schema & Initialization71161
+Node: API Reference74403
+Node: Error Handling74890
+Node: STError75363
+Node: Error Quarks and Macros76800
+Node: API Definitions: Constants and Enumerations77502
+Node: I/O Flags78039
+Node: STUnit Enumeration79106
+Node: Special Constants80259
+Node: STInput: The Sensor Abstraction80642
+Node: STInput Lifecycle Management81257
+Node: STInput Metadata Accessors82213
+Node: Range and Value Control83289
+Node: STOutput: The Actuator Abstraction84968
+Node: STOutput Lifecycle Management85603
+Node: STOutput Metadata Accessors86600
+Node: Value and State Control87685
+Node: Network Discovery: mDNS and Service Location89502
+Node: STMDNSService: Service Representation90061
+Node: Property Management91054
+Node: STMDNS: The Discovery Engine92216
+Node: Signals93055
+Node: System Statistics: Performance Monitoring93424
+Node: STStats: The Telemetry Container94067
+Node: Metric Accessors94830
+Node: STStatsCollector: The Abstract Engine95473
+Node: STProcessStatsCollector: Process Monitoring96122
+Node: Services and Communication: Server and Client96803
+Node: STServer: Publishing a Service97381
+Node: Service Metadata99123
+Node: STClient: Consuming a Service99797
+Node: Client Connection State101010
+Node: Starting a Client102282
+Node: Remote Resource Access103879
+Node: GNU Free Documentation License105176
 
 End Tag Table
 

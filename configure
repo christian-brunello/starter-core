@@ -663,6 +663,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+ENABLE_DEBUG_SERVER_FALSE
+ENABLE_DEBUG_SERVER_TRUE
 ST_CORE_LIBS
 ST_CORE_CFLAGS
 GSETTINGS_RULES
@@ -811,6 +813,7 @@ with_gnu_ld
 with_sysroot
 enable_libtool_lock
 enable_schemas_compile
+enable_debug_server
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1471,6 +1474,8 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --disable-schemas-compile
                           Disable regeneration of gschemas.compiled on install
+  --enable-debug-server   build starter-core with remote debug server
+                          interface
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -13926,6 +13931,32 @@ if test "$MAKEINFO" = ":" ; then
     as_fn_error $? "makeinfo not found. Please install it and try again." "$LINENO" 5
 fi
 
+# Optional remote debug server (GDBus TCP). Runtime bind via
+# --debug-server-bind=HOST:PORT (default 0.0.0.0:17373).
+# Check whether --enable-debug-server was given.
+if test ${enable_debug_server+y}
+then :
+  enableval=$enable_debug_server;
+else $as_nop
+  enable_debug_server=no
+fi
+
+
+if test "x$enable_debug_server" = "xyes"
+then :
+
+printf "%s\n" "#define ENABLE_DEBUG_SERVER 1" >>confdefs.h
+
+fi
+ if test "x$enable_debug_server" = "xyes"; then
+  ENABLE_DEBUG_SERVER_TRUE=
+  ENABLE_DEBUG_SERVER_FALSE='#'
+else
+  ENABLE_DEBUG_SERVER_TRUE='#'
+  ENABLE_DEBUG_SERVER_FALSE=
+fi
+
+
 # =========================================================
 
 # Definisce i file Makefile da creare
@@ -14063,6 +14094,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${ENABLE_DEBUG_SERVER_TRUE}" && test -z "${ENABLE_DEBUG_SERVER_FALSE}"; then
+  as_fn_error $? "conditional \"ENABLE_DEBUG_SERVER\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -16217,5 +16252,12 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:
+  debug-server: ${enable_debug_server}
+" >&5
+printf "%s\n" "$as_me:
+  debug-server: ${enable_debug_server}
+" >&6;}
 
 
