@@ -33,7 +33,7 @@ starter-core.service: starter-core.service.in
 
 all-local: starter-core.service
 
-EXTRA_DIST = starter-core.service.in rules.conf rules.conf.example starter-core.pc.in
+EXTRA_DIST = starter-core.service.in rules.conf.example starter-core.pc.in
 CLEANFILES = starter-core.service starter-core.pc
 
 pkgconfigdir = $(libdir)/pkgconfig

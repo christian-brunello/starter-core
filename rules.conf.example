@@ -1,0 +1,207 @@
+# =============================================================================
+# STARTER rules — language reference example
+# =============================================================================
+#
+# Install path (example only; never overwrites a live rules.conf):
+#   $(sysconfdir)/starter/rules.conf.example
+#
+# To use it:
+#   cp /usr/local/etc/starter/rules.conf.example /usr/local/etc/starter/rules.conf
+#   # edit rules.conf for your site, then restart starter-core
+#
+# Default run path:
+#   starter-core -R /usr/local/etc/starter/rules.conf
+#
+# Optional preprocessor (m4 recommended). Placeholders:
+#   {F}  → path to the rules file
+#   gsettings set org.starter.core rules-preprocessor 'm4 {F}'
+#   # or: 'cat {F}'  to disable preprocessing
+#
+# This file is written for the shipped examples:
+#   time-example  → inputs  time:hour, time:minute, time:second
+#                   output  time:local
+#   beep-example  → output  beep:status
+#   oil-example   → input   oil:price
+#
+# Launch: starter-core -R … &  time-example &  beep-example &  oil-example &
+#
+# Comments: lines starting with # (STARTER lexer). With m4, also use `dnl …`.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Variables (VAR)
+# -----------------------------------------------------------------------------
+# Declare a variable (starts at 0), or initialise it.
+# A variable can be a *target* of a block / TRIGGER and an *input* elsewhere.
+# Without EVAL(), assigning an expression stores a *live reference*
+# (re-evaluated when used). EVAL() freezes a numeric snapshot.
+
+VAR alarm_active;                 # default 0
+VAR oil_is_cheap = 0;
+VAR startup_hour = EVAL(time:hour);   # snapshot (may resolve when TIME appears)
+VAR live_hour = time:hour;            # alias / live link to time:hour
+
+
+# -----------------------------------------------------------------------------
+# 2. Target block  —  one output/variable, first matching SET wins
+# -----------------------------------------------------------------------------
+# Syntax:
+#   <target> {
+#       SET <expr> WHEN <condition>;
+#       ...
+#   }
+#
+# Re-evaluated when any identifier referenced in the block changes.
+# Rules are tried top to bottom; the first WHEN that is true applies.
+
+beep:status {
+    # Alarm clock: beep only at 07:00 (one minute window)
+    SET TRUE  WHEN time:hour == 7 && time:minute == 0;
+    SET FALSE WHEN TRUE;          # default / catch-all
+}
+
+# Same idea, oil price as the sensor (abstraction: data is data)
+# Uncomment to try instead of / in parallel with the alarm block above —
+# only one block per target is typical; prefer VAR + TRIGGER for combining.
+#
+# beep:status {
+#     SET TRUE  WHEN oil:price < 100;
+#     SET FALSE WHEN TRUE;
+# }
+
+
+# Drive a variable from a target block (same syntax as an output)
+oil_is_cheap {
+    SET 1 WHEN oil:price < 100;
+    SET 0 WHEN oil:price >= 100;
+}
+
+
+# -----------------------------------------------------------------------------
+# 3. TRIGGER — one condition, one or more assignments
+# -----------------------------------------------------------------------------
+# Syntax:
+#   TRIGGER WHEN <condition> SET <id> = <expr> [, <id> = <expr> ...];
+#
+# Prefer TRIGGER to fan out one event to many targets.
+# Prefer a target block when many conditions control a *single* target.
+
+TRIGGER WHEN oil_is_cheap == 1 SET alarm_active = 1;
+TRIGGER WHEN oil_is_cheap == 0 SET alarm_active = 0;
+
+# Multiple assignments in one TRIGGER (fan-out to several ids)
+TRIGGER WHEN CHANGED(alarm_active) SET demo_const = EVAL(alarm_active),
+                                         frozen_sum = EVAL(time:hour + time:minute / 60);
+
+
+# -----------------------------------------------------------------------------
+# 4. Literals, booleans, identifiers
+# -----------------------------------------------------------------------------
+# Numbers are doubles. TRUE == 1, FALSE == 0.
+# Any non-zero value is “true” in conditions.
+# Identifiers: [A-Za-z][A-Za-z0-9_:]*   e.g. ServiceName:datapoint
+
+VAR demo_const = 3.14;
+VAR demo_true  = TRUE;
+VAR demo_false = FALSE;
+
+
+# -----------------------------------------------------------------------------
+# 5. Comparison and logical operators
+# -----------------------------------------------------------------------------
+#   ==  !=  <  <=  >  >=
+#   &&  (and)    ||  (or)
+# Parentheses control grouping. Precedence (low → high among these):
+#   ||   then   &&   then   comparisons   then   + -   then   * /
+
+VAR morning = (time:hour >= 6 && time:hour < 12);
+VAR night   = (time:hour >= 22 || time:hour < 6);
+
+# Combined condition example (documented only via a variable alias)
+VAR wake_or_cheap = (time:hour == 7 && time:minute == 0) || oil:price < 100;
+
+
+# -----------------------------------------------------------------------------
+# 6. Arithmetic
+# -----------------------------------------------------------------------------
+# Binary: +  -  *  /
+# Negative literals are fine (lexer accepts leading - on numbers).
+# minute-of-day style formula:
+
+VAR minutes_since_midnight = time:minute + (time:hour * 60);
+VAR neg_demo = -1.5;
+VAR scaled = (oil:price - 50) / 10;
+
+
+# -----------------------------------------------------------------------------
+# 7. Built-in functions
+# -----------------------------------------------------------------------------
+# MIN(a, b, ...)      lowest value
+# MAX(a, b, ...)      highest value
+# ROUND(x)              nearest integer
+# LIMIT(x, min, max)    clamp x into [min, max]
+# EVAL(expr)            evaluate once, store constant (break live link)
+# CHANGED(id)           true when id’s value changed since last eval
+#                       (first sighting counts as changed)
+
+VAR clamp_demo = LIMIT(oil:price, 0, 200);
+VAR round_demo = ROUND(oil:price / 3);
+VAR band_demo  = MAX(0, MIN(100, oil:price));
+VAR frozen_sum = EVAL(1 + time:hour);
+
+# Edge-detect style: fire only when the input changes
+TRIGGER WHEN CHANGED(oil:price) SET demo_const = EVAL(oil:price);
+
+
+# -----------------------------------------------------------------------------
+# 8. Putting it together — small readable “scene”
+# -----------------------------------------------------------------------------
+# night_mode aggregates time; lights/beep could follow it on a real install.
+
+VAR night_mode = 0;
+
+night_mode {
+    SET 1 WHEN time:hour >= 22 || time:hour < 6;
+    SET 0 WHEN TRUE;
+}
+
+TRIGGER WHEN night_mode == 1 SET time:local = TRUE;
+TRIGGER WHEN night_mode == 0 SET time:local = FALSE;
+
+
+# -----------------------------------------------------------------------------
+# 9. Optional m4 helpers (only if rules-preprocessor uses m4)
+# -----------------------------------------------------------------------------
+# With:  gsettings set org.starter.core rules-preprocessor 'm4 {F}'
+# you can define macros. Example (uncomment when using m4):
+#
+# dnl IN_RANGE(val, min, max) — expands before STARTER parses
+# define(IN_RANGE, ($1 >= $2 && $1 <= $3))
+# define(ALARM_HOUR, 7)
+#
+# beep:status {
+#     SET TRUE  WHEN IN_RANGE(time:hour, ALARM_HOUR, ALARM_HOUR) && time:minute == 0;
+#     SET FALSE WHEN TRUE;
+# }
+#
+# Without m4, write the expanded form by hand:
+#     SET TRUE WHEN time:hour >= 7 && time:hour <= 7 && time:minute == 0;
+
+
+# -----------------------------------------------------------------------------
+# 10. Quick reference
+# -----------------------------------------------------------------------------
+# VAR name;
+# VAR name = expr;
+#
+# target {
+#     SET expr WHEN condition;
+# }
+#
+# TRIGGER WHEN condition SET a = expr [, b = expr ...];
+#
+# Functions: MIN MAX ROUND LIMIT EVAL CHANGED
+# Booleans:  TRUE FALSE   (and any non-zero number)
+# Comments:  # … to end of line
+# =============================================================================
