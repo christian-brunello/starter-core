@@ -150,6 +150,8 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      /* Returns TRUE if the stored expression changed (and "changed" was emitted). */
      gboolean st_var_set_value (STVar * self, Expr * value);
 
+     typedef struct _Engine Engine;
+
      typedef struct
      {
        gchar *id;
@@ -158,10 +160,13 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
 
      void assign_delete (Assign * self);
      Assign *assign_new (const gchar * id, Expr * rval);
+     /* If did_apply is non-NULL, set TRUE only when the assign changes state. */
      gboolean assign_apply (Assign * self, GHashTable * inputs,
 			    GHashTable * outputs, GHashTable * variables,
-			    GError ** error);
+			    gboolean * did_apply, GError ** error);
      gchar *assign_describe (Assign * self, GString * s);
+     /* Conf-like: "id = <expr>" */
+     gchar *assign_format_conf (Assign * self, GString * s);
      gboolean assign_have_ref_to (Assign * self, const gchar * id,
 				  GHashTable * variables);
 
@@ -174,9 +179,12 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      void trigger_delete (Trigger * self);
      Trigger *trigger_new (Expr * cond, GPtrArray * ass);
      gchar *trigger_describe (Trigger * self, GString * s);
+     /* Conf-like: "TRIGGER WHEN <cond> SET <id> = <expr>[, ...]" */
+     gchar *trigger_format_conf (Trigger * self, GString * s);
+     /* engine may be NULL (no Rule/TriggerTriggered callbacks). */
      gboolean trigger_apply (Trigger * self, GHashTable * inputs,
 			     GHashTable * outputs, GHashTable * variables,
-			     GError ** error);
+			     Engine * engine, GError ** error);
      gboolean trigger_have_ref_to (Trigger * self, const gchar * id,
 				   GHashTable * variables);
 
@@ -189,6 +197,8 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      void label_entry_delete (LabelEntry * self);
      LabelEntry *label_entry_new (Expr * cond, Assign * ass);
      gchar *label_entry_describe (LabelEntry * self, GString * s);
+     /* Conf-like: "SET <rval> WHEN <cond>" */
+     gchar *label_entry_format_conf (LabelEntry * self, GString * s);
      gboolean label_entry_have_ref_to (LabelEntry * self, const gchar * id,
 				       GHashTable * variables);
 
@@ -200,18 +210,27 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      void lable_block_delete (LabelBlock * self);
      LabelBlock *label_block_new (GPtrArray * entries);
      gchar *label_block_describe (LabelBlock * self, GString * s);
+     /* engine may be NULL (no RuleTriggered callbacks). */
      gboolean label_block_apply (LabelBlock * self, GHashTable * inputs,
 				 GHashTable * outputs, GHashTable * variables,
-				 GError ** error);
+				 Engine * engine, GError ** error);
      gboolean label_block_have_ref_to (LabelBlock * self, const gchar * id,
 				       GHashTable * variables);
 
-     typedef struct
+     typedef void (*EngineTriggeredFunc) (const gchar * dest,
+					  const gchar * describe,
+					  gpointer user_data);
+
+     struct _Engine
      {
        GPtrArray *labels;
        GPtrArray *triggers;
        GHashTable *variables;
-     } Engine;
+       EngineTriggeredFunc on_rule_triggered;
+       gpointer on_rule_triggered_data;
+       EngineTriggeredFunc on_trigger_triggered;
+       gpointer on_trigger_triggered_data;
+     };
 
      void engine_delete (Engine * self);
      Engine *engine_new (GPtrArray * labels, GPtrArray * triggers);

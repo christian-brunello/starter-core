@@ -16,6 +16,10 @@ typedef struct
 {
   Engine *engine;
   guint var_changed;
+  guint rule_triggered;
+  guint trigger_triggered;
+  gchar *last_dest;
+  gchar *last_describe;
 } Fixture;
 
 static void
@@ -28,6 +32,32 @@ on_var_changed (STVar * var, gpointer user_data)
 }
 
 static void
+on_rule_triggered (const gchar * dest, const gchar * describe,
+		   gpointer user_data)
+{
+  Fixture *f = user_data;
+
+  f->rule_triggered++;
+  g_free (f->last_dest);
+  g_free (f->last_describe);
+  f->last_dest = g_strdup (dest);
+  f->last_describe = g_strdup (describe);
+}
+
+static void
+on_trigger_triggered (const gchar * dest, const gchar * describe,
+		      gpointer user_data)
+{
+  Fixture *f = user_data;
+
+  f->trigger_triggered++;
+  g_free (f->last_dest);
+  g_free (f->last_describe);
+  f->last_dest = g_strdup (dest);
+  f->last_describe = g_strdup (describe);
+}
+
+static void
 fixture_setup (Fixture * f, gconstpointer user_data)
 {
   (void) user_data;
@@ -36,6 +66,14 @@ fixture_setup (Fixture * f, gconstpointer user_data)
     engine_new (g_ptr_array_new_full (0, (GDestroyNotify) lable_block_delete),
 		g_ptr_array_new_full (0, (GDestroyNotify) trigger_delete));
   f->var_changed = 0;
+  f->rule_triggered = 0;
+  f->trigger_triggered = 0;
+  f->last_dest = NULL;
+  f->last_describe = NULL;
+  f->engine->on_rule_triggered = on_rule_triggered;
+  f->engine->on_rule_triggered_data = f;
+  f->engine->on_trigger_triggered = on_trigger_triggered;
+  f->engine->on_trigger_triggered_data = f;
 }
 
 static void
@@ -43,6 +81,8 @@ fixture_teardown (Fixture * f, gconstpointer user_data)
 {
   (void) user_data;
 
+  g_free (f->last_dest);
+  g_free (f->last_describe);
   engine_delete (f->engine);
 }
 
@@ -120,7 +160,8 @@ test_trigger_continues_after_failed_assign (Fixture * f,
     g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
   g_assert_false (trigger_apply
-		  (tr, empty_io, empty_io, f->engine->variables, &error));
+		  (tr, empty_io, empty_io, f->engine->variables, f->engine,
+		   &error));
   g_assert_error (error, ST_ERROR, ST_ERROR_UNDEFINED_IDENTIFIER);
   g_clear_error (&error);
 
@@ -132,7 +173,70 @@ test_trigger_continues_after_failed_assign (Fixture * f,
   g_assert_no_error (error);
   g_assert_cmpfloat (res, ==, 42.0);
 
+  /* Second assign applied; first failed — one TriggerTriggered for "ok". */
+  g_assert_cmpuint (f->trigger_triggered, ==, 1);
+  g_assert_cmpstr (f->last_dest, ==, "ok");
+  g_assert_true (g_str_has_prefix (f->last_describe, "TRIGGER WHEN"));
+
   trigger_delete (tr);
+  g_hash_table_unref (empty_io);
+}
+
+static void
+test_rule_triggered_callback (Fixture * f, gconstpointer user_data)
+{
+  GPtrArray *entries;
+  LabelBlock *block;
+  LabelEntry *entry;
+  GHashTable *empty_io;
+  STVar *v;
+  Expr *cond;
+  Expr *rval;
+  Assign *ass;
+  GError *error = NULL;
+  gdouble res = -1;
+
+  (void) user_data;
+
+  v = add_var (f, "target", 0);
+  cond = expr_new_literal (1);
+  rval = expr_new_literal (7);
+  ass = assign_new ("target", rval);
+  entry = label_entry_new (cond, ass);
+  expr_unref (cond);
+  expr_unref (rval);
+
+  entries = g_ptr_array_new_full (0, (GDestroyNotify) label_entry_delete);
+  g_ptr_array_add (entries, entry);
+  block = label_block_new (entries);
+
+  empty_io =
+    g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+  g_assert_true (label_block_apply
+		 (block, empty_io, empty_io, f->engine->variables, f->engine,
+		  &error));
+  g_assert_no_error (error);
+
+  g_assert_cmpuint (f->rule_triggered, ==, 1);
+  g_assert_cmpuint (f->trigger_triggered, ==, 0);
+  g_assert_cmpstr (f->last_dest, ==, "target");
+  g_assert_true (g_str_has_prefix (f->last_describe, "SET "));
+  g_assert_nonnull (strstr (f->last_describe, "WHEN"));
+
+  g_assert_true (expr_eval
+		 (st_var_get_value (v), empty_io, empty_io,
+		  f->engine->variables, &res, &error));
+  g_assert_no_error (error);
+  g_assert_cmpfloat (res, ==, 7.0);
+
+  /* Second apply with same value: no emit. */
+  g_assert_true (label_block_apply
+		 (block, empty_io, empty_io, f->engine->variables, f->engine,
+		  &error));
+  g_assert_cmpuint (f->rule_triggered, ==, 1);
+
+  lable_block_delete (block);
   g_hash_table_unref (empty_io);
 }
 
@@ -161,6 +265,8 @@ main (int argc, char **argv)
   g_test_add ("/starter-core/engine/trigger-continues-on-fail", Fixture, NULL,
 	      fixture_setup, test_trigger_continues_after_failed_assign,
 	      fixture_teardown);
+  g_test_add ("/starter-core/engine/rule-triggered-callback", Fixture, NULL,
+	      fixture_setup, test_rule_triggered_callback, fixture_teardown);
   g_test_add_func ("/starter-core/engine/expr-equal",
 		   test_expr_equal_structural);
 

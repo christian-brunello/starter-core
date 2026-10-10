@@ -64,9 +64,12 @@ assign_new (const gchar * id, Expr * rval)
 
 gboolean
 assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
-	      GHashTable * variables, GError ** error)
+	      GHashTable * variables, gboolean * did_apply, GError ** error)
 {
   gpointer p;
+
+  if (did_apply)
+    *did_apply = FALSE;
 
   if ((p = g_hash_table_lookup (outputs, self->id)) != NULL)
     {
@@ -133,6 +136,9 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 	  LOGD ("rule applied: %s", assign_describe (self, s));
 	}
 
+      if (did_apply)
+	*did_apply = TRUE;
+
       return TRUE;
     }
 
@@ -164,6 +170,9 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 	  LOGD ("rule applied: %s", assign_describe (self, s));
 	}
 
+      if (did_apply)
+	*did_apply = TRUE;
+
       return TRUE;
     }
 
@@ -183,6 +192,16 @@ assign_describe (Assign * self, GString * s)
   g_string_printf (s,
 		   "Assign %p {id: %s, rval: %s}",
 		   self, self->id, expr_describe (self->rval, es));
+
+  return s->str;
+}
+
+gchar *
+assign_format_conf (Assign * self, GString * s)
+{
+  g_autoptr (GString) es = g_string_new ("");
+
+  g_string_printf (s, "%s = %s", self->id, expr_describe (self->rval, es));
 
   return s->str;
 }
@@ -229,6 +248,22 @@ label_entry_describe (LabelEntry * self, GString * s)
 		   self,
 		   expr_describe (self->cond, cs),
 		   assign_describe (self->ass, as));
+
+  return s->str;
+}
+
+gchar *
+label_entry_format_conf (LabelEntry * self, GString * s)
+{
+  g_autoptr (GString) rs;
+  g_autoptr (GString) cs;
+
+  rs = g_string_new ("");
+  cs = g_string_new ("");
+
+  g_string_printf (s, "SET %s WHEN %s",
+		   expr_describe (self->ass->rval, rs),
+		   expr_describe (self->cond, cs));
 
   return s->str;
 }
@@ -285,7 +320,7 @@ label_block_describe (LabelBlock * self, GString * s)
 gboolean
 label_block_apply (LabelBlock * self, GHashTable * inputs,
 		   GHashTable * outputs, GHashTable * variables,
-		   GError ** error)
+		   Engine * engine, GError ** error)
 {
   guint i;
 
@@ -300,6 +335,7 @@ label_block_apply (LabelBlock * self, GHashTable * inputs,
     {
       LabelEntry *entry = self->entries->pdata[i];
       gdouble cond_res;
+      gboolean did_apply = FALSE;
 
       if (verbose_level >= VERBOSE_LEVEL_3)
 	{
@@ -325,7 +361,20 @@ label_block_apply (LabelBlock * self, GHashTable * inputs,
 		 assign_describe (entry->ass, s2));
 	    }
 
-	  return assign_apply (entry->ass, inputs, outputs, variables, error);
+	  if (!assign_apply
+	      (entry->ass, inputs, outputs, variables, &did_apply, error))
+	    return FALSE;
+
+	  if (did_apply && engine && engine->on_rule_triggered)
+	    {
+	      g_autoptr (GString) ds = g_string_new ("");
+
+	      engine->on_rule_triggered (entry->ass->id,
+					 label_entry_format_conf (entry, ds),
+					 engine->on_rule_triggered_data);
+	    }
+
+	  return TRUE;
 	}
 
       VERBOSE_2_PRINTF ("skip %s (condition false)", entry->ass->id);
@@ -402,9 +451,35 @@ trigger_describe (Trigger * self, GString * s)
   return s->str;
 }
 
+gchar *
+trigger_format_conf (Trigger * self, GString * s)
+{
+  g_autoptr (GString) cs;
+  g_autoptr (GString) as;
+  g_autoptr (GString) ts;
+  guint i;
+
+  cs = g_string_new ("");
+  as = g_string_new ("");
+  ts = g_string_new ("");
+
+  if (self->ass)
+    for (i = 0; i < self->ass->len; i++)
+      {
+	g_string_truncate (ts, 0);
+	g_string_append_printf (as, "%s%s", i == 0 ? "" : ", ",
+				assign_format_conf (self->ass->pdata[i], ts));
+      }
+
+  g_string_printf (s, "TRIGGER WHEN %s SET %s",
+		   expr_describe (self->cond, cs), as->str);
+
+  return s->str;
+}
+
 gboolean
 trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
-	       GHashTable * variables, GError ** error)
+	       GHashTable * variables, Engine * engine, GError ** error)
 {
   gdouble cond_res;
 
@@ -423,9 +498,16 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
       guint i;
       gboolean ok = TRUE;
       GError *first_error = NULL;
+      g_autoptr (GString) conf = NULL;
 
       VERBOSE_2_PRINTF ("trigger condition true, apply %u assignment(s)",
 			self->ass->len);
+
+      if (engine && engine->on_trigger_triggered)
+	{
+	  conf = g_string_new ("");
+	  trigger_format_conf (self, conf);
+	}
 
       /*
        * Unlike label blocks (single assignment), a TRIGGER may list several
@@ -435,6 +517,7 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
 	{
 	  Assign *ass = self->ass->pdata[i];
 	  GError *xerror = NULL;
+	  gboolean did_apply = FALSE;
 
 	  if (verbose_level >= VERBOSE_LEVEL_3)
 	    {
@@ -446,7 +529,8 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
 		 expr_describe (self->cond, s), assign_describe (ass, s2));
 	    }
 
-	  if (!assign_apply (ass, inputs, outputs, variables, &xerror))
+	  if (!assign_apply
+	      (ass, inputs, outputs, variables, &did_apply, &xerror))
 	    {
 	      ok = FALSE;
 	      LOGW ("trigger assign failed (%s): %s",
@@ -456,6 +540,11 @@ trigger_apply (Trigger * self, GHashTable * inputs, GHashTable * outputs,
 		first_error = xerror;
 	      else
 		g_error_free (xerror);
+	    }
+	  else if (did_apply && engine && engine->on_trigger_triggered)
+	    {
+	      engine->on_trigger_triggered (ass->id, conf->str,
+					    engine->on_trigger_triggered_data);
 	    }
 	}
 
@@ -603,7 +692,7 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 	      ("Iterate label block because of startup, connection or disconnection event");
 
 	  if (!label_block_apply
-	      (self->labels->pdata[i], inputs, outputs, self->variables,
+	      (self->labels->pdata[i], inputs, outputs, self->variables, self,
 	       &xerror))
 	    {
 	      if (xerror && xerror->code == ST_ERROR_UNDEFINED_IDENTIFIER)
@@ -646,7 +735,7 @@ engine_apply (Engine * self, GHashTable * inputs, GHashTable * outputs,
 
 	  if (!trigger_apply
 	      (self->triggers->pdata[i], inputs, outputs, self->variables,
-	       &xerror))
+	       self, &xerror))
 	    {
 	      if (xerror && xerror->code == ST_ERROR_UNDEFINED_IDENTIFIER)
 		LOGW ("apply trigger failed: %s", xerror->message);

@@ -521,6 +521,26 @@ st_core_setup_outputs_hash_table (STCore * self)
   return r;
 }
 
+#ifdef ENABLE_DEBUG_SERVER
+static void
+on_debug_rule_triggered (const gchar * dest, const gchar * describe,
+			 gpointer user_data)
+{
+  STCore *self = user_data;
+
+  st_core_debug_emit_rule_triggered (self->debug, dest, describe);
+}
+
+static void
+on_debug_trigger_triggered (const gchar * dest, const gchar * describe,
+			    gpointer user_data)
+{
+  STCore *self = user_data;
+
+  st_core_debug_emit_trigger_triggered (self->debug, dest, describe);
+}
+#endif
+
 int
 main (int argc, char *argv[])
 {
@@ -607,6 +627,11 @@ main (int argc, char *argv[])
 	g_clear_error (&debug_error);
 	exit (EXIT_FAILURE);
       }
+
+    self.engine->on_rule_triggered = on_debug_rule_triggered;
+    self.engine->on_rule_triggered_data = &self;
+    self.engine->on_trigger_triggered = on_debug_trigger_triggered;
+    self.engine->on_trigger_triggered_data = &self;
   }
 #endif
 

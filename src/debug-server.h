@@ -55,6 +55,12 @@ void st_core_debug_emit_input_changed (STCoreDebug * self, STInput * in);
 void st_core_debug_emit_output_changed (STCoreDebug * self, STOutput * out);
 void st_core_debug_emit_stats_changed (STCoreDebug * self, STStats * stats);
 void st_core_debug_emit_var_changed (STCoreDebug * self, STVar * var);
+void st_core_debug_emit_rule_triggered (STCoreDebug * self,
+					const gchar * dest,
+					const gchar * describe);
+void st_core_debug_emit_trigger_triggered (STCoreDebug * self,
+					   const gchar * dest,
+					   const gchar * describe);
 
 /*
  * Control: inject into the core process image.

@@ -150,6 +150,14 @@ static const gchar introspection_xml[] =
   "      <arg name='name' type='s'/>"
   "      <arg name='describe' type='s'/>"
   "    </signal>"
+  "    <signal name='RuleTriggered'>"
+  "      <arg name='dest' type='s'/>"
+  "      <arg name='describe' type='s'/>"
+  "    </signal>"
+  "    <signal name='TriggerTriggered'>"
+  "      <arg name='dest' type='s'/>"
+  "      <arg name='describe' type='s'/>"
+  "    </signal>"
   "    <signal name='Stopped'>"
   "      <arg name='reason' type='s'/>"
   "      <arg name='id' type='s'/>"
@@ -1031,6 +1039,30 @@ st_core_debug_emit_var_changed (STCoreDebug * self, STVar * var)
   broadcast_signal (self, "VarChanged",
 		    g_variant_new ("(ss)", st_var_get_name (var),
 				   desc ? desc : ""));
+}
+
+void
+st_core_debug_emit_rule_triggered (STCoreDebug * self, const gchar * dest,
+				   const gchar * describe)
+{
+  if (self == NULL || !ST_IS_CORE_DEBUG (self) || dest == NULL)
+    return;
+
+  broadcast_signal (self, "RuleTriggered",
+		    g_variant_new ("(ss)", dest,
+				   describe ? describe : ""));
+}
+
+void
+st_core_debug_emit_trigger_triggered (STCoreDebug * self, const gchar * dest,
+				      const gchar * describe)
+{
+  if (self == NULL || !ST_IS_CORE_DEBUG (self) || dest == NULL)
+    return;
+
+  broadcast_signal (self, "TriggerTriggered",
+		    g_variant_new ("(ss)", dest,
+				   describe ? describe : ""));
 }
 
 static STInput *

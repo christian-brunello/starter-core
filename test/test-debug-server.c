@@ -62,6 +62,12 @@ typedef struct
   guint input_signals;
   gchar *last_input_name;
   gdouble last_input_val;
+  guint rule_signals;
+  gchar *last_rule_dest;
+  gchar *last_rule_describe;
+  guint trigger_signals;
+  gchar *last_trigger_dest;
+  gchar *last_trigger_describe;
 
   /* optional I/O peer for SetInput/SetOutput success tests */
   STServer *io_server;
@@ -171,6 +177,10 @@ fixture_teardown (Fixture * f, gconstpointer user_data)
   g_clear_pointer (&f->last_peer_addr, g_free);
   g_clear_pointer (&f->last_peer_event, g_free);
   g_clear_pointer (&f->last_input_name, g_free);
+  g_clear_pointer (&f->last_rule_dest, g_free);
+  g_clear_pointer (&f->last_rule_describe, g_free);
+  g_clear_pointer (&f->last_trigger_dest, g_free);
+  g_clear_pointer (&f->last_trigger_describe, g_free);
   g_clear_object (&f->io_server);
   g_clear_pointer (&f->io_inputs, g_ptr_array_unref);
   g_clear_pointer (&f->io_outputs, g_ptr_array_unref);
@@ -200,6 +210,18 @@ static gboolean
 input_signal_seen (gpointer data)
 {
   return ((Fixture *) data)->input_signals > 0;
+}
+
+static gboolean
+rule_signal_seen (gpointer data)
+{
+  return ((Fixture *) data)->rule_signals > 0;
+}
+
+static gboolean
+trigger_signal_seen (gpointer data)
+{
+  return ((Fixture *) data)->trigger_signals > 0;
 }
 
 static void
@@ -263,6 +285,58 @@ on_input_changed_signal (GDBusConnection * connection,
   g_free (f->last_input_name);
   f->last_input_name = g_strdup (name);
   f->last_input_val = val;
+}
+
+static void
+on_rule_triggered_signal (GDBusConnection * connection,
+			  const gchar * sender_name,
+			  const gchar * object_path,
+			  const gchar * interface_name,
+			  const gchar * signal_name, GVariant * parameters,
+			  gpointer user_data)
+{
+  Fixture *f = user_data;
+  const gchar *dest = NULL;
+  const gchar *describe = NULL;
+
+  (void) connection;
+  (void) sender_name;
+  (void) object_path;
+  (void) interface_name;
+  (void) signal_name;
+
+  g_variant_get (parameters, "(&s&s)", &dest, &describe);
+  f->rule_signals++;
+  g_free (f->last_rule_dest);
+  g_free (f->last_rule_describe);
+  f->last_rule_dest = g_strdup (dest);
+  f->last_rule_describe = g_strdup (describe);
+}
+
+static void
+on_trigger_triggered_signal (GDBusConnection * connection,
+			     const gchar * sender_name,
+			     const gchar * object_path,
+			     const gchar * interface_name,
+			     const gchar * signal_name, GVariant * parameters,
+			     gpointer user_data)
+{
+  Fixture *f = user_data;
+  const gchar *dest = NULL;
+  const gchar *describe = NULL;
+
+  (void) connection;
+  (void) sender_name;
+  (void) object_path;
+  (void) interface_name;
+  (void) signal_name;
+
+  g_variant_get (parameters, "(&s&s)", &dest, &describe);
+  f->trigger_signals++;
+  g_free (f->last_trigger_dest);
+  g_free (f->last_trigger_describe);
+  f->last_trigger_dest = g_strdup (dest);
+  f->last_trigger_describe = g_strdup (describe);
 }
 
 static GDBusConnection *
@@ -481,6 +555,11 @@ typedef struct
   const gchar *peer_event;
   /* InputChanged */
   STInput *input;
+  /* RuleTriggered / TriggerTriggered */
+  const gchar *rule_dest;
+  const gchar *rule_describe;
+  const gchar *trigger_dest;
+  const gchar *trigger_describe;
 } ServerEmitJob;
 
 static gboolean
@@ -501,6 +580,28 @@ emit_input_on_server (gpointer data)
   ServerEmitJob *job = data;
 
   st_core_debug_emit_input_changed (job->f->debug, job->input);
+  job->done = TRUE;
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+emit_rule_on_server (gpointer data)
+{
+  ServerEmitJob *job = data;
+
+  st_core_debug_emit_rule_triggered (job->f->debug, job->rule_dest,
+				     job->rule_describe);
+  job->done = TRUE;
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+emit_trigger_on_server (gpointer data)
+{
+  ServerEmitJob *job = data;
+
+  st_core_debug_emit_trigger_triggered (job->f->debug, job->trigger_dest,
+					job->trigger_describe);
   job->done = TRUE;
   return G_SOURCE_REMOVE;
 }
@@ -598,6 +699,64 @@ test_debug_server_input_signal (Fixture * f, gconstpointer user_data)
 
   g_object_unref (in);
   g_dbus_connection_signal_unsubscribe (conn, sid);
+  g_object_unref (conn);
+}
+
+static void
+test_debug_server_rule_trigger_signals (Fixture * f, gconstpointer user_data)
+{
+  GError *error = NULL;
+  GDBusConnection *conn;
+  guint sid_rule;
+  guint sid_trigger;
+  ServerEmitJob job = { 0 };
+
+  (void) user_data;
+
+  conn = connect_debug (f, &error);
+  g_assert_no_error (error);
+  g_assert_nonnull (conn);
+
+  sid_rule =
+    g_dbus_connection_signal_subscribe (conn, NULL, DEBUG_INTERFACE,
+					"RuleTriggered", DEBUG_OBJECT_PATH,
+					NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+					on_rule_triggered_signal, f, NULL);
+  sid_trigger =
+    g_dbus_connection_signal_subscribe (conn, NULL, DEBUG_INTERFACE,
+					"TriggerTriggered", DEBUG_OBJECT_PATH,
+					NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+					on_trigger_triggered_signal, f, NULL);
+  g_assert_cmpuint (sid_rule, !=, 0);
+  g_assert_cmpuint (sid_trigger, !=, 0);
+
+  f->rule_signals = 0;
+  job.f = f;
+  job.rule_dest = "beep:status";
+  job.rule_describe =
+    "SET 1.000000 WHEN (time:hour) == (7.000000)";
+  g_main_context_invoke (f->context, emit_rule_on_server, &job);
+  wait_server_job (f, &job);
+
+  g_assert_true (iterate_until (rule_signal_seen, f, 2000));
+  g_assert_cmpstr (f->last_rule_dest, ==, "beep:status");
+  g_assert_true (g_str_has_prefix (f->last_rule_describe, "SET "));
+
+  f->trigger_signals = 0;
+  job.done = FALSE;
+  job.trigger_dest = "alarm_active";
+  job.trigger_describe =
+    "TRIGGER WHEN (oil_is_cheap) == (1.000000) SET alarm_active = 1.000000";
+  g_main_context_invoke (f->context, emit_trigger_on_server, &job);
+  wait_server_job (f, &job);
+
+  g_assert_true (iterate_until (trigger_signal_seen, f, 2000));
+  g_assert_cmpstr (f->last_trigger_dest, ==, "alarm_active");
+  g_assert_true (g_str_has_prefix
+		 (f->last_trigger_describe, "TRIGGER WHEN"));
+
+  g_dbus_connection_signal_unsubscribe (conn, sid_rule);
+  g_dbus_connection_signal_unsubscribe (conn, sid_trigger);
   g_object_unref (conn);
 }
 
@@ -1122,6 +1281,10 @@ main (int argc, char *argv[])
 
   g_test_add ("/starter-core/debug-server/input-signal", Fixture, NULL,
 	      fixture_setup, test_debug_server_input_signal,
+	      fixture_teardown);
+
+  g_test_add ("/starter-core/debug-server/rule-trigger-signals", Fixture,
+	      NULL, fixture_setup, test_debug_server_rule_trigger_signals,
 	      fixture_teardown);
 
   g_test_add ("/starter-core/debug-server/set-unknown", Fixture, NULL,
