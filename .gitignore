@@ -26,6 +26,12 @@ src/config.h
 starter-core.pc
 starter-core.service
 
+# Out-of-tree build directory
+/build/
+
+# Automake test results
+*.trs
+
 # Built programs
 /src/starter-core
 /examples/time-example
