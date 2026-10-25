@@ -80,6 +80,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (STServer, st_server, G_TYPE_OBJECT)
        "      <arg direction='in' type='t' name='flags'/>"
        "      <arg direction='out' type='i' name='error'/>"
        "    </method>"
+       "    <method name='SetInput'>"
+       "      <arg direction='in' type='s' name='id'/>"
+       "      <arg direction='in' type='d' name='value'/>"
+       "      <arg direction='in' type='t' name='flags'/>"
+       "      <arg direction='out' type='i' name='error'/>"
+       "    </method>"
        "    <method name='GetStats'>"
        "      <arg direction='out' type='(sddddddddddddddddddddddddddd)' name='stats'/>"
        "    </method>"
@@ -368,6 +374,37 @@ handle_method_call (GDBusConnection * connection,
 
 	      res = st_output_set_val (out, value, &error)
 		&& st_output_set_flags (out, flags, &error);
+
+	      LOGD ("result: %d", res);
+
+	      break;
+	    }
+	}
+
+      g_dbus_method_invocation_return_value (invocation,
+					     g_variant_new ("(i)",
+							    (int) res));
+    }
+  else if (g_strcmp0 (method_name, "SetInput") == 0)
+    {
+      const gchar *name;
+      double value;
+      guint64 flags;
+      guint i;
+      gboolean res = FALSE;
+
+      g_variant_get (parameters, "(&sdt)", &name, &value, &flags);
+
+      for (i = 0; i < priv->inputs->len && res == FALSE; i++)
+	{
+	  STInput *in = priv->inputs->pdata[i];
+
+	  if (strcmp (name, st_input_get_name (in)) == 0)
+	    {
+	      LOGD ("found input at index %u", i);
+
+	      res = st_input_set_val (in, value, &error)
+		&& st_input_set_flags (in, flags, &error);
 
 	      LOGD ("result: %d", res);
 

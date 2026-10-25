@@ -37,6 +37,7 @@ starter-core.service
 /examples/time-example
 /examples/oil-example
 /examples/beep-example
+/test/test-engine
 /test/test-input
 /test/test-output
 /test/test-stats

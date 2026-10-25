@@ -91,7 +91,8 @@ typedef enum
   EXPR_TYPE_LITERAL,
   EXPR_TYPE_OP,
   EXPR_TYPE_REF,
-  EXPR_TYPE_FUNC
+  EXPR_TYPE_FUNC,
+  EXPR_TYPE_FLAG
 } ExprType;
 
 typedef struct _Expr
@@ -107,6 +108,11 @@ typedef struct _Expr
       gchar *id;
       GPtrArray *args;
     } func;
+    struct
+    {
+      gchar *ref;
+      guint64 bit;
+    } flag;
   } data;
   struct
   {
@@ -134,6 +140,9 @@ Expr *expr_new_func_round (GPtrArray * args);
 Expr *expr_new_func_limit (GPtrArray * args);
 Expr *expr_new_func_eval (GPtrArray * args);
 Expr *expr_new_func_changed (GPtrArray * args);
+Expr *expr_new_flag (const gchar * ref, guint64 bit);
+const gchar *st_io_flag_bit_name (guint64 bit);
+gboolean st_io_flag_bit_is_usr (guint64 bit);
 gdouble expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
 		   GHashTable * variables, gdouble * res, GError ** error);
 gchar *expr_describe (Expr * self, GString * s);
@@ -156,10 +165,13 @@ G_DECLARE_FINAL_TYPE (STVar, st_var, ST, VAR, GObject)
      {
        gchar *id;
        Expr *rval;
+       /* 0 = assign value/expr; otherwise write this USR bit from rval truthiness */
+       guint64 flag_bit;
      } Assign;
 
      void assign_delete (Assign * self);
      Assign *assign_new (const gchar * id, Expr * rval);
+     Assign *assign_new_flag (const gchar * id, guint64 flag_bit, Expr * rval);
      /* If did_apply is non-NULL, set TRUE only when the assign changes state. */
      gboolean assign_apply (Assign * self, GHashTable * inputs,
 			    GHashTable * outputs, GHashTable * variables,

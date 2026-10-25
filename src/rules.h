@@ -36,10 +36,10 @@
    private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_RULES_H_INCLUDED
-#define YY_YY_RULES_H_INCLUDED
+# define YY_YY_RULES_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-#define YYDEBUG 0
+# define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -47,30 +47,32 @@ extern int yydebug;
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
-#define YYTOKENTYPE
-enum yytokentype
-{
-  YYEMPTY = -2,
-  YYEOF = 0,			/* "end of file"  */
-  YYerror = 256,		/* error  */
-  YYUNDEF = 257,		/* "invalid token"  */
-  T_EQ = 258,			/* T_EQ  */
-  T_NE = 259,			/* T_NE  */
-  T_LT = 260,			/* T_LT  */
-  T_LE = 261,			/* T_LE  */
-  T_GT = 262,			/* T_GT  */
-  T_GE = 263,			/* T_GE  */
-  T_AND = 264,			/* T_AND  */
-  T_OR = 265,			/* T_OR  */
-  T_KEY_VAR = 266,		/* T_KEY_VAR  */
-  T_KEY_SET = 267,		/* T_KEY_SET  */
-  T_KEY_WHEN = 268,		/* T_KEY_WHEN  */
-  T_KEY_TRIGGER = 269,		/* T_KEY_TRIGGER  */
-  VALUE = 270,			/* VALUE  */
-  IDENTIFIER = 271,		/* IDENTIFIER  */
-  UMINUS = 272			/* UMINUS  */
-};
-typedef enum yytokentype yytoken_kind_t;
+# define YYTOKENTYPE
+  enum yytokentype
+  {
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    T_EQ = 258,                    /* T_EQ  */
+    T_NE = 259,                    /* T_NE  */
+    T_LT = 260,                    /* T_LT  */
+    T_LE = 261,                    /* T_LE  */
+    T_GT = 262,                    /* T_GT  */
+    T_GE = 263,                    /* T_GE  */
+    T_AND = 264,                   /* T_AND  */
+    T_OR = 265,                    /* T_OR  */
+    T_KEY_VAR = 266,               /* T_KEY_VAR  */
+    T_KEY_SET = 267,               /* T_KEY_SET  */
+    T_KEY_WHEN = 268,              /* T_KEY_WHEN  */
+    T_KEY_TRIGGER = 269,           /* T_KEY_TRIGGER  */
+    T_KEY_FLAG = 270,              /* T_KEY_FLAG  */
+    VALUE = 271,                   /* VALUE  */
+    IDENTIFIER = 272,              /* IDENTIFIER  */
+    T_FLAG_NAME = 273,             /* T_FLAG_NAME  */
+    UMINUS = 274                   /* UMINUS  */
+  };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
 /* Token kinds.  */
 #define YYEMPTY -2
@@ -89,39 +91,42 @@ typedef enum yytokentype yytoken_kind_t;
 #define T_KEY_SET 267
 #define T_KEY_WHEN 268
 #define T_KEY_TRIGGER 269
-#define VALUE 270
-#define IDENTIFIER 271
-#define UMINUS 272
+#define T_KEY_FLAG 270
+#define VALUE 271
+#define IDENTIFIER 272
+#define T_FLAG_NAME 273
+#define UMINUS 274
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 38 "rules.y"
+#line 40 "rules.y"
 
-  double dval;
-  gchar *sval;
+    double dval; 
+    gchar *sval; 
+    guint64 uval;
 
-  Expr *expr_ptr;
-  Assign *ass_ptr;
-  Trigger *trigger_ptr;
-  LabelEntry *label_entry_ptr;
-  LabelBlock *label_block_ptr;
-  GPtrArray *ptr_array;
+    Expr *expr_ptr;
+    Assign *ass_ptr;
+    Trigger *trigger_ptr;
+    LabelEntry *label_entry_ptr;
+    LabelBlock *label_block_ptr;
+    GPtrArray *ptr_array; 
 
-#line 113 "rules.h"
+#line 118 "rules.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
-#define YYSTYPE_IS_TRIVIAL 1
-#define YYSTYPE_IS_DECLARED 1
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
 #endif
 
 
 extern YYSTYPE yylval;
 
 
-int yyparse (Engine * engine);
+int yyparse (Engine *engine);
 
 
 #endif /* !YY_YY_RULES_H_INCLUDED  */

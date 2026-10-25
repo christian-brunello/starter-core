@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <glib.h>
 
+#include <starter/defs.h>
+
 #include "internals.h"
 
 extern int yylineno;
@@ -38,6 +40,7 @@ void yyerror (Engine *, char const *);
 %union {
     double dval; 
     gchar *sval; 
+    guint64 uval;
 
     Expr *expr_ptr;
     Assign *ass_ptr;
@@ -49,11 +52,12 @@ void yyerror (Engine *, char const *);
 
 /* ==, !=, <, <=, >, >=, &&, || */
 %token T_EQ T_NE T_LT T_LE T_GT T_GE T_AND T_OR
-/* VAR, SET, WHEN, TRIGGER */
-%token T_KEY_VAR T_KEY_SET T_KEY_WHEN T_KEY_TRIGGER
+/* VAR, SET, WHEN, TRIGGER, FLAG */
+%token T_KEY_VAR T_KEY_SET T_KEY_WHEN T_KEY_TRIGGER T_KEY_FLAG
 
 %token <dval> VALUE
 %token <sval> IDENTIFIER
+%token <uval> T_FLAG_NAME
 
 %type <ptr_array> argument_list
 %type <expr_ptr> expr
@@ -108,9 +112,29 @@ label_block:
 
 	  g_free(e->ass->id);
 	  e->ass->id = g_strdup($1);
+	  e->ass->flag_bit = 0;
         }
 
       $$ = label_block_new($3);
+
+      free($1);
+    }
+    | IDENTIFIER T_KEY_FLAG T_FLAG_NAME '{' label_entries '}'
+    {
+      guint i;
+
+      /* Non-USR write targets are accepted at parse time; assign_apply warns
+       * and skips. */
+      for(i = 0; i < $5->len; i++)
+        {
+	  LabelEntry *e = $5->pdata[i];
+
+	  g_free(e->ass->id);
+	  e->ass->id = g_strdup($1);
+	  e->ass->flag_bit = $3;
+        }
+
+      $$ = label_block_new($5);
 
       free($1);
     }
@@ -161,6 +185,13 @@ assignment:
 	    expr_unref($3);
 	    free($1);
 	  }
+	  | IDENTIFIER T_KEY_FLAG T_FLAG_NAME '=' expr
+	  {
+	    /* Non-USR: parse OK; assign_apply warns and skips. */
+	    $$ = assign_new_flag ($1, $3, $5);
+	    expr_unref ($5);
+	    free ($1);
+	  }
 
 declaration:
     T_KEY_VAR IDENTIFIER ';' {
@@ -182,6 +213,11 @@ expr:
       | IDENTIFIER {
 	$$ = expr_new_ref($1);
 	free($1);
+      }
+      | IDENTIFIER T_KEY_FLAG T_FLAG_NAME {
+	/* Read: any known flag name (USR* / MANUAL_OVERRIDE / NO_HISTORY). */
+	$$ = expr_new_flag ($1, $3);
+	free ($1);
       }
       /* Booleans */
       | expr T_EQ expr {

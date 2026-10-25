@@ -19,7 +19,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <starter/server.h>
 #include <starter/client.h>
@@ -28,19 +30,42 @@
 #include <starter/output.h>
 #include <starter/stats.h>
 #include <starter/error.h>
+#include <starter/defs.h>
 
 static pid_t server_pid = -1;
 
 static void
 kill_server_process (void)
 {
-  if (server_pid > 0)
+  pid_t pid = server_pid;
+  int status;
+  int i;
+
+  if (pid <= 0)
+    return;
+
+  /* Clear first so atexit cannot double-wait. */
+  server_pid = -1;
+
+  g_test_message ("Terminating background server process (PID: %d)...",
+		  (int) pid);
+
+  /* Ask politely first (child installs a self-pipe / default may not quit
+   * g_main_loop_run). Then escalate. */
+  if (kill (pid, SIGTERM) == 0)
     {
-      g_test_message ("Terminating background server process (PID: %d)...", server_pid);
-      kill (server_pid, SIGTERM);
-      waitpid (server_pid, NULL, 0);
-      server_pid = -1;
+      for (i = 0; i < 50; i++)
+	{
+	  if (waitpid (pid, &status, WNOHANG) == pid)
+	    return;
+	  g_usleep (10000);
+	}
     }
+
+  g_test_message ("Server still alive, sending SIGKILL...");
+  kill (pid, SIGKILL);
+  while (waitpid (pid, &status, 0) < 0 && errno == EINTR)
+    ;
 }
 
 static void
@@ -92,8 +117,36 @@ test_e2e_complete_pipeline (gconstpointer user_data)
   g_assert_nonnull (client_stats);
   g_test_message ("Client monitoring stats structure validated post-connection.");
 
+  /* 5. SetInput / SetOutput with USR flags (value unchanged, flags transported). */
+  {
+    STInput *in = client_inputs->pdata[0];
+    STOutput *out = client_outputs->pdata[0];
+    gdouble in_val = st_input_get_val (in);
+    gdouble out_val = st_output_get_val (out);
+    guint64 want = ST_IO_FLAG_USR1;
+    gint spins;
+
+    g_assert_true (st_client_set_input
+		   (client, st_input_get_name (in), in_val, want));
+    g_assert_true (st_client_set_output
+		   (client, st_output_get_name (out), out_val, want));
+
+    for (spins = 0; spins < 50; spins++)
+      g_main_context_iteration (NULL, FALSE);
+
+    g_assert_cmpuint (st_input_get_flags (in) & ST_IO_FLAG_USR1, !=, 0);
+    g_assert_cmpuint (st_output_get_flags (out) & ST_IO_FLAG_USR1, !=, 0);
+    g_assert_cmpfloat (st_input_get_val (in), ==, in_val);
+    g_assert_cmpfloat (st_output_get_val (out), ==, out_val);
+    g_test_message ("SetInput/SetOutput USR1 flag round-trip OK.");
+  }
+
   g_test_message ("Complete E2E validation pipeline executed successfully.");
   g_object_unref (client);
+
+  /* Drain any deferred GDBus/client teardown work. */
+  while (g_main_context_pending (NULL))
+    g_main_context_iteration (NULL, FALSE);
 }
 
 int
@@ -126,7 +179,11 @@ main (int argc, char *argv[])
       GError *error = NULL;
       guint16 dynamic_port = 0;
 
-      // Close unused read end of the pipe
+      /* Die immediately if the parent test process exits first. */
+      prctl (PR_SET_PDEATHSIG, SIGKILL);
+      if (getppid () == 1)
+	_exit (EXIT_FAILURE);
+
       close (pipe_fds[0]);
 
       server_loop = g_main_loop_new (NULL, FALSE);
@@ -140,53 +197,48 @@ main (int argc, char *argv[])
       g_ptr_array_add (inputs, mock_input);
       g_ptr_array_add (outputs, mock_output);
 
-      // Instantiate the real server component
       server = st_server_new ("StarterIntegrationDaemon", &version, inputs, outputs);
       g_assert_nonnull (server);
       
-      // Start server on dynamic port 0
       if (!st_server_start (server, 0, &error))
         {
           g_error ("Child server failed to bind: %s", error->message);
         }
 
-      // Extract the port dynamically assigned by the kernel
       dynamic_port = st_server_get_port (server);
 
-      // Send the dynamic port code to the parent client process via pipe
       if (write (pipe_fds[1], &dynamic_port, sizeof (dynamic_port)) != sizeof (dynamic_port))
         {
           g_error ("Child server failed to pipe the allocated port back.");
         }
       close (pipe_fds[1]);
 
-      // Run the server event context indefinitely until parent terminates us
       g_main_loop_run (server_loop);
 
-      // Cleanup allocations
       g_object_unref (server);
       g_ptr_array_unref (inputs);
       g_ptr_array_unref (outputs);
       g_main_loop_unref (server_loop);
-      
+
       _exit (EXIT_SUCCESS);
     }
   else
     {
-      /* ----------------------------------------------------
-       * PARENT PROCESS: GTest Suites (STClient Runner)
-       * ---------------------------------------------------- */
+      int test_result;
+
+      close (pipe_fds[1]);
+
       atexit (kill_server_process);
 
       g_test_add_data_func ("/libstarter-core/integration/complete-pipeline-e2e",
                             pipe_fds,
                             test_e2e_complete_pipeline);
 
-      int test_result = g_test_run ();
+      test_result = g_test_run ();
 
       kill_server_process ();
 
-      return test_result;
+      /* Avoid GLib/GDBus worker-thread hang on process teardown. */
+      _exit (test_result);
     }
 }
-

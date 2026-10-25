@@ -20,8 +20,34 @@
 
 #include <math.h>
 #include <starter/error.h>
+#include <starter/defs.h>
 
 #include "internals.h"
+
+gboolean
+st_io_flag_bit_is_usr (guint64 bit)
+{
+  return bit != 0 && (bit & ST_IO_FLAG_USR_MASK) == bit
+    && (bit & (bit - 1)) == 0;
+}
+
+const gchar *
+st_io_flag_bit_name (guint64 bit)
+{
+  if (bit == ST_IO_FLAG_USR1)
+    return "USR1";
+  if (bit == ST_IO_FLAG_USR2)
+    return "USR2";
+  if (bit == ST_IO_FLAG_USR3)
+    return "USR3";
+  if (bit == ST_IO_FLAG_USR4)
+    return "USR4";
+  if (bit == ST_IO_FLAG_MANUAL_OVERRIDE)
+    return "MANUAL_OVERRIDE";
+  if (bit == ST_IO_FLAG_NO_HISTORY)
+    return "NO_HISTORY";
+  return "?";
+}
 
 Expr *
 expr_ref (Expr * self)
@@ -282,6 +308,86 @@ expr_new_ref (const gchar * ref)
   r->callbacks.destroy = ref_expr_destroy;
   r->callbacks.describe = ref_expr_describe;
   r->callbacks.have_ref_to = ref_expr_have_ref_to;
+  r->nref = 1;
+
+  return r;
+}
+
+static gboolean
+flag_expr_eval (Expr * self, GHashTable * inputs, GHashTable * outputs,
+		GHashTable * variables, gdouble * res, GError ** error)
+{
+  gpointer p;
+  guint64 flags = 0;
+
+  (void) variables;
+
+  if (inputs && (p = g_hash_table_lookup (inputs, self->data.flag.ref)) != NULL)
+    {
+      ClientInputMap *cmap = p;
+      const GPtrArray *cinputs = st_client_get_inputs (cmap->client);
+
+      flags = st_input_get_flags (cinputs->pdata[cmap->index]);
+      *res = (flags & self->data.flag.bit) ? 1.0 : 0.0;
+      return TRUE;
+    }
+
+  if (outputs
+      && (p = g_hash_table_lookup (outputs, self->data.flag.ref)) != NULL)
+    {
+      ClientOutputMap *cmap = p;
+      const GPtrArray *coutputs = st_client_get_outputs (cmap->client);
+
+      flags = st_output_get_flags (coutputs->pdata[cmap->index]);
+      *res = (flags & self->data.flag.bit) ? 1.0 : 0.0;
+      return TRUE;
+    }
+
+  g_set_error (error,
+	       ST_ERROR,
+	       ST_ERROR_UNDEFINED_IDENTIFIER,
+	       "%s: undefined identifier for FLAG: %s",
+	       __FUNCTION__, self->data.flag.ref);
+
+  return FALSE;
+}
+
+static void
+flag_expr_destroy (Expr * self)
+{
+  g_free (self->data.flag.ref);
+}
+
+static gchar *
+flag_expr_describe (Expr * self, GString * s)
+{
+  g_string_printf (s, "%s FLAG %s", self->data.flag.ref,
+		   st_io_flag_bit_name (self->data.flag.bit));
+  return s->str;
+}
+
+static gboolean
+flag_expr_have_ref_to (Expr * self, const gchar * id, GHashTable * variables)
+{
+  (void) variables;
+  return strcmp (self->data.flag.ref, id) == 0;
+}
+
+Expr *
+expr_new_flag (const gchar * ref, guint64 bit)
+{
+  Expr *r;
+
+  r = g_malloc0 (sizeof (Expr));
+
+  r->type = EXPR_TYPE_FLAG;
+  r->data.flag.ref = g_strdup (ref);
+  r->data.flag.bit = bit;
+
+  r->callbacks.eval = flag_expr_eval;
+  r->callbacks.destroy = flag_expr_destroy;
+  r->callbacks.describe = flag_expr_describe;
+  r->callbacks.have_ref_to = flag_expr_have_ref_to;
   r->nref = 1;
 
   return r;
@@ -617,6 +723,10 @@ expr_equal (const Expr * a, const Expr * b)
 	    return FALSE;
 	}
       return TRUE;
+
+    case EXPR_TYPE_FLAG:
+      return a->data.flag.bit == b->data.flag.bit
+	&& g_strcmp0 (a->data.flag.ref, b->data.flag.ref) == 0;
     }
 
   return FALSE;

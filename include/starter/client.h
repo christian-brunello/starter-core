@@ -67,6 +67,8 @@ G_DECLARE_DERIVABLE_TYPE (STClient, st_client, ST, CLIENT, GObject)
      gchar *st_client_get_service_name (STClient * self);
      gboolean st_client_set_output (STClient * self, const gchar * name,
 				    double value, guint64 flags);
+     gboolean st_client_set_input (STClient * self, const gchar * name,
+				   double value, guint64 flags);
 
 G_END_DECLS
 #endif /* STARTER_CLIENT_H_INCLUDED */

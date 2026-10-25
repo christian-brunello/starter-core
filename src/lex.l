@@ -18,6 +18,7 @@
  */
 %{
 #include <glib.h>
+#include <starter/defs.h>
 #include "internals.h"
 #include "rules.h"
 
@@ -55,6 +56,31 @@ IDENTIFIER  [A-Za-z][A-Za-z0-9_:]*
 "SET"   { return T_KEY_SET; }
 "WHEN"   { return T_KEY_WHEN; }
 "TRIGGER" { return T_KEY_TRIGGER; }
+"FLAG"  { return T_KEY_FLAG; }
+"USR1" {
+	  yylval.uval = ST_IO_FLAG_USR1;
+	  return T_FLAG_NAME;
+       }
+"USR2" {
+	  yylval.uval = ST_IO_FLAG_USR2;
+	  return T_FLAG_NAME;
+       }
+"USR3" {
+	  yylval.uval = ST_IO_FLAG_USR3;
+	  return T_FLAG_NAME;
+       }
+"USR4" {
+	  yylval.uval = ST_IO_FLAG_USR4;
+	  return T_FLAG_NAME;
+       }
+"MANUAL_OVERRIDE" {
+	  yylval.uval = ST_IO_FLAG_MANUAL_OVERRIDE;
+	  return T_FLAG_NAME;
+       }
+"NO_HISTORY" {
+	  yylval.uval = ST_IO_FLAG_NO_HISTORY;
+	  return T_FLAG_NAME;
+       }
 "TRUE" {
 	  yylval.dval = 1;
 	  return VALUE;

@@ -6,6 +6,7 @@
 
 #include <glib.h>
 #include <starter/error.h>
+#include <starter/defs.h>
 
 #include "internals.h"
 
@@ -255,6 +256,65 @@ test_expr_equal_structural (void)
   expr_unref (c);
 }
 
+static void
+test_flag_expr_equal_and_ref (void)
+{
+  Expr *a = expr_new_flag ("Manual:x", ST_IO_FLAG_USR1);
+  Expr *b = expr_new_flag ("Manual:x", ST_IO_FLAG_USR1);
+  Expr *c = expr_new_flag ("Manual:x", ST_IO_FLAG_USR2);
+  Expr *d = expr_new_flag ("Manual:y", ST_IO_FLAG_USR1);
+  Expr *mo = expr_new_flag ("Lamp:sw", ST_IO_FLAG_MANUAL_OVERRIDE);
+  g_autoptr (GString) s = g_string_new ("");
+
+  g_assert_true (expr_equal (a, b));
+  g_assert_false (expr_equal (a, c));
+  g_assert_false (expr_equal (a, d));
+  g_assert_true (expr_have_ref_to (a, "Manual:x", NULL));
+  g_assert_false (expr_have_ref_to (a, "Manual:y", NULL));
+  g_assert_cmpstr (expr_describe (a, s), ==, "Manual:x FLAG USR1");
+  g_assert_cmpstr (expr_describe (mo, s), ==, "Lamp:sw FLAG MANUAL_OVERRIDE");
+  g_assert_true (st_io_flag_bit_is_usr (ST_IO_FLAG_USR1));
+  g_assert_false (st_io_flag_bit_is_usr (ST_IO_FLAG_MANUAL_OVERRIDE));
+
+  expr_unref (a);
+  expr_unref (b);
+  expr_unref (c);
+  expr_unref (d);
+  expr_unref (mo);
+}
+
+static void
+test_flag_write_non_usr_skipped (Fixture * f, gconstpointer user_data)
+{
+  Assign *ass;
+  Expr *rval;
+  GHashTable *empty_io;
+  GError *error = NULL;
+  gboolean did_apply = TRUE;
+
+  (void) user_data;
+
+  g_test_expect_message (ST_CORE_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+			 "*refusing to set non-USR flag*");
+
+  rval = expr_new_literal (1);
+  ass = assign_new_flag ("Lamp:sw", ST_IO_FLAG_MANUAL_OVERRIDE, rval);
+  expr_unref (rval);
+
+  empty_io =
+    g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+  g_assert_true (assign_apply
+		 (ass, empty_io, empty_io, f->engine->variables, &did_apply,
+		  &error));
+  g_assert_no_error (error);
+  g_assert_false (did_apply);
+  g_test_assert_expected_messages ();
+
+  assign_delete (ass);
+  g_hash_table_unref (empty_io);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -269,6 +329,10 @@ main (int argc, char **argv)
 	      fixture_setup, test_rule_triggered_callback, fixture_teardown);
   g_test_add_func ("/starter-core/engine/expr-equal",
 		   test_expr_equal_structural);
+  g_test_add_func ("/starter-core/engine/flag-expr",
+		   test_flag_expr_equal_and_ref);
+  g_test_add ("/starter-core/engine/flag-write-non-usr-skipped", Fixture, NULL,
+	      fixture_setup, test_flag_write_non_usr_skipped, fixture_teardown);
 
   return g_test_run ();
 }

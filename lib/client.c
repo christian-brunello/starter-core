@@ -734,15 +734,16 @@ call_get_stats_method (STClient * self, GError ** error)
 }
 
 static gboolean
-call_set_output_method (STClient * self, const gchar * name, gdouble value,
-			guint64 flags, GError ** error)
+call_set_io_method (STClient * self, const gchar * method,
+		    const gchar * name, gdouble value, guint64 flags,
+		    GError ** error)
 {
   guint32 r = 0;
   STClientPrivate *priv;
 
   priv = ST_CLIENT_GET_PRIVATE (self);
 
-  if(priv->connection)
+  if (priv->connection)
     {
       GVariant *params;
       GVariant *result;
@@ -753,7 +754,7 @@ call_set_output_method (STClient * self, const gchar * name, gdouble value,
 					    NULL,
 					    "/org/starter/service",
 					    "org.starter.Service",
-					    "SetOutput",
+					    method,
 					    params,
 					    G_VARIANT_TYPE ("(i)"),
 					    G_DBUS_CALL_FLAGS_NONE,
@@ -780,14 +781,28 @@ call_set_output_method (STClient * self, const gchar * name, gdouble value,
   else
     {
       g_set_error_literal (error,
-                           ST_ERROR,
-                           ST_ERROR_NOT_CONNECTED, 
-                           "client is not connected to D-Bus server");
+			   ST_ERROR,
+			   ST_ERROR_NOT_CONNECTED,
+			   "client is not connected to D-Bus server");
     }
 
-  LOGD ("%s completed with r: %u", __FUNCTION__, r);
+  LOGD ("%s(%s) completed with r: %u", __FUNCTION__, method, r);
 
   return r;
+}
+
+static gboolean
+call_set_output_method (STClient * self, const gchar * name, gdouble value,
+			guint64 flags, GError ** error)
+{
+  return call_set_io_method (self, "SetOutput", name, value, flags, error);
+}
+
+static gboolean
+call_set_input_method (STClient * self, const gchar * name, gdouble value,
+		       guint64 flags, GError ** error)
+{
+  return call_set_io_method (self, "SetInput", name, value, flags, error);
 }
 
 static void
@@ -1239,7 +1254,26 @@ st_client_set_output (STClient * self, const gchar * name, double value,
 
   if (error)
     {
-      LOGE ("error call get name method: %s",
+      LOGE ("error call SetOutput: %s",
+	    error ? error->message : "unknown error");
+      g_error_free (error);
+    }
+
+  return r;
+}
+
+gboolean
+st_client_set_input (STClient * self, const gchar * name, double value,
+		     guint64 flags)
+{
+  gboolean r;
+  GError *error = NULL;
+
+  r = call_set_input_method (self, name, value, flags, &error);
+
+  if (error)
+    {
+      LOGE ("error call SetInput: %s",
 	    error ? error->message : "unknown error");
       g_error_free (error);
     }

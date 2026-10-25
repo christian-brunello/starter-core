@@ -19,7 +19,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <starter/server.h>
 #include <starter/client.h>
@@ -43,14 +45,31 @@ typedef struct
 static void
 kill_server_process (void)
 {
-  if (server_pid > 0)
+  pid_t pid = server_pid;
+  int status;
+  int i;
+
+  if (pid <= 0)
+    return;
+
+  server_pid = -1;
+
+  g_test_message ("Terminating background server process (PID: %d)...",
+		  (int) pid);
+  if (kill (pid, SIGTERM) == 0)
     {
-      g_test_message ("Terminating background server process (PID: %d)...",
-		      server_pid);
-      kill (server_pid, SIGTERM);
-      waitpid (server_pid, NULL, 0);
-      server_pid = -1;
+      for (i = 0; i < 50; i++)
+	{
+	  if (waitpid (pid, &status, WNOHANG) == pid)
+	    return;
+	  g_usleep (10000);
+	}
     }
+
+  g_test_message ("Server still alive, sending SIGKILL...");
+  kill (pid, SIGKILL);
+  while (waitpid (pid, &status, 0) < 0 && errno == EINTR)
+    ;
 }
 
 static gboolean
@@ -150,6 +169,9 @@ test_e2e_complete_pipeline_async (gconstpointer user_data)
 
   g_object_unref (ctx.client);
   g_main_loop_unref (ctx.loop);
+
+  while (g_main_context_pending (NULL))
+    g_main_context_iteration (NULL, FALSE);
 }
 
 int
@@ -178,6 +200,10 @@ main (int argc, char *argv[])
       STVersion version = { .major = 1, .minor = 0, .micro = 0 };
       GError *error = NULL;
       guint16 dynamic_port = 0;
+
+      prctl (PR_SET_PDEATHSIG, SIGKILL);
+      if (getppid () == 1)
+	_exit (EXIT_FAILURE);
 
       close (pipe_fds[0]);
 
@@ -222,16 +248,18 @@ main (int argc, char *argv[])
     }
   else
     {
+      int test_result;
+
+      close (pipe_fds[1]);
       atexit (kill_server_process);
 
       g_test_add_data_func
 	("/libstarter-core/integration/complete-pipeline-e2e-async",
 	 pipe_fds, test_e2e_complete_pipeline_async);
 
-      int test_result = g_test_run ();
+      test_result = g_test_run ();
 
       kill_server_process ();
-
-      return test_result;
+      _exit (test_result);
     }
 }

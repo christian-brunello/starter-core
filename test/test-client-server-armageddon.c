@@ -19,7 +19,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <starter/server.h>
 #include <starter/client.h>
@@ -36,13 +38,31 @@ static pid_t server_pid = -1;
 static void
 kill_server_process (void)
 {
-  if (server_pid > 0)
+  pid_t pid = server_pid;
+  int status;
+  int i;
+
+  if (pid <= 0)
+    return;
+
+  server_pid = -1;
+
+  g_test_message ("Stopping the daemon post-armageddon (PID: %d)...",
+		  (int) pid);
+  if (kill (pid, SIGTERM) == 0)
     {
-      g_test_message ("Stopping the daemon post-armageddon (PID: %d)...", server_pid);
-      kill (server_pid, SIGTERM);
-      waitpid (server_pid, NULL, 0);
-      server_pid = -1;
+      for (i = 0; i < 50; i++)
+	{
+	  if (waitpid (pid, &status, WNOHANG) == pid)
+	    return;
+	  g_usleep (10000);
+	}
     }
+
+  g_test_message ("Server still alive, sending SIGKILL...");
+  kill (pid, SIGKILL);
+  while (waitpid (pid, &status, 0) < 0 && errno == EINTR)
+    ;
 }
 
 static void
@@ -132,6 +152,10 @@ main (int argc, char *argv[])
       GError *error = NULL;
       guint16 dynamic_port = 0;
 
+      prctl (PR_SET_PDEATHSIG, SIGKILL);
+      if (getppid () == 1)
+	_exit (EXIT_FAILURE);
+
       close (pipe_fds[0]);
 
       server_loop = g_main_loop_new (NULL, FALSE);
@@ -167,7 +191,7 @@ main (int argc, char *argv[])
       g_ptr_array_unref (inputs);
       g_ptr_array_unref (outputs);
       g_main_loop_unref (server_loop);
-      
+
       _exit (EXIT_SUCCESS);
     }
   else
@@ -175,18 +199,19 @@ main (int argc, char *argv[])
       /* ----------------------------------------------------
        * PARENT PROCESS: GTest Suites (STClient Runner)
        * ---------------------------------------------------- */
-      // Standard ISO C fallback to ensure the daemon is killed on any assertion failure
+      int test_result;
+
+      close (pipe_fds[1]);
       atexit (kill_server_process);
 
       g_test_add_data_func ("/libstarter-core/integration/armageddon-stress-e2e",
                             pipe_fds,
                             test_e2e_armageddon_stress);
 
-      int test_result = g_test_run ();
+      test_result = g_test_run ();
 
       kill_server_process ();
-
-      return test_result;
+      _exit (test_result);
     }
 }
 

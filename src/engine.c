@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include <starter/error.h>
+#include <starter/defs.h>
 
 #include "internals.h"
 
@@ -58,8 +59,126 @@ assign_new (const gchar * id, Expr * rval)
 
   r->id = g_strdup (id);
   r->rval = expr_ref (rval);
+  r->flag_bit = 0;
 
   return r;
+}
+
+Assign *
+assign_new_flag (const gchar * id, guint64 flag_bit, Expr * rval)
+{
+  Assign *r;
+
+  r = assign_new (id, rval);
+  r->flag_bit = flag_bit;
+
+  return r;
+}
+
+static gboolean
+assign_apply_flag (Assign * self, GHashTable * inputs, GHashTable * outputs,
+		   GHashTable * variables, gboolean * did_apply,
+		   GError ** error)
+{
+  gpointer p;
+  gdouble expr_res;
+  guint64 flags;
+  guint64 new_flags;
+  gdouble val;
+
+  if (!st_io_flag_bit_is_usr (self->flag_bit))
+    {
+      LOGW ("refusing to set non-USR flag %s on %s (write allows USR1..USR4 only)",
+	    st_io_flag_bit_name (self->flag_bit), self->id);
+      VERBOSE_1_PRINTF
+	("skip FLAG write: %s FLAG %s is not a USR flag", self->id,
+	 st_io_flag_bit_name (self->flag_bit));
+      return TRUE;
+    }
+
+  if (!expr_eval (self->rval, inputs, outputs, variables, &expr_res, error))
+    return FALSE;
+
+  if ((p = g_hash_table_lookup (outputs, self->id)) != NULL)
+    {
+      ClientOutputMap *m = p;
+      const GPtrArray *coutputs = st_client_get_outputs (m->client);
+      STOutput *out = coutputs->pdata[m->index];
+
+      val = st_output_get_val (out);
+      flags = st_output_get_flags (out);
+      new_flags = expr_res ? (flags | self->flag_bit)
+	: (flags & ~self->flag_bit);
+
+      if (new_flags == flags)
+	{
+	  VERBOSE_2_PRINTF
+	    ("Avoid SetOutput FLAG: %s FLAG %s unchanged", self->id,
+	     st_io_flag_bit_name (self->flag_bit));
+	  return TRUE;
+	}
+
+      /* Peer applies val+flags; Input/OutputChanged transports the update. */
+      if (!st_client_set_output (m->client, self->id, val, new_flags))
+	{
+	  g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
+		       "error in st_client_set_output (FLAG) for %s",
+		       self->id);
+	  return FALSE;
+	}
+
+      LOGI ("rule applied: %s FLAG %s = %g", self->id,
+	    st_io_flag_bit_name (self->flag_bit), expr_res ? 1.0 : 0.0);
+      VERBOSE_1_PRINTF ("rule applied: %s FLAG %s = %g", self->id,
+			st_io_flag_bit_name (self->flag_bit),
+			expr_res ? 1.0 : 0.0);
+
+      if (did_apply)
+	*did_apply = TRUE;
+      return TRUE;
+    }
+
+  if ((p = g_hash_table_lookup (inputs, self->id)) != NULL)
+    {
+      ClientInputMap *m = p;
+      const GPtrArray *cinputs = st_client_get_inputs (m->client);
+      STInput *in = cinputs->pdata[m->index];
+
+      val = st_input_get_val (in);
+      flags = st_input_get_flags (in);
+      new_flags = expr_res ? (flags | self->flag_bit)
+	: (flags & ~self->flag_bit);
+
+      if (new_flags == flags)
+	{
+	  VERBOSE_2_PRINTF
+	    ("Avoid SetInput FLAG: %s FLAG %s unchanged", self->id,
+	     st_io_flag_bit_name (self->flag_bit));
+	  return TRUE;
+	}
+
+      if (!st_client_set_input (m->client, self->id, val, new_flags))
+	{
+	  g_set_error (error, ST_ERROR, ST_ERROR_INVALID_VALUE,
+		       "error in st_client_set_input (FLAG) for %s",
+		       self->id);
+	  return FALSE;
+	}
+
+      LOGI ("rule applied: %s FLAG %s = %g", self->id,
+	    st_io_flag_bit_name (self->flag_bit), expr_res ? 1.0 : 0.0);
+      VERBOSE_1_PRINTF ("rule applied: %s FLAG %s = %g", self->id,
+			st_io_flag_bit_name (self->flag_bit),
+			expr_res ? 1.0 : 0.0);
+
+      if (did_apply)
+	*did_apply = TRUE;
+      return TRUE;
+    }
+
+  g_set_error (error, ST_ERROR, ST_ERROR_UNDEFINED_IDENTIFIER,
+	       "FLAG target %s is not an input or output", self->id);
+  return FALSE;
 }
 
 gboolean
@@ -70,6 +189,10 @@ assign_apply (Assign * self, GHashTable * inputs, GHashTable * outputs,
 
   if (did_apply)
     *did_apply = FALSE;
+
+  if (self->flag_bit != 0)
+    return assign_apply_flag (self, inputs, outputs, variables, did_apply,
+			      error);
 
   if ((p = g_hash_table_lookup (outputs, self->id)) != NULL)
     {
@@ -189,9 +312,15 @@ assign_describe (Assign * self, GString * s)
 {
   g_autoptr (GString) es = g_string_new ("");
 
-  g_string_printf (s,
-		   "Assign %p {id: %s, rval: %s}",
-		   self, self->id, expr_describe (self->rval, es));
+  if (self->flag_bit)
+    g_string_printf (s,
+		     "Assign %p {id: %s FLAG %s, rval: %s}",
+		     self, self->id, st_io_flag_bit_name (self->flag_bit),
+		     expr_describe (self->rval, es));
+  else
+    g_string_printf (s,
+		     "Assign %p {id: %s, rval: %s}",
+		     self, self->id, expr_describe (self->rval, es));
 
   return s->str;
 }
@@ -201,7 +330,12 @@ assign_format_conf (Assign * self, GString * s)
 {
   g_autoptr (GString) es = g_string_new ("");
 
-  g_string_printf (s, "%s = %s", self->id, expr_describe (self->rval, es));
+  if (self->flag_bit)
+    g_string_printf (s, "%s FLAG %s = %s", self->id,
+		     st_io_flag_bit_name (self->flag_bit),
+		     expr_describe (self->rval, es));
+  else
+    g_string_printf (s, "%s = %s", self->id, expr_describe (self->rval, es));
 
   return s->str;
 }
