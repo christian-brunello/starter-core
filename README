@@ -10,8 +10,9 @@ nodes through a lightweight and robust communication stack:
 * Discovery: Uses mDNS (Multicast DNS) for automatic peer discovery.
 * Communication: Uses D-Bus for reliable inter-process communication (IPC).
 
-For more detailed information, please consult the technical manual located 
-in the 'doc' directory.
+For more detailed information, please consult the technical manual in the
+'doc' directory (sources: starter-core.texi; PDF: doc/starter-core.pdf).
+Rebuild the PDF with: make -C doc pdf
 
 2. PREREQUISITES
 ================

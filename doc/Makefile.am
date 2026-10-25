@@ -3,4 +3,4 @@ starter_core_TEXINFOS = fdl.texi gpl.texi lgpl.texi
 
 TEXINFO_DIRS = .
 
-EXTRA_DIST = starter-core.texi
+EXTRA_DIST = starter-core.texi starter-core.pdf

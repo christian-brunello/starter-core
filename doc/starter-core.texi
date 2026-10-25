@@ -527,6 +527,39 @@ Clamps a value. If it goes below @var{min}, it returns @var{min}; if above @var{
 This is a special one. It returns @code{1} (@code{TRUE}) only if the value of that specific @var{id} has changed since the last evaluation. It's perfect for triggering actions only on a fresh update.
 @end table
 
+@node I/O Flags in Rules
+@subsubsection I/O Flags in Rules
+
+Every Input and Output carries a @code{flags} field (@pxref{I/O Flags}). In
+@file{rules.conf} you can read or write those bits with the @code{FLAG}
+qualifier on the same targets and expressions you already use—no new statement
+kinds.
+
+@emph{Read} (any defined flag name) — yields @code{1} or @code{0}:
+
+@example
+SET Manual:OutWest WHEN Manual:OutWest FLAG USR1;
+SET 0 WHEN Lamp:switch FLAG MANUAL_OVERRIDE;
+@end example
+
+@emph{Write} — only @code{USR1}@{dots{}@}@code{USR4} actually change state.
+The syntax accepts system flags too, but the engine logs a warning and skips
+the write:
+
+@example
+Manual:OutWest FLAG USR1 @{
+    SET FALSE WHEN TIME:hour == 0;
+@}
+
+TRIGGER WHEN TIME:hour == 0
+  SET Manual:OutWest FLAG USR1 = FALSE;
+@end example
+
+Writing a USR bit uses the peer @code{SetOutput} / @code{SetInput} methods
+(value unchanged, flags updated); @code{InputChanged} / @code{OutputChanged}
+already carry the new flags to the Core. Variables do not have flags; they may
+only @emph{reference} a live @code{id FLAG USRn} expression.
+
 @node The Mechanics of Evaluation: Snapshots vs. Live Streams
 @subsection The Mechanics of Evaluation: Snapshots vs. Live Streams
 
