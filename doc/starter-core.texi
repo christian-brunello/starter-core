@@ -542,7 +542,7 @@ SET Manual:OutWest WHEN Manual:OutWest FLAG USR1;
 SET 0 WHEN Lamp:switch FLAG MANUAL_OVERRIDE;
 @end example
 
-@emph{Write} — only @code{USR1}@{dots{}@}@code{USR4} actually change state.
+@emph{Write} — only @code{USR1}@dots{}@code{USR4} actually change state.
 The syntax accepts system flags too, but the engine logs a warning and skips
 the write:
 
