@@ -74,7 +74,8 @@ G_DEFINE_TYPE_WITH_PRIVATE (STProcessStatsCollector,
 					      state);
      static gboolean read_proc_io (STProcessStatsCollectorPrivate * state,
 				   gulong * rchar_out, gulong * wchar_out);
-     static STProcessStatsCollectorPrivate *init_monitoring ();
+     static STProcessStatsCollectorPrivate
+       *init_monitoring (STProcessStatsCollectorPrivate * state);
      static double calculate_cpu_usage (STProcessStatsCollectorPrivate *
 					state, gulong utime_curr,
 					gulong stime_curr,

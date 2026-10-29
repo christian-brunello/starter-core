@@ -21,15 +21,31 @@ To build and run STARTER, you need the following dependencies:
 * GLib 2.0 (libglib2.0-dev)
 * D-Bus (libdbus-1-dev)
 * Avahi / mDNS stack (libavahi-client-dev, libavahi-glib-dev)
-* Autotools (autoconf, automake, libtool)
+* MySQL / MariaDB client (default-libmysqlclient-dev or equivalent)
+* Autotools (autoconf, automake, libtool, pkg-config)
+* Texinfo (makeinfo) — required by configure; also used to build the manual
+
+On Debian/Ubuntu (example):
+  sudo apt install build-essential autoconf automake libtool pkg-config \
+    libglib2.0-dev libavahi-client-dev libavahi-glib-dev \
+    default-libmysqlclient-dev texinfo
 
 3. BUILDING FROM SOURCE
 =======================
 
-    $ ./autogen.sh
+From a git checkout, regenerate the Autotools files then configure:
+
+    $ autoreconf -fi
     $ ./configure
     $ make
     $ sudo make install
+
+Optional remote debug server (GDBus):
+
+    $ ./configure --enable-debug-server
+
+Do not use a project-specific autogen script; autoreconf picks the host
+autoconf/automake/libtool versions correctly.
 
 4. CONFIGURATION
 ================

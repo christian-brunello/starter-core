@@ -200,10 +200,12 @@ To compile @acronym{STARTER}, you’ll need to prepare your environment. The sys
 @item @command{glib-2.0} and @command{gio-2.0} (version 2.44 or later; the backbone for system abstractions)
 @item @command{avahi-client} and @command{avahi-glib} (For zero-configuration networking/service discovery)
 @item @command{libmysqlclient-dev} (To enable database connectivity)
+@item Autotools: @command{autoconf}, @command{automake}, @command{libtool}, @command{pkg-config}
+@item @command{makeinfo} (from the @command{texinfo} package) — required by @command{configure}; also builds the manual
 @end itemize
 @item Optional (but recommended):
 @itemize
-@item @command{flex}, @command{bison}, and @command{makeinfo} (Useful for specific build tasks or documentation)
+@item @command{flex} and @command{bison} (useful for regenerating the rules parser)
 @end itemize
 @end table
 
@@ -217,10 +219,11 @@ The database requires three specific tables: @code{labels}, @code{history}, and 
 @node Download and Installation
 @subsection Download and Installation
 
-@acronym{STARTER} follows the standard @acronym{GNU} packaging conventions and utilizes @command{autotools}. If you’ve ever compiled software on Linux, you’ll feel right at home. Run the following commands from your terminal:
+@acronym{STARTER} follows the standard @acronym{GNU} packaging conventions and utilizes @command{autotools}. From a @command{git} checkout, regenerate the build system with @command{autoreconf} (do not use a project-specific @file{autogen.sh}), then configure and build:
 
 @example
 cd @var{starter-directory}
+autoreconf -fi
 ./configure
 make
 sudo make install
