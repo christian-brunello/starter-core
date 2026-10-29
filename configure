@@ -709,6 +709,7 @@ LIBTOOL
 LEXLIB
 LEX_OUTPUT_ROOT
 LEX
+ST_HAVE_YACC
 YFLAGS
 YACC
 ac_ct_AR
@@ -4669,6 +4670,8 @@ unknown)
 esac
 
 
+# Parser tools for rules.y / lex.l. Autoconf's AC_PROG_YACC does not fail when
+# no generator exists (it leaves YACC=yacc); AC_PROG_LEX sets LEX=: if missing.
 for ac_prog in 'bison -y' byacc
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -4716,6 +4719,59 @@ fi
   test -n "$YACC" && break
 done
 test -n "$YACC" || YACC="yacc"
+
+case $YACC in #(
+  yacc) :
+    # Extract the first word of "yacc", so it can be a program name with args.
+set dummy yacc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_prog_ST_HAVE_YACC+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  if test -n "$ST_HAVE_YACC"; then
+  ac_cv_prog_ST_HAVE_YACC="$ST_HAVE_YACC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_prog_ST_HAVE_YACC="yes"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_prog_ST_HAVE_YACC" && ac_cv_prog_ST_HAVE_YACC="no"
+fi
+fi
+ST_HAVE_YACC=$ac_cv_prog_ST_HAVE_YACC
+if test -n "$ST_HAVE_YACC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ST_HAVE_YACC" >&5
+printf "%s\n" "$ST_HAVE_YACC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+   if test "x$ST_HAVE_YACC" != "xyes"
+then :
+  as_fn_error $? "bison or yacc not found. Install bison and try again." "$LINENO" 5
+fi ;; #(
+  *) :
+     ;;
+esac
 
 for ac_prog in flex lex
 do
@@ -4934,6 +4990,10 @@ fi
 fi
 rm -f conftest.l $LEX_OUTPUT_ROOT.c
 
+fi
+if test "x$LEX" = "x:" || test "x$LEX" = "x"
+then :
+  as_fn_error $? "flex/lex not found. Install flex and try again." "$LINENO" 5
 fi
 
 case `pwd` in
@@ -13119,6 +13179,7 @@ printf "%s\n" "no" >&6; }
 	fi
 fi
 
+# PKG_CHECK_MODULES fails the configure run if a .pc module is missing.
 
 pkg_failed=no
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for glib-2.0 >= 2.44 gobject-2.0 >= 2.44 gio-2.0 >= 2.44 gio-unix-2.0 avahi-glib avahi-client" >&5

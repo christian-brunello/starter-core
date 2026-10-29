@@ -27,13 +27,24 @@ AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_PROG_CC
 AM_PROG_AR
 
+# Parser tools for rules.y / lex.l. Autoconf's AC_PROG_YACC does not fail when
+# no generator exists (it leaves YACC=yacc); AC_PROG_LEX sets LEX=: if missing.
 AC_PROG_YACC
+AS_CASE([$YACC],
+  [yacc],
+  [AC_CHECK_PROG([ST_HAVE_YACC], [yacc], [yes], [no])
+   AS_IF([test "x$ST_HAVE_YACC" != "xyes"],
+     [AC_MSG_ERROR([bison or yacc not found. Install bison and try again.])])])
+
 AC_PROG_LEX([noyywrap])
+AS_IF([test "x$LEX" = "x:" || test "x$LEX" = "x"],
+  [AC_MSG_ERROR([flex/lex not found. Install flex and try again.])])
 
 LT_INIT
 
 PKG_PROG_PKG_CONFIG
 
+# PKG_CHECK_MODULES fails the configure run if a .pc module is missing.
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.44 gobject-2.0 >= 2.44 gio-2.0 >= 2.44 gio-unix-2.0 avahi-glib avahi-client])
 PKG_CHECK_MODULES([MYSQLCLIENT], [mysqlclient])
 

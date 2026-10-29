@@ -201,13 +201,12 @@ To compile @acronym{STARTER}, you’ll need to prepare your environment. The sys
 @item @command{avahi-client} and @command{avahi-glib} (For zero-configuration networking/service discovery)
 @item @command{libmysqlclient-dev} (To enable database connectivity)
 @item Autotools: @command{autoconf}, @command{automake}, @command{libtool}, @command{pkg-config}
+@item @command{flex} and @command{bison} (or @command{byacc}/@command{yacc}) — required to build the rules lexer/parser from @file{lex.l} / @file{rules.y}
 @item @command{makeinfo} (from the @command{texinfo} package) — required by @command{configure}; also builds the manual
 @end itemize
-@item Optional (but recommended):
-@itemize
-@item @command{flex} and @command{bison} (useful for regenerating the rules parser)
-@end itemize
 @end table
+
+@command{./configure} fails if any required tool or @command{pkg-config} module is missing (libraries via @code{PKG_CHECK_MODULES}, plus @command{flex}, @command{bison}/@command{yacc}, @command{makeinfo}, and @command{glib-compile-schemas}).
 
 @node Database Initialization
 @subsection Database Initialization

@@ -23,10 +23,16 @@ To build and run STARTER, you need the following dependencies:
 * Avahi / mDNS stack (libavahi-client-dev, libavahi-glib-dev)
 * MySQL / MariaDB client (default-libmysqlclient-dev or equivalent)
 * Autotools (autoconf, automake, libtool, pkg-config)
+* flex and bison (or byacc/yacc) — required to build the rules lexer/parser
 * Texinfo (makeinfo) — required by configure; also used to build the manual
+
+configure fails if any of the required tools or pkg-config modules above
+are missing (including GLib/Avahi/MySQL .pc files, flex, bison/yacc,
+makeinfo, glib-compile-schemas).
 
 On Debian/Ubuntu (example):
   sudo apt install build-essential autoconf automake libtool pkg-config \
+    flex bison \
     libglib2.0-dev libavahi-client-dev libavahi-glib-dev \
     default-libmysqlclient-dev texinfo
 
